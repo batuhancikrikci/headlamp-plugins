@@ -85,8 +85,8 @@ When you edit a Helm-managed object, the plugin warns that the next
 #### From the Headlamp plugin catalog (Artifact Hub)
 
 The plugin is published on [Artifact Hub](https://artifacthub.io/packages/headlamp/batuhancikrikci-headlamp-plugins/monitoring). In the Headlamp desktop app, open the plugin
-catalog, search for **Monitoring** and install it. The catalog shows only official plugins by default; turn off **Only official plugins** in the
-Plugin Catalog settings to see this plugin.
+catalog, search for **Monitoring** and install it. The catalog shows only official plugins by default; turn off the **Only Official** switch in the
+catalog (or **Display only Official Plugins** in its settings) to see this plugin.
 
 #### Manual installation
 
@@ -381,7 +381,7 @@ değişikliklerinizin üzerine yazacağı konusunda uyarır.
 
 Eklenti [Artifact Hub](https://artifacthub.io/packages/headlamp/batuhancikrikci-headlamp-plugins/monitoring) üzerinde yayınlanır. Headlamp masaüstü uygulamasında eklenti
 kataloğunu açın, **Monitoring** araması yapın ve eklentiyi kurun. Katalog varsayılan olarak yalnızca resmî (official) eklentileri gösterir; bu eklentiyi görmek için
-Plugin Catalog ayarlarında **Only official plugins** seçeneğini kapatın.
+katalogdaki **Only Official** anahtarını (ya da ayarlarındaki **Display only Official Plugins** seçeneğini) kapatın.
 
 #### Elle kurulum
 

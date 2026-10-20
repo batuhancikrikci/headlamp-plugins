@@ -70,7 +70,7 @@ pull request.
 
 **From the catalog:** the plugins are published on Artifact Hub. In the Headlamp desktop app, open
 the plugin catalog, search for the plugin and install it. The catalog shows only official plugins by
-default; turn off **Only official plugins** in the Plugin Catalog settings to see these plugins.
+default; turn off the **Only Official** switch in the catalog (or **Display only Official Plugins** in its settings) to see these plugins.
 
 **Manually:** download `<plugin>-<version>.tar.gz` from
 [GitHub Releases](https://github.com/batuhancikrikci/headlamp-plugins/releases) and extract it into
@@ -191,8 +191,8 @@ kullanılabilir. `node scripts/check-common.mjs` bu kopyaların eşitliğini den
 
 **Katalogdan:** Eklentiler Artifact Hub'da yayınlanır. Headlamp masaüstü uygulamasında eklenti
 kataloğunu açın, eklentiyi arayın ve kurun. Katalog varsayılan olarak yalnızca resmî (official)
-eklentileri gösterir; bu eklentileri görmek için Plugin Catalog ayarlarında **Only official plugins**
-seçeneğini kapatın.
+eklentileri gösterir; bu eklentileri görmek için katalogdaki **Only Official** anahtarını (ya da ayarlarındaki
+**Display only Official Plugins** seçeneğini) kapatın.
 
 **Elle:** [GitHub Releases](https://github.com/batuhancikrikci/headlamp-plugins/releases)
 sayfasından `<eklenti>-<sürüm>.tar.gz` dosyasını indirip Headlamp eklenti dizinine açın
