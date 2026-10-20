@@ -3,7 +3,7 @@
 version: 0.2.1
 name: inference-hub
 displayName: Inference Hub
-createdAt: '2026-10-18T00:00:00Z'
+createdAt: "2026-10-20T13:27:36Z"
 description: 'Inference Hub: an AI/LLM platform experience for Headlamp covering KServe, llm-d, the Gateway API Inference Extension, vLLM and the NVIDIA GPU Operator'
 logoPath: docs/logo.png
 license: Apache-2.0
@@ -55,8 +55,11 @@ install: |
           source: https://artifacthub.io/packages/headlamp/batuhancikrikci-headlamp-plugins/inference-hub
           version: 0.2.1
   ```
+changes:
+  - kind: added
+    description: "First public release."
 annotations:
   headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/inference-hub-v0.2.1/inference-hub-0.2.1.tar.gz
-  headlamp/plugin/archive-checksum: sha256:set-by-the-release-workflow
+  headlamp/plugin/archive-checksum: sha256:d0273957bcb59da957cd070c155bd61f83ac0c4216430ed363c2dd62fc238a91
   headlamp/plugin/version-compat: '>=0.45.0'
   headlamp/plugin/distro-compat: in-cluster,web,desktop

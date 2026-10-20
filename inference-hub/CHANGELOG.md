@@ -4,6 +4,6 @@ All notable changes to the Inference Hub plugin are documented here. The format 
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the plugin uses
 [semantic versioning](https://semver.org/).
 
-## [0.2.1] — unreleased
+## [0.2.1] — 2026-10-20
 
 First public release.
