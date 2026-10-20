@@ -18,8 +18,6 @@ keywords:
   - ai-gateway
 provider:
   name: Batuhan CIKRIKCI
-maintainers:
-  - name: Batuhan CIKRIKCI
 links:
   - name: Source code
     url: https://github.com/batuhancikrikci/headlamp-plugins/tree/main/agentrouter
