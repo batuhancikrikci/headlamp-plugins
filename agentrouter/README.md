@@ -1,6 +1,6 @@
 # Agent Router — Headlamp plugin
 
-[English](#english) | [Türkçe](#türkçe)
+[English](#english) | [Türkçe](#turkce)
 
 ---
 
@@ -239,7 +239,7 @@ Open an [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) for 
 
 ---
 
-## Türkçe
+## Turkce
 
 [Envoy AI Gateway / Agent Router](https://github.com/theagentrouter/agent-router)
 (`aigateway.envoyproxy.io`) için bir [Headlamp](https://headlamp.dev) eklentisi. Kenar çubuğuna

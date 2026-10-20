@@ -1,6 +1,6 @@
 # Headlamp Plus — Headlamp plugin
 
-[English](#english) | [Türkçe](#türkçe)
+[English](#english) | [Türkçe](#turkce)
 
 ---
 
@@ -209,7 +209,7 @@ Open an [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) for 
 
 ---
 
-## Türkçe
+## Turkce
 
 Headlamp'in orijinal görünümünü korurken harici (out-of-tree) iyileştirmeler ve yapılandırma kuralları ekleyen
 bir [Headlamp](https://headlamp.dev) eklentisi. Headlamp çekirdek kodunu değiştirmeden

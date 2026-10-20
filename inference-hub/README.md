@@ -1,6 +1,6 @@
 # Inference Hub — Headlamp plugin
 
-[English](#english) | [Türkçe](#türkçe)
+[English](#english) | [Türkçe](#turkce)
 
 ---
 
@@ -263,7 +263,7 @@ Open an [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) for 
 
 ---
 
-## Türkçe
+## Turkce
 
 Inference Hub, [Headlamp](https://headlamp.dev)'i Kubernetes üzerinde LLM çalıştırmak için bir konsola
 dönüştürür. **KServe**, **llm-d** ve **Gateway API Inference Extension**, **vLLM** ve **NVIDIA GPU

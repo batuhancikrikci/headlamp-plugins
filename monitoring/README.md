@@ -1,6 +1,6 @@
 # Monitoring — Headlamp plugin
 
-[English](#english) | [Türkçe](#türkçe)
+[English](#english) | [Türkçe](#turkce)
 
 ---
 
@@ -302,7 +302,7 @@ Open an [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) for 
 
 ---
 
-## Türkçe
+## Turkce
 
 **kube-prometheus-stack** veya **Prometheus Operator** çalıştıran kümeler için bir
 [Headlamp](https://headlamp.dev) eklentisi. Kenar çubuğuna bir **Monitoring** bölümü ekler.

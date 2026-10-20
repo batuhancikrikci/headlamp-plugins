@@ -1,6 +1,6 @@
 # Multicluster Hub — Headlamp plugin
 
-[English](#english) | [Türkçe](#türkçe)
+[English](#english) | [Türkçe](#turkce)
 
 ---
 
@@ -303,7 +303,7 @@ Open an [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) for 
 
 ---
 
-## Türkçe
+## Turkce
 
 Bir [Open Cluster Management](https://open-cluster-management.io) (OCM) hub'ını yönetmek için geliştirilen
 Headlamp eklentisi; yönetilen kümeler ve kayıtları, cluster set'ler, placement'lar, ManifestWork

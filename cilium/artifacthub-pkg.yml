@@ -4,7 +4,7 @@ version: 0.1.0
 name: cilium
 displayName: Cilium
 createdAt: "2026-10-20T13:26:19Z"
-digest: "3d753bb6a85aa51080da052e2b127427fd8cf51deecc82003c6ba70b2984bc5b"
+digest: "d3e96abb4412e54bb2df6ad3fa7719259535b9ff76fff35e6f96a50f87d8e049"
 description: 'Headlamp plugin for operating Cilium: network policies, endpoints and identities, BGP, LB IPAM, egress gateway and Envoy configuration with guided forms and wizards'
 logoPath: docs/logo.png
 license: Apache-2.0

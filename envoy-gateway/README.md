@@ -1,6 +1,6 @@
 # Envoy Gateway — Headlamp plugin
 
-[English](#english) | [Türkçe](#türkçe)
+[English](#english) | [Türkçe](#turkce)
 
 ---
 
@@ -212,7 +212,7 @@ Open an [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) for 
 
 ---
 
-## Türkçe
+## Turkce
 
 [Envoy Gateway](https://gateway.envoyproxy.io) kaynaklarını (`gateway.envoyproxy.io`) yönetmek için
 bir [Headlamp](https://headlamp.dev) eklentisi. Kenar çubuğuna bir genel bakış sayfası ve her CRD için

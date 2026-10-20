@@ -1,6 +1,6 @@
 # Cilium — Headlamp plugin
 
-[English](#english) | [Türkçe](#türkçe)
+[English](#english) | [Türkçe](#turkce)
 
 ---
 
@@ -394,7 +394,7 @@ Open an [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) for 
 
 ---
 
-## Türkçe
+## Turkce
 
 [Cilium](https://cilium.io)'u Kubernetes arayüzünden yönetmek için bir [Headlamp](https://headlamp.dev)
 eklentisi. Kenar çubuğuna sağlık özeti, her Cilium CRD'si için yapılandırılmış görünümler, rehberli

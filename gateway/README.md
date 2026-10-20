@@ -1,6 +1,6 @@
 # Gateway API — Headlamp plugin
 
-[English](#english) | [Türkçe](#türkçe)
+[English](#english) | [Türkçe](#turkce)
 
 ---
 
@@ -309,7 +309,7 @@ Open an [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) for 
 
 ---
 
-## Türkçe
+## Turkce
 
 Kubernetes [Gateway API](https://gateway-api.sigs.k8s.io/) (`gateway.networking.k8s.io`) için bir
 [Headlamp](https://headlamp.dev) eklentisi. Headlamp'in yerleşik "Gateway (beta)" sayfalarının yerine
