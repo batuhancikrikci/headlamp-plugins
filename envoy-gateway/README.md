@@ -33,11 +33,11 @@ The UI is English only.
 
 **Overview**
 
-![Overview](docs/screenshots/overview.jpg)
+![Overview](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/envoy-gateway/docs/screenshots/overview.jpg)
 
 **SecurityPolicy wizard**
 
-![SecurityPolicy wizard](docs/screenshots/security-policy-wizard.jpg)
+![SecurityPolicy wizard](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/envoy-gateway/docs/screenshots/security-policy-wizard.jpg)
 
 ### Requirements
 
@@ -202,13 +202,13 @@ scripts/
 
 ### License
 
-Licensed under the [Apache License 2.0](LICENSE). Third-party components and trademark notices are listed in [NOTICE](NOTICE).
+Licensed under the [Apache License 2.0](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/envoy-gateway/LICENSE). Third-party components and trademark notices are listed in [NOTICE](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/envoy-gateway/NOTICE).
 
 This is an independent project; it is not affiliated with or endorsed by the Headlamp project or the projects it works with. Kubernetes, Headlamp, Envoy and Envoy Gateway are trademarks of their respective owners and are used only to identify the software this plugin works with. The package logo is based on the Envoy logo and is used for the same purpose only.
 
 ### Contributing
 
-Open an [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) for bugs and ideas. The contribution guidelines are in [CONTRIBUTING.md](../CONTRIBUTING.md) and security reports are handled as described in [SECURITY.md](../SECURITY.md).
+Open an [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) for bugs and ideas. The contribution guidelines are in [CONTRIBUTING.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/CONTRIBUTING.md) and security reports are handled as described in [SECURITY.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/SECURITY.md).
 
 ---
 
@@ -241,11 +241,11 @@ Arayüz yalnızca İngilizcedir.
 
 **Genel bakış**
 
-![Genel bakış](docs/screenshots/overview.jpg)
+![Genel bakış](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/envoy-gateway/docs/screenshots/overview.jpg)
 
 **SecurityPolicy sihirbazı**
 
-![SecurityPolicy sihirbazı](docs/screenshots/security-policy-wizard.jpg)
+![SecurityPolicy sihirbazı](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/envoy-gateway/docs/screenshots/security-policy-wizard.jpg)
 
 ### Gereksinimler
 
@@ -409,10 +409,10 @@ scripts/
 
 ### Lisans
 
-[Apache License 2.0](LICENSE) ile lisanslanmıştır. Üçüncü taraf bileşenler ve marka bildirimleri [NOTICE](NOTICE) dosyasındadır.
+[Apache License 2.0](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/envoy-gateway/LICENSE) ile lisanslanmıştır. Üçüncü taraf bileşenler ve marka bildirimleri [NOTICE](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/envoy-gateway/NOTICE) dosyasındadır.
 
 Bu bağımsız bir projedir; Headlamp projesiyle ya da birlikte çalıştığı projelerle bağlantılı değildir ve onlar tarafından onaylanmamıştır. Kubernetes, Headlamp, Envoy ve Envoy Gateway ilgili sahiplerinin ticari markalarıdır; yalnızca eklentinin birlikte çalıştığı yazılımı tanımlamak için kullanılır. Paket logosu, Envoy logosundan esinlenmiştir ve yalnızca aynı amaçla kullanılır.
 
 ### Katkıda bulunma
 
-Hata bildirimleri ve öneriler için [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) açın. Katkı kuralları [CONTRIBUTING.md](../CONTRIBUTING.md), güvenlik bildirimleri [SECURITY.md](../SECURITY.md) içindedir.
+Hata bildirimleri ve öneriler için [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) açın. Katkı kuralları [CONTRIBUTING.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/CONTRIBUTING.md), güvenlik bildirimleri [SECURITY.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/SECURITY.md) içindedir.

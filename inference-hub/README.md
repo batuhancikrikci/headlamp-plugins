@@ -44,19 +44,19 @@ workload** section with live engine metrics on Pod pages.
 
 **Command Center**
 
-![Command Center](docs/screenshots/command-center.jpg)
+![Command Center](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/inference-hub/docs/screenshots/command-center.jpg)
 
 **Model Catalog**
 
-![Model Catalog](docs/screenshots/model-catalog.jpg)
+![Model Catalog](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/inference-hub/docs/screenshots/model-catalog.jpg)
 
 **Deploy wizard**
 
-![Deploy wizard](docs/screenshots/deploy-wizard.jpg)
+![Deploy wizard](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/inference-hub/docs/screenshots/deploy-wizard.jpg)
 
 **Playground**
 
-![Playground](docs/screenshots/playground.jpg)
+![Playground](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/inference-hub/docs/screenshots/playground.jpg)
 
 ### Requirements
 
@@ -253,13 +253,13 @@ scripts/
 
 ### License
 
-Licensed under the [Apache License 2.0](LICENSE). Third-party components and trademark notices are listed in [NOTICE](NOTICE).
+Licensed under the [Apache License 2.0](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/inference-hub/LICENSE). Third-party components and trademark notices are listed in [NOTICE](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/inference-hub/NOTICE).
 
 This is an independent project; it is not affiliated with or endorsed by the Headlamp project or the projects it works with. Kubernetes, Headlamp, KServe, llm-d, vLLM, NVIDIA, Hugging Face and the names and logos of the model providers are trademarks of their respective owners and are used only to identify the software this plugin works with.
 
 ### Contributing
 
-Open an [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) for bugs and ideas. The contribution guidelines are in [CONTRIBUTING.md](../CONTRIBUTING.md) and security reports are handled as described in [SECURITY.md](../SECURITY.md).
+Open an [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) for bugs and ideas. The contribution guidelines are in [CONTRIBUTING.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/CONTRIBUTING.md) and security reports are handled as described in [SECURITY.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/SECURITY.md).
 
 ---
 
@@ -303,19 +303,19 @@ ve Pod sayfalarında canlı engine metrikleriyle bir **AI iş yükü** bölümü
 
 **Command Center**
 
-![Command Center](docs/screenshots/command-center.jpg)
+![Command Center](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/inference-hub/docs/screenshots/command-center.jpg)
 
 **Model Catalog**
 
-![Model Catalog](docs/screenshots/model-catalog.jpg)
+![Model Catalog](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/inference-hub/docs/screenshots/model-catalog.jpg)
 
 **Deploy wizard**
 
-![Deploy wizard](docs/screenshots/deploy-wizard.jpg)
+![Deploy wizard](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/inference-hub/docs/screenshots/deploy-wizard.jpg)
 
 **Playground**
 
-![Playground](docs/screenshots/playground.jpg)
+![Playground](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/inference-hub/docs/screenshots/playground.jpg)
 
 ### Gereksinimler
 
@@ -512,10 +512,10 @@ scripts/
 
 ### Lisans
 
-[Apache License 2.0](LICENSE) ile lisanslanmıştır. Üçüncü taraf bileşenler ve marka bildirimleri [NOTICE](NOTICE) dosyasındadır.
+[Apache License 2.0](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/inference-hub/LICENSE) ile lisanslanmıştır. Üçüncü taraf bileşenler ve marka bildirimleri [NOTICE](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/inference-hub/NOTICE) dosyasındadır.
 
 Bu bağımsız bir projedir; Headlamp projesiyle ya da birlikte çalıştığı projelerle bağlantılı değildir ve onlar tarafından onaylanmamıştır. Kubernetes, Headlamp, KServe, llm-d, vLLM, NVIDIA, Hugging Face ile model sağlayıcılarının adları ve logoları ilgili sahiplerinin ticari markalarıdır; yalnızca eklentinin birlikte çalıştığı yazılımı tanımlamak için kullanılır.
 
 ### Katkıda bulunma
 
-Hata bildirimleri ve öneriler için [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) açın. Katkı kuralları [CONTRIBUTING.md](../CONTRIBUTING.md), güvenlik bildirimleri [SECURITY.md](../SECURITY.md) içindedir.
+Hata bildirimleri ve öneriler için [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) açın. Katkı kuralları [CONTRIBUTING.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/CONTRIBUTING.md), güvenlik bildirimleri [SECURITY.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/SECURITY.md) içindedir.

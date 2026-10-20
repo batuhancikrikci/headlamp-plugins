@@ -98,19 +98,19 @@ Events are shown on every detail page.
 
 **Overview**
 
-![Overview](docs/screenshots/overview.jpg)
+![Overview](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/gateway/docs/screenshots/overview.jpg)
 
 **Topology**
 
-![Topology](docs/screenshots/topology.jpg)
+![Topology](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/gateway/docs/screenshots/topology.jpg)
 
 **Gateway detail**
 
-![Gateway detail](docs/screenshots/gateway-detail.jpg)
+![Gateway detail](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/gateway/docs/screenshots/gateway-detail.jpg)
 
 **HTTPRoute detail**
 
-![HTTPRoute detail](docs/screenshots/httproute-detail.jpg)
+![HTTPRoute detail](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/gateway/docs/screenshots/httproute-detail.jpg)
 
 ### Requirements
 
@@ -299,13 +299,13 @@ scripts/
 
 ### License
 
-Licensed under the [Apache License 2.0](LICENSE). Third-party components and trademark notices are listed in [NOTICE](NOTICE).
+Licensed under the [Apache License 2.0](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/gateway/LICENSE). Third-party components and trademark notices are listed in [NOTICE](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/gateway/NOTICE).
 
 This is an independent project; it is not affiliated with or endorsed by the Headlamp project or the projects it works with. Kubernetes, Headlamp and Envoy Gateway are trademarks of their respective owners and are used only to identify the software this plugin works with.
 
 ### Contributing
 
-Open an [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) for bugs and ideas. The contribution guidelines are in [CONTRIBUTING.md](../CONTRIBUTING.md) and security reports are handled as described in [SECURITY.md](../SECURITY.md).
+Open an [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) for bugs and ideas. The contribution guidelines are in [CONTRIBUTING.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/CONTRIBUTING.md) and security reports are handled as described in [SECURITY.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/SECURITY.md).
 
 ---
 
@@ -405,19 +405,19 @@ Her detay sayfasında olaylar gösterilir.
 
 **Genel bakış**
 
-![Genel bakış](docs/screenshots/overview.jpg)
+![Genel bakış](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/gateway/docs/screenshots/overview.jpg)
 
 **Topoloji**
 
-![Topoloji](docs/screenshots/topology.jpg)
+![Topoloji](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/gateway/docs/screenshots/topology.jpg)
 
 **Gateway detayı**
 
-![Gateway detayı](docs/screenshots/gateway-detail.jpg)
+![Gateway detayı](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/gateway/docs/screenshots/gateway-detail.jpg)
 
 **HTTPRoute detayı**
 
-![HTTPRoute detayı](docs/screenshots/httproute-detail.jpg)
+![HTTPRoute detayı](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/gateway/docs/screenshots/httproute-detail.jpg)
 
 ### Gereksinimler
 
@@ -604,10 +604,10 @@ scripts/
 
 ### Lisans
 
-[Apache License 2.0](LICENSE) ile lisanslanmıştır. Üçüncü taraf bileşenler ve marka bildirimleri [NOTICE](NOTICE) dosyasındadır.
+[Apache License 2.0](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/gateway/LICENSE) ile lisanslanmıştır. Üçüncü taraf bileşenler ve marka bildirimleri [NOTICE](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/gateway/NOTICE) dosyasındadır.
 
 Bu bağımsız bir projedir; Headlamp projesiyle ya da birlikte çalıştığı projelerle bağlantılı değildir ve onlar tarafından onaylanmamıştır. Kubernetes, Headlamp ve Envoy Gateway ilgili sahiplerinin ticari markalarıdır; yalnızca eklentinin birlikte çalıştığı yazılımı tanımlamak için kullanılır.
 
 ### Katkıda bulunma
 
-Hata bildirimleri ve öneriler için [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) açın. Katkı kuralları [CONTRIBUTING.md](../CONTRIBUTING.md), güvenlik bildirimleri [SECURITY.md](../SECURITY.md) içindedir.
+Hata bildirimleri ve öneriler için [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) açın. Katkı kuralları [CONTRIBUTING.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/CONTRIBUTING.md), güvenlik bildirimleri [SECURITY.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/SECURITY.md) içindedir.

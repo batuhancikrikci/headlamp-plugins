@@ -66,15 +66,15 @@ and can be applied again.
 
 **Overview**
 
-![Overview](docs/screenshots/overview.jpg)
+![Overview](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/cilium/docs/screenshots/overview.jpg)
 
 **Network policy wizard**
 
-![Network policy wizard](docs/screenshots/policy-wizard.jpg)
+![Network policy wizard](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/cilium/docs/screenshots/policy-wizard.jpg)
 
 **BGP**
 
-![BGP](docs/screenshots/bgp.jpg)
+![BGP](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/cilium/docs/screenshots/bgp.jpg)
 
 ### Requirements
 
@@ -384,13 +384,13 @@ scripts/
 
 ### License
 
-Licensed under the [Apache License 2.0](LICENSE). Third-party components and trademark notices are listed in [NOTICE](NOTICE).
+Licensed under the [Apache License 2.0](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/cilium/LICENSE). Third-party components and trademark notices are listed in [NOTICE](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/cilium/NOTICE).
 
 This is an independent project; it is not affiliated with or endorsed by the Headlamp project or the projects it works with. Kubernetes, Headlamp, Cilium and Hubble are trademarks of their respective owners and are used only to identify the software this plugin works with.
 
 ### Contributing
 
-Open an [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) for bugs and ideas. The contribution guidelines are in [CONTRIBUTING.md](../CONTRIBUTING.md) and security reports are handled as described in [SECURITY.md](../SECURITY.md).
+Open an [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) for bugs and ideas. The contribution guidelines are in [CONTRIBUTING.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/CONTRIBUTING.md) and security reports are handled as described in [SECURITY.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/SECURITY.md).
 
 ---
 
@@ -456,15 +456,15 @@ düzeltme sonrası güvenle tekrar çalıştırılabilir (idempotent).
 
 **Genel bakış**
 
-![Genel bakış](docs/screenshots/overview.jpg)
+![Genel bakış](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/cilium/docs/screenshots/overview.jpg)
 
 **Ağ politikası sihirbazı**
 
-![Ağ politikası sihirbazı](docs/screenshots/policy-wizard.jpg)
+![Ağ politikası sihirbazı](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/cilium/docs/screenshots/policy-wizard.jpg)
 
 **BGP**
 
-![BGP](docs/screenshots/bgp.jpg)
+![BGP](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/cilium/docs/screenshots/bgp.jpg)
 
 ### Gereksinimler
 
@@ -773,10 +773,10 @@ scripts/
 
 ### Lisans
 
-[Apache License 2.0](LICENSE) ile lisanslanmıştır. Üçüncü taraf bileşenler ve marka bildirimleri [NOTICE](NOTICE) dosyasındadır.
+[Apache License 2.0](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/cilium/LICENSE) ile lisanslanmıştır. Üçüncü taraf bileşenler ve marka bildirimleri [NOTICE](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/cilium/NOTICE) dosyasındadır.
 
 Bu bağımsız bir projedir; Headlamp projesiyle ya da birlikte çalıştığı projelerle bağlantılı değildir ve onlar tarafından onaylanmamıştır. Kubernetes, Headlamp, Cilium ve Hubble ilgili sahiplerinin ticari markalarıdır; yalnızca eklentinin birlikte çalıştığı yazılımı tanımlamak için kullanılır.
 
 ### Katkıda bulunma
 
-Hata bildirimleri ve öneriler için [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) açın. Katkı kuralları [CONTRIBUTING.md](../CONTRIBUTING.md), güvenlik bildirimleri [SECURITY.md](../SECURITY.md) içindedir.
+Hata bildirimleri ve öneriler için [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) açın. Katkı kuralları [CONTRIBUTING.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/CONTRIBUTING.md), güvenlik bildirimleri [SECURITY.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/SECURITY.md) içindedir.

@@ -31,11 +31,11 @@ returns to its stock themes and language selector.
 
 **Cluster overview**
 
-![Cluster overview](docs/screenshots/cluster-overview.jpg)
+![Cluster overview](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/headlamp-plus/docs/screenshots/cluster-overview.jpg)
 
 **Workloads overview**
 
-![Workloads overview](docs/screenshots/workloads-overview.jpg)
+![Workloads overview](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/headlamp-plus/docs/screenshots/workloads-overview.jpg)
 
 ### Requirements
 
@@ -199,13 +199,13 @@ scripts/
 
 ### License
 
-Licensed under the [Apache License 2.0](LICENSE). Third-party components and trademark notices are listed in [NOTICE](NOTICE).
+Licensed under the [Apache License 2.0](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/headlamp-plus/LICENSE). Third-party components and trademark notices are listed in [NOTICE](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/headlamp-plus/NOTICE).
 
 This is an independent project; it is not affiliated with or endorsed by the Headlamp project or the projects it works with. Kubernetes and Headlamp are trademarks of their respective owners and are used only to identify the software this plugin works with. The package logo is based on the Headlamp logo and is used for the same purpose only.
 
 ### Contributing
 
-Open an [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) for bugs and ideas. The contribution guidelines are in [CONTRIBUTING.md](../CONTRIBUTING.md) and security reports are handled as described in [SECURITY.md](../SECURITY.md).
+Open an [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) for bugs and ideas. The contribution guidelines are in [CONTRIBUTING.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/CONTRIBUTING.md) and security reports are handled as described in [SECURITY.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/SECURITY.md).
 
 ---
 
@@ -236,11 +236,11 @@ bu durumda standart temalarına ve dil seçicisine döner.
 
 **Küme genel bakışı**
 
-![Küme genel bakışı](docs/screenshots/cluster-overview.jpg)
+![Küme genel bakışı](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/headlamp-plus/docs/screenshots/cluster-overview.jpg)
 
 **İş yükleri genel bakışı**
 
-![İş yükleri genel bakışı](docs/screenshots/workloads-overview.jpg)
+![İş yükleri genel bakışı](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/headlamp-plus/docs/screenshots/workloads-overview.jpg)
 
 ### Gereksinimler
 
@@ -404,10 +404,10 @@ scripts/
 
 ### Lisans
 
-[Apache License 2.0](LICENSE) ile lisanslanmıştır. Üçüncü taraf bileşenler ve marka bildirimleri [NOTICE](NOTICE) dosyasındadır.
+[Apache License 2.0](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/headlamp-plus/LICENSE) ile lisanslanmıştır. Üçüncü taraf bileşenler ve marka bildirimleri [NOTICE](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/headlamp-plus/NOTICE) dosyasındadır.
 
 Bu bağımsız bir projedir; Headlamp projesiyle ya da birlikte çalıştığı projelerle bağlantılı değildir ve onlar tarafından onaylanmamıştır. Kubernetes ve Headlamp ilgili sahiplerinin ticari markalarıdır; yalnızca eklentinin birlikte çalıştığı yazılımı tanımlamak için kullanılır. Paket logosu, Headlamp logosundan esinlenmiştir ve yalnızca aynı amaçla kullanılır.
 
 ### Katkıda bulunma
 
-Hata bildirimleri ve öneriler için [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) açın. Katkı kuralları [CONTRIBUTING.md](../CONTRIBUTING.md), güvenlik bildirimleri [SECURITY.md](../SECURITY.md) içindedir.
+Hata bildirimleri ve öneriler için [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) açın. Katkı kuralları [CONTRIBUTING.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/CONTRIBUTING.md), güvenlik bildirimleri [SECURITY.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/SECURITY.md) içindedir.

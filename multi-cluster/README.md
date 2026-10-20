@@ -113,7 +113,7 @@ RBAC allows them (SelfSubjectAccessReview through Headlamp's `AuthVisible`).
 
 **Overview**
 
-![Overview](docs/screenshots/overview.jpg)
+![Overview](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/multi-cluster/docs/screenshots/overview.jpg)
 
 ### Requirements
 
@@ -231,8 +231,8 @@ APIs are not installed are hidden; a tab whose kind is missing, or served only i
 plugin does not know, shows a clear "not installed" / "unsupported version" state. The add-on
 APIs are used as `v1beta1` on OCM v1.2.0+ and as `v1alpha1` before; version-dependent form fields
 (e.g. Placement CEL selectors, `sortBy`, MWRS cascade deletion) are switched on from the CRD
-schema. See [docs/API_MATRIX.md](docs/API_MATRIX.md) for every kind, version and field change,
-and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the design.
+schema. See [docs/API_MATRIX.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/multi-cluster/docs/API_MATRIX.md) for every kind, version and field change,
+and [docs/ARCHITECTURE.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/multi-cluster/docs/ARCHITECTURE.md) for the design.
 
 ### Development
 
@@ -293,13 +293,13 @@ scripts/
 
 ### License
 
-Licensed under the [Apache License 2.0](LICENSE). Third-party components and trademark notices are listed in [NOTICE](NOTICE).
+Licensed under the [Apache License 2.0](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/multi-cluster/LICENSE). Third-party components and trademark notices are listed in [NOTICE](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/multi-cluster/NOTICE).
 
 This is an independent project; it is not affiliated with or endorsed by the Headlamp project or the projects it works with. Kubernetes, Headlamp, Open Cluster Management and Argo CD are trademarks of their respective owners and are used only to identify the software this plugin works with.
 
 ### Contributing
 
-Open an [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) for bugs and ideas. The contribution guidelines are in [CONTRIBUTING.md](../CONTRIBUTING.md) and security reports are handled as described in [SECURITY.md](../SECURITY.md).
+Open an [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) for bugs and ideas. The contribution guidelines are in [CONTRIBUTING.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/CONTRIBUTING.md) and security reports are handled as described in [SECURITY.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/SECURITY.md).
 
 ---
 
@@ -411,7 +411,7 @@ gösterilir (Headlamp'in `AuthVisible` bileşeni üzerinden SelfSubjectAccessRev
 
 **Genel bakış**
 
-![Genel bakış](docs/screenshots/overview.jpg)
+![Genel bakış](https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/multi-cluster/docs/screenshots/overview.jpg)
 
 ### Gereksinimler
 
@@ -530,8 +530,8 @@ olmayan bölümler gizlenir; türü eksik ya da yalnızca eklentinin bilmediği 
 sekme açık bir "kurulu değil" / "desteklenmeyen sürüm" durumu gösterir. Add-on API'leri OCM v1.2.0+
 üzerinde `v1beta1`, öncesinde `v1alpha1` olarak kullanılır; sürüme bağlı form alanları (örneğin
 Placement CEL seçicileri, `sortBy`, MWRS cascade silme) CRD şemasına göre açılır. Her tür, sürüm ve
-alan değişikliği için [docs/API_MATRIX.md](docs/API_MATRIX.md), tasarım için
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) dosyasına bakın.
+alan değişikliği için [docs/API_MATRIX.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/multi-cluster/docs/API_MATRIX.md), tasarım için
+[docs/ARCHITECTURE.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/multi-cluster/docs/ARCHITECTURE.md) dosyasına bakın.
 
 ### Geliştirme
 
@@ -592,10 +592,10 @@ scripts/
 
 ### Lisans
 
-[Apache License 2.0](LICENSE) ile lisanslanmıştır. Üçüncü taraf bileşenler ve marka bildirimleri [NOTICE](NOTICE) dosyasındadır.
+[Apache License 2.0](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/multi-cluster/LICENSE) ile lisanslanmıştır. Üçüncü taraf bileşenler ve marka bildirimleri [NOTICE](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/multi-cluster/NOTICE) dosyasındadır.
 
 Bu bağımsız bir projedir; Headlamp projesiyle ya da birlikte çalıştığı projelerle bağlantılı değildir ve onlar tarafından onaylanmamıştır. Kubernetes, Headlamp, Open Cluster Management ve Argo CD ilgili sahiplerinin ticari markalarıdır; yalnızca eklentinin birlikte çalıştığı yazılımı tanımlamak için kullanılır.
 
 ### Katkıda bulunma
 
-Hata bildirimleri ve öneriler için [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) açın. Katkı kuralları [CONTRIBUTING.md](../CONTRIBUTING.md), güvenlik bildirimleri [SECURITY.md](../SECURITY.md) içindedir.
+Hata bildirimleri ve öneriler için [issue](https://github.com/batuhancikrikci/headlamp-plugins/issues) açın. Katkı kuralları [CONTRIBUTING.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/CONTRIBUTING.md), güvenlik bildirimleri [SECURITY.md](https://github.com/batuhancikrikci/headlamp-plugins/blob/main/SECURITY.md) içindedir.
