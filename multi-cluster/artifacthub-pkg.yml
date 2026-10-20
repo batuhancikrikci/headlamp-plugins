@@ -3,7 +3,7 @@
 version: 0.1.0
 name: multi-cluster
 displayName: Multicluster Hub
-createdAt: '2026-10-18T00:00:00Z'
+createdAt: "2026-10-20T13:28:29Z"
 description: 'Multicluster Hub: Headlamp plugin for managing Open Cluster Management (OCM) hubs — clusters, cluster sets, placements, ManifestWorks, add-ons, application subscriptions and GitOps, with guided forms and wizards'
 logoPath: docs/logo.png
 license: Apache-2.0
@@ -50,8 +50,11 @@ install: |
           source: https://artifacthub.io/packages/headlamp/batuhancikrikci-headlamp-plugins/multi-cluster
           version: 0.1.0
   ```
+changes:
+  - kind: added
+    description: "First public release."
 annotations:
   headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/multi-cluster-v0.1.0/multi-cluster-0.1.0.tar.gz
-  headlamp/plugin/archive-checksum: sha256:set-by-the-release-workflow
+  headlamp/plugin/archive-checksum: sha256:36a64070ed3c324d79cbbb070bf23f686af524da65a0252d5bca5082932bed33
   headlamp/plugin/version-compat: '>=0.45.0'
   headlamp/plugin/distro-compat: in-cluster,web,desktop
