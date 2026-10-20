@@ -7,6 +7,7 @@ createdAt: "2026-10-20T13:26:51Z"
 description: 'Headlamp plugin for the Kubernetes Gateway API: overview, topology, guided forms, wizards and relationship-aware detail views'
 logoPath: docs/logo.png
 license: Apache-2.0
+category: networking
 homeURL: https://github.com/batuhancikrikci/headlamp-plugins/tree/main/gateway
 keywords:
   - headlamp

@@ -7,6 +7,7 @@ createdAt: "2026-10-20T13:26:19Z"
 description: 'Headlamp plugin for operating Cilium: network policies, endpoints and identities, BGP, LB IPAM, egress gateway and Envoy configuration with guided forms and wizards'
 logoPath: docs/logo.png
 license: Apache-2.0
+category: networking
 homeURL: https://github.com/batuhancikrikci/headlamp-plugins/tree/main/cilium
 keywords:
   - headlamp

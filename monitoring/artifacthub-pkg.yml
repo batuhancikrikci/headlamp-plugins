@@ -7,6 +7,7 @@ createdAt: "2026-10-20T13:28:08Z"
 description: 'Headlamp plugin for managing kube-prometheus-stack (Prometheus Operator) resources'
 logoPath: docs/logo.png
 license: Apache-2.0
+category: monitoring-logging
 homeURL: https://github.com/batuhancikrikci/headlamp-plugins/tree/main/monitoring
 keywords:
   - headlamp

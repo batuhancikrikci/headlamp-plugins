@@ -7,6 +7,7 @@ createdAt: "2026-10-20T13:26:26Z"
 description: "Headlamp Plus: Headlamp's original light and dark themes as the only choices, an English-only UI, cluster and workloads dashboards and same-tab OIDC sign-in"
 logoPath: docs/logo.png
 license: Apache-2.0
+category: monitoring-logging
 homeURL: https://github.com/batuhancikrikci/headlamp-plugins/tree/main/headlamp-plus
 keywords:
   - headlamp
