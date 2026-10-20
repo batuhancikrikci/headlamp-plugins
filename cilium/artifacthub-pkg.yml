@@ -3,7 +3,7 @@
 version: 0.1.0
 name: cilium
 displayName: Cilium
-createdAt: '2026-10-18T00:00:00Z'
+createdAt: "2026-10-20T13:26:19Z"
 description: 'Headlamp plugin for operating Cilium: network policies, endpoints and identities, BGP, LB IPAM, egress gateway and Envoy configuration with guided forms and wizards'
 logoPath: docs/logo.png
 license: Apache-2.0
@@ -54,8 +54,11 @@ install: |
           source: https://artifacthub.io/packages/headlamp/batuhancikrikci-headlamp-plugins/cilium
           version: 0.1.0
   ```
+changes:
+  - kind: added
+    description: "First public release."
 annotations:
   headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/cilium-v0.1.0/cilium-0.1.0.tar.gz
-  headlamp/plugin/archive-checksum: sha256:set-by-the-release-workflow
+  headlamp/plugin/archive-checksum: sha256:7ec50ac865ef6e5bf573cb8efd977f6f69ffef6d4c8c255df00e08d215b360ec
   headlamp/plugin/version-compat: '>=0.45.0'
   headlamp/plugin/distro-compat: in-cluster,web,desktop
