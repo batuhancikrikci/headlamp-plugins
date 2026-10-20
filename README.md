@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/batuhancikrikci/headlamp-plugins/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/batuhancikrikci/headlamp-plugins/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/batuhancikrikci-headlamp-plugins)](https://artifacthub.io/packages/search?repo=batuhancikrikci-headlamp-plugins)
 
 [English](#english) | [Türkçe](#türkçe)
 
