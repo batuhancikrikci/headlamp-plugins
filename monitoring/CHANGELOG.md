@@ -4,6 +4,6 @@ All notable changes to the Monitoring plugin are documented here. The format fol
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the plugin uses
 [semantic versioning](https://semver.org/).
 
-## [0.3.0] — unreleased
+## [0.3.0] — 2026-10-20
 
 First public release.

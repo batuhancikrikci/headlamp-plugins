@@ -3,7 +3,7 @@
 version: 0.3.0
 name: monitoring
 displayName: Monitoring
-createdAt: '2026-10-18T00:00:00Z'
+createdAt: "2026-10-20T13:28:08Z"
 description: 'Headlamp plugin for managing kube-prometheus-stack (Prometheus Operator) resources'
 logoPath: docs/logo.png
 license: Apache-2.0
@@ -53,8 +53,11 @@ install: |
           source: https://artifacthub.io/packages/headlamp/batuhancikrikci-headlamp-plugins/monitoring
           version: 0.3.0
   ```
+changes:
+  - kind: added
+    description: "First public release."
 annotations:
   headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/monitoring-v0.3.0/monitoring-0.3.0.tar.gz
-  headlamp/plugin/archive-checksum: sha256:set-by-the-release-workflow
+  headlamp/plugin/archive-checksum: sha256:46f3b13b84cf9e6a2a739dbee916f1b0da96c054848bc3a98b91e3f729e7dabd
   headlamp/plugin/version-compat: '>=0.45.0'
   headlamp/plugin/distro-compat: in-cluster,web,desktop
