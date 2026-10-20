@@ -4,6 +4,10 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    # Major versions can change behaviour; they are upgraded deliberately, not by Dependabot.
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
   - package-ecosystem: npm
     directories:
       - /agentrouter
@@ -16,6 +20,9 @@ updates:
       - /multi-cluster
     schedule:
       interval: monthly
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
     groups:
       headlamp-plugin:
         patterns: ['@kinvolk/headlamp-plugin']
