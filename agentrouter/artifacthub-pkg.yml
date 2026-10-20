@@ -3,7 +3,7 @@
 version: 0.2.0
 name: agentrouter
 displayName: Agent Router
-createdAt: '2026-10-18T00:00:00Z'
+createdAt: "2026-10-20T13:26:50Z"
 description: 'Headlamp plugin for Envoy AI Gateway (Agent Router) — manage AIGatewayRoute, AIServiceBackend, BackendSecurityPolicy, MCPRoute, QuotaPolicy, and GatewayConfig CRDs'
 logoPath: docs/logo.png
 license: Apache-2.0
@@ -52,8 +52,11 @@ install: |
           source: https://artifacthub.io/packages/headlamp/batuhancikrikci-headlamp-plugins/agentrouter
           version: 0.2.0
   ```
+changes:
+  - kind: added
+    description: "First public release."
 annotations:
   headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/agentrouter-v0.2.0/agentrouter-0.2.0.tar.gz
-  headlamp/plugin/archive-checksum: sha256:set-by-the-release-workflow
+  headlamp/plugin/archive-checksum: sha256:f880ef4f47f795dcca08c8d66dee9145c4b2cd23283323acd1b4d1c59b085523
   headlamp/plugin/version-compat: '>=0.45.0'
   headlamp/plugin/distro-compat: in-cluster,web,desktop
