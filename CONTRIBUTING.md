@@ -22,7 +22,8 @@ Every plugin lives in its own directory and is built, tested and released on its
   scripts/         build-icons.mjs and deploy.mjs, identical in every plugin
   package.json     Scripts, dependencies and metadata
   artifacthub-pkg.yml, CHANGELOG.md, LICENSE, NOTICE
-scripts/           Repository tools (check-common.mjs, update-artifacthub.mjs, deploy-all.sh)
+scripts/           Repository tools (check-common.mjs, update-artifacthub.mjs, artifacthub-digest.mjs,
+                   deploy-all.sh)
 ```
 
 ## Development
@@ -57,6 +58,10 @@ props.
 - Add or update unit tests for logic changes; pure logic lives in modules without Headlamp imports
   so it can be tested.
 - Include screenshots for UI changes.
+- After changing a plugin's `README.md`, `artifacthub-pkg.yml` or logo, run
+  `node scripts/artifacthub-digest.mjs` so that Artifact Hub and the Headlamp plugin catalog pick
+  up the change. Links in a plugin's README must be absolute: Artifact Hub and the catalog show the
+  README outside the repository.
 - The UI text is English; keep it short and consistent with the existing wording.
 
 Commit messages use the form `<plugin>: <what changed>`, for example

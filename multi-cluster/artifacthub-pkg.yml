@@ -4,6 +4,7 @@ version: 0.1.0
 name: multi-cluster
 displayName: Multicluster Hub
 createdAt: "2026-10-20T13:28:29Z"
+digest: "54938886f9ecc618d7da2fc342824e7fa2e92be155ea8b7804b5c56b8fbc5a08"
 description: 'Multicluster Hub: Headlamp plugin for managing Open Cluster Management (OCM) hubs — clusters, cluster sets, placements, ManifestWorks, add-ons, application subscriptions and GitOps, with guided forms and wizards'
 logoPath: docs/logo.png
 license: Apache-2.0

@@ -10,10 +10,12 @@
 // in the heading of the version's CHANGELOG.md entry with today's date. `changes` is taken from
 // that CHANGELOG entry: items under "### Added", "### Fixed", ... get the matching Artifact Hub
 // kind; items without a heading count as "added" in the first release and "changed" later.
-// Used by the release workflow; it can also be run by hand.
+// Finally it updates the `digest` (see artifacthub-digest.mjs), so Artifact Hub processes the
+// version. Used by the release workflow; it can also be run by hand.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { writeDigest } from './artifacthub-digest.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const [plugin, version, archiveUrl, checksum] = process.argv.slice(2);
@@ -114,4 +116,5 @@ text = text.replace(/^annotations:/m, `${changesBlock}annotations:`);
 
 fs.writeFileSync(file, text);
 fs.writeFileSync(changelogFile, changelog);
+writeDigest(plugin);
 console.log(`${plugin}/artifacthub-pkg.yml now points at ${version} (${changes.length} change(s)).`);

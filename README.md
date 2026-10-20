@@ -52,7 +52,7 @@ on its own.
   scripts/             build-icons.mjs, deploy.mjs (identical in every plugin)
   artifacthub-pkg.yml  Artifact Hub package metadata
   CHANGELOG.md, LICENSE, NOTICE, README.md
-scripts/               Repository tools: check-common.mjs, update-artifacthub.mjs, deploy-all.sh
+scripts/               Repository tools: check-common.mjs, update-artifacthub.mjs, artifacthub-digest.mjs, deploy-all.sh
 .github/               CI and release workflows, templates, Dependabot
 ```
 
@@ -174,7 +174,7 @@ yayınlanır.
   scripts/             build-icons.mjs, deploy.mjs (tüm eklentilerde aynı)
   artifacthub-pkg.yml  Artifact Hub paket bilgileri
   CHANGELOG.md, LICENSE, NOTICE, README.md
-scripts/               Depo araçları: check-common.mjs, update-artifacthub.mjs, deploy-all.sh
+scripts/               Depo araçları: check-common.mjs, update-artifacthub.mjs, artifacthub-digest.mjs, deploy-all.sh
 .github/               CI ve sürüm iş akışları, şablonlar, Dependabot
 ```
 
