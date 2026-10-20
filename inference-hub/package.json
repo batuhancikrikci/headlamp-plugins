@@ -52,11 +52,11 @@
     "storybook-build": "npm run icons && headlamp-plugin storybook-build"
   },
   "dependencies": {
-    "js-yaml": "^4.3.2"
+    "js-yaml": "^5.5.0"
   },
   "devDependencies": {
     "@iconify-json/mdi": "^1.2.3",
-    "@iconify-json/simple-icons": "^1.2.97",
+    "@iconify-json/simple-icons": "^1.2.100",
     "@kinvolk/headlamp-plugin": "^0.14.0",
     "@types/js-yaml": "^4.0.9"
   },
