@@ -1,0 +1,62 @@
+# Artifact Hub metadata of the Inference Hub plugin. The release workflow updates version, createdAt,
+# archive-url and archive-checksum when a tag named inference-hub-v<version> is pushed.
+version: 0.2.1
+name: inference-hub
+displayName: Inference Hub
+createdAt: '2026-10-18T00:00:00Z'
+description: 'Inference Hub: an AI/LLM platform experience for Headlamp covering KServe, llm-d, the Gateway API Inference Extension, vLLM and the NVIDIA GPU Operator'
+logoPath: docs/logo.png
+license: Apache-2.0
+homeURL: https://github.com/batuhancikrikci/headlamp-plugins/tree/main/inference-hub
+keywords:
+  - headlamp
+  - headlamp-plugin
+  - kubernetes
+  - kserve
+  - llm-d
+  - vllm
+  - gpu
+  - inference
+provider:
+  name: Batuhan CIKRIKCI
+maintainers:
+  - name: Batuhan CIKRIKCI
+links:
+  - name: Source code
+    url: https://github.com/batuhancikrikci/headlamp-plugins/tree/main/inference-hub
+  - name: Issues
+    url: https://github.com/batuhancikrikci/headlamp-plugins/issues
+screenshots:
+  - title: 'Command Center'
+    url: https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/inference-hub/docs/screenshots/command-center.jpg
+  - title: 'Model Catalog'
+    url: https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/inference-hub/docs/screenshots/model-catalog.jpg
+  - title: 'Deploy wizard'
+    url: https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/inference-hub/docs/screenshots/deploy-wizard.jpg
+  - title: 'Playground'
+    url: https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/inference-hub/docs/screenshots/playground.jpg
+install: |
+  ## Headlamp desktop
+
+  Open the plugin catalog in Headlamp, search for "Inference Hub" and install it. Alternatively,
+  download `inference-hub-0.2.1.tar.gz` from the GitHub release and extract it into the Headlamp plugins
+  directory (for example `~/.config/Headlamp/plugins/` on Linux), then reload Headlamp.
+
+  ## Headlamp in-cluster
+
+  Enable the plugin manager of the Headlamp Helm chart:
+
+  ```yaml
+  pluginsManager:
+    enabled: true
+    configContent: |
+      plugins:
+        - name: inference-hub
+          source: https://artifacthub.io/packages/headlamp/batuhancikrikci-headlamp-plugins/inference-hub
+          version: 0.2.1
+  ```
+annotations:
+  headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/inference-hub-v0.2.1/inference-hub-0.2.1.tar.gz
+  headlamp/plugin/archive-checksum: sha256:set-by-the-release-workflow
+  headlamp/plugin/version-compat: '>=0.45.0'
+  headlamp/plugin/distro-compat: in-cluster,web,desktop

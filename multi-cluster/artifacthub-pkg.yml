@@ -1,0 +1,57 @@
+# Artifact Hub metadata of the Multicluster Hub plugin. The release workflow updates version, createdAt,
+# archive-url and archive-checksum when a tag named multi-cluster-v<version> is pushed.
+version: 0.1.0
+name: multi-cluster
+displayName: Multicluster Hub
+createdAt: '2026-10-18T00:00:00Z'
+description: 'Multicluster Hub: Headlamp plugin for managing Open Cluster Management (OCM) hubs — clusters, cluster sets, placements, ManifestWorks, add-ons, application subscriptions and GitOps, with guided forms and wizards'
+logoPath: docs/logo.png
+license: Apache-2.0
+homeURL: https://github.com/batuhancikrikci/headlamp-plugins/tree/main/multi-cluster
+keywords:
+  - headlamp
+  - headlamp-plugin
+  - kubernetes
+  - kubernetes-ui
+  - open-cluster-management
+  - ocm
+  - multi-cluster
+  - placement
+  - manifestwork
+provider:
+  name: Batuhan CIKRIKCI
+maintainers:
+  - name: Batuhan CIKRIKCI
+links:
+  - name: Source code
+    url: https://github.com/batuhancikrikci/headlamp-plugins/tree/main/multi-cluster
+  - name: Issues
+    url: https://github.com/batuhancikrikci/headlamp-plugins/issues
+screenshots:
+  - title: 'Overview'
+    url: https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/multi-cluster/docs/screenshots/overview.jpg
+install: |
+  ## Headlamp desktop
+
+  Open the plugin catalog in Headlamp, search for "Multicluster Hub" and install it. Alternatively,
+  download `multi-cluster-0.1.0.tar.gz` from the GitHub release and extract it into the Headlamp plugins
+  directory (for example `~/.config/Headlamp/plugins/` on Linux), then reload Headlamp.
+
+  ## Headlamp in-cluster
+
+  Enable the plugin manager of the Headlamp Helm chart:
+
+  ```yaml
+  pluginsManager:
+    enabled: true
+    configContent: |
+      plugins:
+        - name: multi-cluster
+          source: https://artifacthub.io/packages/headlamp/batuhancikrikci-headlamp-plugins/multi-cluster
+          version: 0.1.0
+  ```
+annotations:
+  headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/multi-cluster-v0.1.0/multi-cluster-0.1.0.tar.gz
+  headlamp/plugin/archive-checksum: sha256:set-by-the-release-workflow
+  headlamp/plugin/version-compat: '>=0.45.0'
+  headlamp/plugin/distro-compat: in-cluster,web,desktop

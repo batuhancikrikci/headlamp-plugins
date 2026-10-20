@@ -1,0 +1,21 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+  // Use the TypeScript of the project (5.6, pinned by @kinvolk/headlamp-plugin) instead of the
+  // one bundled with VS Code: the shared plugin tsconfig uses options that TypeScript 6 deprecates.
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
+}

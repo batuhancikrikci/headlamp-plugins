@@ -1,0 +1,9 @@
+/**
+ * Honeycomb icon for the Cilium sidebar entry and resource kinds, as an Iconify-compatible
+ * icon object. It is monochrome (currentColor), so it adapts to the light and dark themes.
+ */
+export const ciliumIcon = {
+  body: '<path fill="currentColor" d="M14.68 13.55L12.00 15.10L9.32 13.55L9.32 10.45L12.00 8.90L14.68 10.45ZM20.70 13.55L18.01 15.10L15.33 13.55L15.33 10.45L18.01 8.90L20.70 10.45ZM17.69 18.76L15.01 20.31L12.32 18.76L12.32 15.66L15.01 14.11L17.69 15.66ZM11.68 18.76L8.99 20.31L6.31 18.76L6.31 15.66L8.99 14.11L11.68 15.66ZM8.67 13.55L5.99 15.10L3.30 13.55L3.30 10.45L5.99 8.90L8.67 10.45ZM11.68 8.34L8.99 9.89L6.31 8.34L6.31 5.24L8.99 3.69L11.68 5.24ZM17.69 8.34L15.01 9.89L12.32 8.34L12.32 5.24L15.01 3.69L17.69 5.24Z"/>',
+  width: 24,
+  height: 24,
+};

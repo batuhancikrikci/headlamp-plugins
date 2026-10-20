@@ -1,0 +1,30 @@
+name: Feature request
+description: Suggest an improvement for one of the plugins.
+labels: [enhancement]
+body:
+  - type: dropdown
+    id: plugin
+    attributes:
+      label: Plugin
+      options:
+        - agentrouter
+        - cilium
+        - envoy-gateway
+        - gateway
+        - headlamp-plus
+        - inference-hub
+        - monitoring
+        - multi-cluster
+        - all plugins
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Which problem would it solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution

@@ -1,0 +1,57 @@
+# Artifact Hub metadata of the Envoy Gateway plugin. The release workflow updates version, createdAt,
+# archive-url and archive-checksum when a tag named envoy-gateway-v<version> is pushed.
+version: 0.1.0
+name: envoy-gateway
+displayName: Envoy Gateway
+createdAt: '2026-10-18T00:00:00Z'
+description: 'Headlamp plugin for managing Envoy Gateway (gateway.envoyproxy.io) resources: overview, relationships, guided forms and wizards'
+logoPath: docs/logo.png
+license: Apache-2.0
+homeURL: https://github.com/batuhancikrikci/headlamp-plugins/tree/main/envoy-gateway
+keywords:
+  - headlamp
+  - headlamp-plugin
+  - kubernetes
+  - kubernetes-ui
+  - envoy
+  - envoy-gateway
+  - gateway-api
+provider:
+  name: Batuhan CIKRIKCI
+maintainers:
+  - name: Batuhan CIKRIKCI
+links:
+  - name: Source code
+    url: https://github.com/batuhancikrikci/headlamp-plugins/tree/main/envoy-gateway
+  - name: Issues
+    url: https://github.com/batuhancikrikci/headlamp-plugins/issues
+screenshots:
+  - title: 'Overview'
+    url: https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/envoy-gateway/docs/screenshots/overview.jpg
+  - title: 'SecurityPolicy wizard'
+    url: https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/envoy-gateway/docs/screenshots/security-policy-wizard.jpg
+install: |
+  ## Headlamp desktop
+
+  Open the plugin catalog in Headlamp, search for "Envoy Gateway" and install it. Alternatively,
+  download `envoy-gateway-0.1.0.tar.gz` from the GitHub release and extract it into the Headlamp plugins
+  directory (for example `~/.config/Headlamp/plugins/` on Linux), then reload Headlamp.
+
+  ## Headlamp in-cluster
+
+  Enable the plugin manager of the Headlamp Helm chart:
+
+  ```yaml
+  pluginsManager:
+    enabled: true
+    configContent: |
+      plugins:
+        - name: envoy-gateway
+          source: https://artifacthub.io/packages/headlamp/batuhancikrikci-headlamp-plugins/envoy-gateway
+          version: 0.1.0
+  ```
+annotations:
+  headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/envoy-gateway-v0.1.0/envoy-gateway-0.1.0.tar.gz
+  headlamp/plugin/archive-checksum: sha256:set-by-the-release-workflow
+  headlamp/plugin/version-compat: '>=0.45.0'
+  headlamp/plugin/distro-compat: in-cluster,web,desktop

@@ -1,0 +1,24 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+  - package-ecosystem: npm
+    directories:
+      - /agentrouter
+      - /cilium
+      - /envoy-gateway
+      - /gateway
+      - /headlamp-plus
+      - /inference-hub
+      - /monitoring
+      - /multi-cluster
+    schedule:
+      interval: monthly
+    groups:
+      headlamp-plugin:
+        patterns: ['@kinvolk/headlamp-plugin']
+      dependencies:
+        patterns: ['*']
+        exclude-patterns: ['@kinvolk/headlamp-plugin']

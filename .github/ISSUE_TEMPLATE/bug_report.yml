@@ -1,0 +1,43 @@
+name: Bug report
+description: Something does not work as described.
+labels: [bug]
+body:
+  - type: dropdown
+    id: plugin
+    attributes:
+      label: Plugin
+      options:
+        - agentrouter
+        - cilium
+        - envoy-gateway
+        - gateway
+        - headlamp-plus
+        - inference-hub
+        - monitoring
+        - multi-cluster
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Plugin version, Headlamp version (desktop or in-cluster) and the version of the managed component (for example Cilium 1.20).
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Include the steps to reproduce it and, if possible, a screenshot.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+  - type: textarea
+    id: logs
+    attributes:
+      label: Browser console output
+      description: Messages of this plugin are prefixed with its name, e.g. `[cilium]`. Remove anything sensitive (cluster names, tokens, hostnames).
+      render: text

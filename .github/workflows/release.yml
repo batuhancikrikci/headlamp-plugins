@@ -1,0 +1,159 @@
+name: Release
+
+# Releases one plugin. Push a tag named <plugin>-v<version>, e.g. `cilium-v0.2.0`, on a commit of
+# main, where <version> equals the version in <plugin>/package.json. Push tags one at a time:
+# GitHub starts no workflow when more than three tags are pushed at once. The workflow builds the
+# tarball from the tagged commit, attests its build provenance, publishes it as a GitHub release
+# and then updates main: <plugin>/artifacthub-pkg.yml points at the release (so Artifact Hub picks
+# it up) and the CHANGELOG entry gets the release date.
+#
+# Dry run: start the workflow by hand (Actions > Release > Run workflow) and pick a plugin. It checks
+# and packages the plugin from the chosen branch and keeps the tarball and its checksum as a
+# workflow artifact; nothing is released, attested or pushed.
+
+on:
+  push:
+    tags: ['*-v*']
+  workflow_dispatch:
+    inputs:
+      plugin:
+        description: Plugin to package (dry run, nothing is published)
+        required: true
+        type: choice
+        options:
+          - agentrouter
+          - cilium
+          - envoy-gateway
+          - gateway
+          - headlamp-plus
+          - inference-hub
+          - monitoring
+          - multi-cluster
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+# One run per tag. Releases of different plugins run side by side; their commits to main touch
+# different files, so the push step rebases and retries when another release pushed first.
+# Dry runs never wait for each other.
+concurrency:
+  group: ${{ github.event_name == 'push' && format('release-{0}', github.ref_name) || format('dry-run-{0}', github.run_id) }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+
+      - name: Resolve plugin and version
+        id: tag
+        env:
+          DRY_RUN_PLUGIN: ${{ inputs.plugin }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            plugin="$DRY_RUN_PLUGIN"
+            version="$(node -p "require('./$plugin/package.json').version")"
+            echo "Dry run of $plugin $version from $GITHUB_REF_NAME."
+            echo "plugin=$plugin" >> "$GITHUB_OUTPUT"
+            echo "version=$version" >> "$GITHUB_OUTPUT"
+            echo "archive=$plugin/$plugin-$version.tar.gz" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          tag="${GITHUB_REF_NAME}"
+          plugin="${tag%-v*}"
+          version="${tag##*-v}"
+          if [ ! -f "$plugin/package.json" ]; then
+            echo "::error::No plugin named '$plugin' (tag $tag)."; exit 1
+          fi
+          declared="$(node -p "require('./$plugin/package.json').version")"
+          if [ "$declared" != "$version" ]; then
+            echo "::error::$plugin/package.json has version $declared, the tag says $version."; exit 1
+          fi
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::Tag $tag does not point to a commit of main."; exit 1
+          fi
+          echo "plugin=$plugin" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "archive=$plugin/$plugin-$version.tar.gz" >> "$GITHUB_OUTPUT"
+
+      - name: Check and package
+        working-directory: ${{ steps.tag.outputs.plugin }}
+        run: |
+          npm ci
+          npm run check
+          npm run package
+
+      - name: Keep the dry-run package
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          ARCHIVE: ${{ steps.tag.outputs.archive }}
+        run: |
+          (cd "$(dirname "$ARCHIVE")" && sha256sum "$(basename "$ARCHIVE")" > "$(basename "$ARCHIVE").sha256")
+          cat "$ARCHIVE.sha256"
+      - name: Upload the dry-run package
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ steps.tag.outputs.plugin }}-${{ steps.tag.outputs.version }}-dry-run
+          path: |
+            ${{ steps.tag.outputs.archive }}
+            ${{ steps.tag.outputs.archive }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Attest build provenance
+        if: github.event_name == 'push'
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: ${{ steps.tag.outputs.archive }}
+
+      - name: Publish the GitHub release
+        if: github.event_name == 'push'
+        id: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PLUGIN: ${{ steps.tag.outputs.plugin }}
+          VERSION: ${{ steps.tag.outputs.version }}
+          ARCHIVE: ${{ steps.tag.outputs.archive }}
+        run: |
+          checksum="$(sha256sum "$ARCHIVE" | cut -d' ' -f1)"
+          echo "$checksum  $(basename "$ARCHIVE")" > "$ARCHIVE.sha256"
+          gh release create "$GITHUB_REF_NAME" "$ARCHIVE" "$ARCHIVE.sha256" \
+            --title "$PLUGIN $VERSION" \
+            --notes "Release $VERSION of the $PLUGIN plugin. See $PLUGIN/CHANGELOG.md.
+
+          SHA-256: $checksum
+
+          Verify the build provenance with: gh attestation verify $(basename "$ARCHIVE") --repo $GITHUB_REPOSITORY"
+          echo "checksum=$checksum" >> "$GITHUB_OUTPUT"
+
+      - name: Point Artifact Hub at the release
+        if: github.event_name == 'push'
+        env:
+          PLUGIN: ${{ steps.tag.outputs.plugin }}
+          VERSION: ${{ steps.tag.outputs.version }}
+          CHECKSUM: ${{ steps.publish.outputs.checksum }}
+        run: |
+          git checkout -B main origin/main
+          url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/${PLUGIN}-${VERSION}.tar.gz"
+          node scripts/update-artifacthub.mjs "$PLUGIN" "$VERSION" "$url" "$CHECKSUM"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$PLUGIN/artifacthub-pkg.yml" "$PLUGIN/CHANGELOG.md"
+          git commit -m "$PLUGIN: Point Artifact Hub at $VERSION"
+          for attempt in 1 2 3 4 5; do
+            git push origin main && exit 0
+            echo "Push rejected (attempt $attempt); rebasing on the latest main."
+            sleep $((attempt * 5))
+            git pull --rebase origin main
+          done
+          echo "::error::Could not push the Artifact Hub update to main."; exit 1

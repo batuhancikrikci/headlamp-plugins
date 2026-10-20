@@ -1,0 +1,60 @@
+# Artifact Hub metadata of the Monitoring plugin. The release workflow updates version, createdAt,
+# archive-url and archive-checksum when a tag named monitoring-v<version> is pushed.
+version: 0.3.0
+name: monitoring
+displayName: Monitoring
+createdAt: '2026-10-18T00:00:00Z'
+description: 'Headlamp plugin for managing kube-prometheus-stack (Prometheus Operator) resources'
+logoPath: docs/logo.png
+license: Apache-2.0
+homeURL: https://github.com/batuhancikrikci/headlamp-plugins/tree/main/monitoring
+keywords:
+  - headlamp
+  - headlamp-plugin
+  - kubernetes
+  - prometheus
+  - prometheus-operator
+  - kube-prometheus-stack
+  - alertmanager
+  - monitoring
+provider:
+  name: Batuhan CIKRIKCI
+maintainers:
+  - name: Batuhan CIKRIKCI
+links:
+  - name: Source code
+    url: https://github.com/batuhancikrikci/headlamp-plugins/tree/main/monitoring
+  - name: Issues
+    url: https://github.com/batuhancikrikci/headlamp-plugins/issues
+screenshots:
+  - title: 'Overview'
+    url: https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/monitoring/docs/screenshots/overview.jpg
+  - title: 'Alerting'
+    url: https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/monitoring/docs/screenshots/alerting.jpg
+  - title: 'ServiceMonitor wizard'
+    url: https://raw.githubusercontent.com/batuhancikrikci/headlamp-plugins/main/monitoring/docs/screenshots/monitor-wizard.jpg
+install: |
+  ## Headlamp desktop
+
+  Open the plugin catalog in Headlamp, search for "Monitoring" and install it. Alternatively,
+  download `monitoring-0.3.0.tar.gz` from the GitHub release and extract it into the Headlamp plugins
+  directory (for example `~/.config/Headlamp/plugins/` on Linux), then reload Headlamp.
+
+  ## Headlamp in-cluster
+
+  Enable the plugin manager of the Headlamp Helm chart:
+
+  ```yaml
+  pluginsManager:
+    enabled: true
+    configContent: |
+      plugins:
+        - name: monitoring
+          source: https://artifacthub.io/packages/headlamp/batuhancikrikci-headlamp-plugins/monitoring
+          version: 0.3.0
+  ```
+annotations:
+  headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/monitoring-v0.3.0/monitoring-0.3.0.tar.gz
+  headlamp/plugin/archive-checksum: sha256:set-by-the-release-workflow
+  headlamp/plugin/version-compat: '>=0.45.0'
+  headlamp/plugin/distro-compat: in-cluster,web,desktop

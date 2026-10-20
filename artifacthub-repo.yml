@@ -1,0 +1,6 @@
+# Artifact Hub repository metadata. After registering the repository on Artifact Hub, add the
+# repositoryID it shows (Control Panel > Repositories) to claim ownership and get the
+# "Verified publisher" badge:
+# repositoryID: <uuid>
+owners:
+  - name: Batuhan CIKRIKCI

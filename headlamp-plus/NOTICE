@@ -1,0 +1,31 @@
+Headlamp Plus — Headlamp plugin
+Copyright 2026 Batuhan CIKRIKCI
+
+Licensed under the Apache License, Version 2.0 (see the LICENSE file).
+
+This is an independent project. It is not affiliated with, endorsed by or
+sponsored by the Headlamp project, the Cloud Native Computing Foundation, The
+Linux Foundation or any other company or project. Kubernetes and Headlamp are
+trademarks of their respective owners; they are used only to identify the
+software this project works with.
+
+-------------------------------------------------------------------------------
+Third-party components included in this plugin
+-------------------------------------------------------------------------------
+
+* Headlamp plugin template (src/headlamp-plugin.d.ts and the plugin scaffold)
+  Copyright The Kubernetes Authors
+  Licensed under the Apache License, Version 2.0
+  https://github.com/kubernetes-sigs/headlamp
+
+* Headlamp logo (basis of the Artifact Hub logo, docs/logo.*)
+  From the Headlamp project, https://github.com/kubernetes-sigs/headlamp
+  (frontend/src/resources/icon-light.svg), licensed under the Apache License,
+  Version 2.0. Recoloured and combined with a plus sign. The Headlamp name and
+  logo are trademarks of their owner; they are used only to show that this
+  plugin extends Headlamp.
+
+* Material Design Icons (icon data bundled into main.js)
+  Copyright Pictogrammers
+  Licensed under the Apache License, Version 2.0
+  https://github.com/Templarian/MaterialDesign

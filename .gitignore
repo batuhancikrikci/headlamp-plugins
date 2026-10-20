@@ -1,0 +1,17 @@
+# Dependencies and build output (every plugin has its own as well)
+node_modules/
+dist/
+*.tar.gz
+.headlamp-plugin/
+storybook-static/
+coverage/
+
+# Caches and logs
+.eslintcache
+*.log
+npm-debug.log*
+
+# Editors and operating systems
+.idea/
+.DS_Store
+Thumbs.db
