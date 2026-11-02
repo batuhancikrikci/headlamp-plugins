@@ -1,10 +1,10 @@
 # Artifact Hub metadata of the Envoy Gateway plugin. The release workflow updates version, createdAt,
 # archive-url and archive-checksum when a tag named envoy-gateway-v<version> is pushed.
-version: 0.1.0
+version: 0.1.1
 name: envoy-gateway
 displayName: Envoy Gateway
-createdAt: "2026-10-20T13:26:45Z"
-digest: "07a6b03762178a7f24a34a1ec0db71a7a51227febdec994b5817b1b59338f687"
+createdAt: "2026-11-02T22:15:17Z"
+digest: "816681548f30dc78ae4a68ee22096d42655d4fcfc9e7373cb639e7cc6cba6841"
 description: 'Headlamp plugin for managing Envoy Gateway (gateway.envoyproxy.io) resources: overview, relationships, guided forms and wizards'
 logoPath: docs/logo.png
 license: Apache-2.0
@@ -34,7 +34,7 @@ install: |
   ## Headlamp desktop
 
   Open the plugin catalog in Headlamp, search for "Envoy Gateway" and install it. Alternatively,
-  download `envoy-gateway-0.1.0.tar.gz` from the GitHub release and extract it into the Headlamp plugins
+  download `envoy-gateway-0.1.1.tar.gz` from the GitHub release and extract it into the Headlamp plugins
   directory (for example `~/.config/Headlamp/plugins/` on Linux), then reload Headlamp.
 
   ## Headlamp in-cluster
@@ -48,13 +48,13 @@ install: |
       plugins:
         - name: envoy-gateway
           source: https://artifacthub.io/packages/headlamp/batuhancikrikci-headlamp-plugins/envoy-gateway
-          version: 0.1.0
+          version: 0.1.1
   ```
 changes:
-  - kind: added
-    description: "First public release."
+  - kind: fixed
+    description: "Policies and routes no longer look broken because of old status entries the controller left behind for removed targets or parents; the policy status and the route problems of the Overview only consider entries the controller still maintains."
 annotations:
-  headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/envoy-gateway-v0.1.0/envoy-gateway-0.1.0.tar.gz
-  headlamp/plugin/archive-checksum: sha256:56bb0cc3b0a828df9b55b065d43e300a47b48bc426773006705de7ee30b3b32a
+  headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/envoy-gateway-v0.1.1/envoy-gateway-0.1.1.tar.gz
+  headlamp/plugin/archive-checksum: sha256:7bb101ea3f0d0a758012bedf2e2d77f9304e2519b5023acff647917cbe1537bd
   headlamp/plugin/version-compat: '>=0.45.0'
   headlamp/plugin/distro-compat: in-cluster,web,desktop
