@@ -220,6 +220,25 @@ describe('computeHealth', () => {
     });
   });
 
+  it('ignores ancestors a controller no longer maintains', () => {
+    const accepted = (generation: number) =>
+      condition('Accepted', 'True', 'Accepted', { observedGeneration: generation });
+    const policy = (ancestors: unknown[]) => ({
+      kind: 'BackendTLSPolicy',
+      metadata: { generation: 3 },
+      status: { ancestors },
+    });
+    const stale = { ancestorRef: { name: 'old' }, controllerName: 'a', conditions: [accepted(2)] };
+    const current = { ancestorRef: { name: 'eg' }, controllerName: 'a', conditions: [accepted(3)] };
+    const other = { ancestorRef: { name: 'x' }, controllerName: 'b', conditions: [accepted(2)] };
+    expect(computeHealth(policy([stale, current])).level).toBe('healthy');
+    expect(tallyCondition([policy([stale, current])], 'Accepted').true).toBe(1);
+    // Nothing reported for the current generation yet: still pending.
+    expect(computeHealth(policy([stale])).level).toBe('pending');
+    // Another controller that has not caught up is still waited for.
+    expect(computeHealth(policy([current, other])).level).toBe('pending');
+  });
+
   it('evaluates policies per ancestor', () => {
     const health = computeHealth({
       kind: 'BackendTLSPolicy',

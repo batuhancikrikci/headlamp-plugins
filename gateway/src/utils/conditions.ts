@@ -250,6 +250,34 @@ export function currentParents(obj: StatusObject): RouteParentStatus[] {
   );
 }
 
+/** Highest observedGeneration among the conditions of a status entry; -1 when none is set. */
+function observedGenerationOf(entry: { conditions?: Condition[] } | undefined): number {
+  return Math.max(
+    -1,
+    ...asArray<Condition>(entry?.conditions).map(c => c?.observedGeneration ?? -1)
+  );
+}
+
+/**
+ * Drops status entries a controller left behind: when a controller has already reported the
+ * current generation for one entry, its entries still at an older generation are no longer
+ * maintained (e.g. ancestors of a target that was removed) and do not describe the object.
+ */
+export function withoutStaleEntries<
+  T extends { controllerName?: string; conditions?: Condition[] } | null | undefined
+>(entries: T[], generation?: number): T[] {
+  if (generation === undefined) return entries;
+  const current = new Set(
+    entries
+      .filter(e => observedGenerationOf(e ?? undefined) === generation)
+      .map(e => e?.controllerName || '')
+  );
+  return entries.filter(e => {
+    const observed = observedGenerationOf(e ?? undefined);
+    return observed < 0 || observed >= generation || !current.has(e?.controllerName || '');
+  });
+}
+
 /** Expected top-level conditions per kind that reports its own conditions. */
 const EXPECTED_CONDITIONS: Record<string, string[]> = {
   GatewayClass: ['Accepted'],
@@ -351,7 +379,10 @@ export function computeHealth(obj: StatusObject | null | undefined): Health {
   }
 
   if (ANCESTOR_KINDS.has(kind)) {
-    const ancestors = asArray<PolicyAncestorStatus>(status.ancestors);
+    const ancestors = withoutStaleEntries(
+      asArray<PolicyAncestorStatus>(status.ancestors),
+      generation
+    );
     if (ancestors.length === 0) {
       return {
         level: 'pending',
@@ -468,7 +499,11 @@ export function tallyCondition(
     }>(obj.status);
     if (Array.isArray(status.conditions)) add(status.conditions);
     for (const parent of currentParents(obj)) add(parent?.conditions);
-    for (const ancestor of asArray<PolicyAncestorStatus>(status.ancestors)) {
+    const generation = obj.metadata?.generation;
+    for (const ancestor of withoutStaleEntries(
+      asArray<PolicyAncestorStatus>(status.ancestors),
+      generation
+    )) {
       add(ancestor?.conditions);
     }
   }
