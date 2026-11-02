@@ -8,6 +8,7 @@ export const SIDEBAR_ROOT = 'inference-hub';
 export const PAGES = {
   commandCenter: { name: 'inference-hub-command-center', path: `${URL_PREFIX}/command-center` },
   catalog: { name: 'inference-hub-catalog', path: `${URL_PREFIX}/catalog` },
+  planner: { name: 'inference-hub-planner', path: `${URL_PREFIX}/capacity-planner` },
   storage: { name: 'inference-hub-storage', path: `${URL_PREFIX}/model-storage` },
   endpoints: { name: 'inference-hub-endpoints', path: `${URL_PREFIX}/endpoints` },
   gateway: { name: 'inference-hub-gateway', path: `${URL_PREFIX}/inference-gateway` },
@@ -57,12 +58,23 @@ export function endpointEditUrl(slug: EndpointSlug, namespace: string, name: str
   return Router.createRouteURL(DETAIL_PAGES.endpointEdit.name, { slug, namespace, name });
 }
 
+/** Capacity Planner, optionally with a catalog entry selected. */
+export function plannerUrl(cache?: string) {
+  const url = Router.createRouteURL(PAGES.planner.name);
+  return cache ? `${url}?cache=${encodeURIComponent(cache)}` : url;
+}
+
 export function playgroundUrl(targetId: string) {
   return `${Router.createRouteURL(PAGES.playground.name)}?target=${encodeURIComponent(targetId)}`;
 }
 
-/** Deploy wizard, optionally preselecting a catalog entry (LocalModelCache) or a model URI. */
-export function deployUrl(opts: { cache?: string; uri?: string; namespace?: string } = {}) {
+/**
+ * Deploy wizard, optionally preselecting a catalog entry (LocalModelCache) or a model URI, the
+ * GPUs per replica and extra vLLM arguments (from the Capacity Planner).
+ */
+export function deployUrl(
+  opts: { cache?: string; uri?: string; namespace?: string; gpus?: string; args?: string } = {}
+) {
   const params = new URLSearchParams();
   Object.entries(opts).forEach(([k, v]) => v && params.set(k, v));
   const q = params.toString();

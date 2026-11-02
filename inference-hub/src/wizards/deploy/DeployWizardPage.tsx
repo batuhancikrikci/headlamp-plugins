@@ -71,6 +71,10 @@ function initialForm(search: string, namespace: string, discovery: Discovery): D
       name: suggestName(served || uri),
     });
   }
+  const gpus = Number(params.get('gpus'));
+  if (Number.isInteger(gpus) && gpus > 0 && gpus <= 64) form.gpus = gpus;
+  const args = params.get('args');
+  if (args && form.mode === 'llm') form.extraArgs = args;
   return form;
 }
 

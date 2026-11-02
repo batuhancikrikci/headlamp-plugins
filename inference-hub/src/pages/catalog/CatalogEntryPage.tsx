@@ -35,7 +35,7 @@ import {
   NodeCopy,
 } from '../../resources/catalog';
 import { RESOURCES } from '../../resources/definitions';
-import { deployUrl, DETAIL_PAGES, PAGES } from '../../routes';
+import { deployUrl, DETAIL_PAGES, PAGES, plannerUrl } from '../../routes';
 import { checkFit, estimateServingMemory, gpusForMemory } from '../../utils/gpuFit';
 import { formatParams } from '../../utils/modelInfo';
 import { formatBytes } from '../../utils/quantity';
@@ -179,6 +179,13 @@ function EntryBody({ discovery, name }: { discovery: Discovery; name: string }) 
               onClick={() => history.push(deployUrl({ cache: entry.name, uri: entry.uri }))}
             >
               {t('Deploy')}
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<Icon icon="mdi:calculator-variant-outline" />}
+              onClick={() => history.push(plannerUrl(entry.name))}
+            >
+              {t('Plan capacity')}
             </Button>
             <GuardedButton
               check={access('update')}
