@@ -39,12 +39,37 @@ export function worstHealth(a: Health, b: Health): Health {
   return HEALTH_RANK[a] >= HEALTH_RANK[b] ? a : b;
 }
 
+/** Highest observedGeneration among the conditions of a status entry; -1 when none is set. */
+function observedGenerationOf(entry: { conditions?: PolicyCondition[] }): number {
+  return Math.max(-1, ...(entry.conditions || []).map(c => c.observedGeneration ?? -1));
+}
+
+/**
+ * Drops status entries a controller left behind: when a controller has already reported the
+ * current generation for one entry, its entries still at an older generation are no longer
+ * maintained (e.g. ancestors of a target that was removed) and do not describe the object.
+ */
+export function withoutStaleEntries<
+  T extends { controllerName?: string; conditions?: PolicyCondition[] }
+>(entries: T[], objectGeneration?: unknown): T[] {
+  if (typeof objectGeneration !== 'number') return entries;
+  const generation = objectGeneration;
+  const current = new Set(
+    entries.filter(e => observedGenerationOf(e) === generation).map(e => e.controllerName || '')
+  );
+  return entries.filter(e => {
+    const observed = observedGenerationOf(e);
+    return observed < 0 || observed >= generation || !current.has(e.controllerName || '');
+  });
+}
+
 /**
  * Summarizes the status of an Envoy Gateway resource. For policy CRDs every ancestor is taken
  * into account, so a policy that is rejected by one of several Gateways is reported as failing.
+ * With the object's `generation`, ancestors its controller no longer maintains are ignored.
  */
-export function summarizeStatus(status?: PolicyStatus): ConditionSummary {
-  const ancestors = status?.ancestors || [];
+export function summarizeStatus(status?: PolicyStatus, generation?: unknown): ConditionSummary {
+  const ancestors = withoutStaleEntries(status?.ancestors || [], generation);
   let health: Health = 'unknown';
   let primary: PolicyCondition | undefined;
   let acceptedCount = 0;

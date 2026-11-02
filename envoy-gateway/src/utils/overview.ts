@@ -3,7 +3,7 @@
  * routes are protected by a SecurityPolicy, and a summary of the Envoy Gateway configuration.
  */
 import { API_GROUP, GATEWAY_API_GROUP, ObjectJson, PolicyCondition } from '../resources/types';
-import { summarizeStatus } from './conditions';
+import { summarizeStatus, withoutStaleEntries } from './conditions';
 import { envoyProxyHealth, envoyProxyReferences } from './envoyProxyStatus';
 import { identityOf, policyTargets, routeParentGateways } from './targets';
 
@@ -211,7 +211,12 @@ export function collectIssues(input: IssueInput): Issue[] {
   }
 
   for (const route of routesOfGateways(input.routes || [], gateways)) {
-    const parents: Array<{ conditions?: PolicyCondition[] }> = route.status?.parents || [];
+    // Entries of parents the controller no longer maintains (e.g. removed from the route) are
+    // ignored, so their old failures are not reported.
+    const parents = withoutStaleEntries<{
+      controllerName?: string;
+      conditions?: PolicyCondition[];
+    }>(route.status?.parents || [], route.metadata?.generation);
     const failing = parents
       .flatMap(p => p.conditions || [])
       .find(c => ['Accepted', 'ResolvedRefs'].includes(c.type) && c.status === 'False');
@@ -229,7 +234,7 @@ export function collectIssues(input: IssueInput): Issue[] {
   }
 
   for (const res of input.resources || []) {
-    const summary = summarizeStatus(res.status);
+    const summary = summarizeStatus(res.status, res.metadata?.generation);
     if (summary.health === 'error' || summary.health === 'warning') {
       issues.push({
         id: `eg-${res.kind}-${res.metadata?.namespace}-${res.metadata?.name}`,

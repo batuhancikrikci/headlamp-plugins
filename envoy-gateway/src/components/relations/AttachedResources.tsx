@@ -92,7 +92,9 @@ function Attachments({ json }: { json: ObjectJson }) {
   const rows: Row[] = [];
   for (const crd of policyCrds) {
     for (const policy of byKind[crd.kind] || []) {
-      const status = <StatusSummary summary={summarizeStatus(policy.status)} />;
+      const status = (
+        <StatusSummary summary={summarizeStatus(policy.status, policy.metadata?.generation)} />
+      );
       const base = {
         kind: crd.kind,
         name: policy.metadata?.name || '',

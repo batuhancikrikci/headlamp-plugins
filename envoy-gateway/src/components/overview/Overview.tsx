@@ -998,11 +998,13 @@ function Dashboard({ availability }: { availability: Availability }) {
   const coverage = securityCoverage(routes, lists.SecurityPolicy.list);
 
   const accepted = (kind: string) =>
-    lists[kind].list.filter(r => summarizeStatus(r.status).health === 'success').length;
+    lists[kind].list.filter(
+      r => summarizeStatus(r.status, r.metadata?.generation).health === 'success'
+    ).length;
   const failing = (kinds: string[]) =>
     kinds
       .flatMap(kind => lists[kind].list)
-      .filter(r => summarizeStatus(r.status).health === 'error').length;
+      .filter(r => summarizeStatus(r.status, r.metadata?.generation).health === 'error').length;
   const count = (kind: string): React.ReactNode =>
     lists[kind].loaded ? lists[kind].list.length : '…';
   const sum = (kinds: string[]): React.ReactNode =>

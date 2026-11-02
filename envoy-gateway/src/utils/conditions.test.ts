@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { PolicyStatus } from '../resources/types';
 import { getPrimaryCondition, statusSortValue, summarizeStatus } from './conditions';
 
 const accepted = { type: 'Accepted', status: 'True' };
@@ -16,6 +17,26 @@ describe('getPrimaryCondition', () => {
 });
 
 describe('summarizeStatus', () => {
+  it('ignores ancestors the controller no longer maintains', () => {
+    const gateway = (name: string) => ({
+      group: 'gateway.networking.k8s.io',
+      kind: 'Gateway',
+      name,
+    });
+    const current = { type: 'Accepted', status: 'True', reason: 'Accepted', observedGeneration: 3 };
+    const stale = { type: 'Accepted', status: 'False', reason: 'Invalid', observedGeneration: 2 };
+    const status: PolicyStatus = {
+      ancestors: [
+        { ancestorRef: gateway('old'), controllerName: 'eg', conditions: [stale] },
+        { ancestorRef: gateway('eg'), controllerName: 'eg', conditions: [current] },
+      ],
+    };
+    expect(summarizeStatus(status).health).toBe('error');
+    expect(summarizeStatus(status, 3)).toMatchObject({ health: 'success', ancestorCount: 1 });
+    // Without a current entry of the controller, the old one still counts.
+    expect(summarizeStatus({ ancestors: [status.ancestors![0]] }, 3).health).toBe('error');
+  });
+
   it('is unknown without status', () => {
     expect(summarizeStatus(undefined)).toMatchObject({ health: 'unknown', ancestorCount: 0 });
   });

@@ -41,7 +41,7 @@ export class EnvoyGatewayObject<
   }
 
   get statusSummary(): ConditionSummary {
-    return summarizeStatus(this.status);
+    return summarizeStatus(this.status, this.metadata?.generation);
   }
 }
 
