@@ -120,11 +120,19 @@ export function suggestName(model: string): string {
   );
 }
 
-/** Served model name suggestion for a URI: "org/name" for Hugging Face, else the last segment. */
+/**
+ * Served model name suggestion for a URI: the model name without its organization or provider,
+ * lowercase, without dots, e.g. "hf://Qwen/Qwen3.5-122B-A10B-FP8" -> "qwen35-122b-a10b-fp8".
+ */
 export function suggestServedName(uri: string): string {
   const path = uri.replace(/^[a-z0-9+.-]+:\/\//i, '').replace(/\/+$/, '');
-  if (uriScheme(uri) === 'hf') return path.split('@')[0].split('/').slice(0, 2).join('/');
-  return path.split('/').pop()?.split(':')[0] || '';
+  const name = path.split('@')[0].split('/').pop()?.split(':')[0] || '';
+  return name
+    .toLowerCase()
+    .replace(/\./g, '')
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
 
 export function validateUri(uri: string): string | undefined {

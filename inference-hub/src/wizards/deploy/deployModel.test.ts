@@ -39,11 +39,14 @@ describe('suggestions', () => {
     expect(long.length).toBeLessThanOrEqual(40);
     expect(long).toMatch(/^[a-z][-a-z0-9]*[a-z0-9]$/);
     expect(suggestName('1234')).toBe('model');
-    expect(suggestServedName('hf://meta-llama/Llama-3.1-8B-Instruct')).toBe(
-      'meta-llama/Llama-3.1-8B-Instruct'
-    );
+    expect(suggestServedName('hf://Qwen/Qwen3.5-2B')).toBe('qwen35-2b');
+    expect(suggestServedName('hf://Qwen/Qwen3.5-122B-A10B-FP8')).toBe('qwen35-122b-a10b-fp8');
+    expect(suggestServedName('hf://google/gemma-4-26B-A4B-it@main')).toBe('gemma-4-26b-a4b-it');
+    expect(suggestServedName('hf://meta-llama/Llama-3.1-8B-Instruct')).toBe('llama-31-8b-instruct');
+    expect(suggestServedName('s3://bucket/models/Llama-3.1-8B/')).toBe('llama-31-8b');
     expect(suggestServedName('pvc://models/granite-8b')).toBe('granite-8b');
     expect(suggestServedName('oci://quay.io/org/modelcar:1.0')).toBe('modelcar');
+    expect(suggestServedName('hf://org/Model_Name v2')).toBe('model-name-v2');
   });
 });
 

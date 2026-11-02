@@ -37,6 +37,8 @@ All notable changes to the Inference Hub plugin are documented here. The format 
 
 ### Changed
 
+- The deploy wizard suggests served model names without the organization, in lowercase and
+  without dots, e.g. `qwen35-122b-a10b-fp8` for `hf://Qwen/Qwen3.5-122B-A10B-FP8`.
 - Updated the bundled Simple Icons set.
 
 ## [0.2.1] — 2026-10-20

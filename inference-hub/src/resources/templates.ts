@@ -9,7 +9,7 @@ export function llmInferenceServiceTemplate(apiVersion: string, namespace: strin
     kind: 'LLMInferenceService',
     metadata: { name: 'qwen25-7b-instruct', namespace },
     spec: {
-      model: { uri: 'hf://Qwen/Qwen2.5-7B-Instruct', name: 'Qwen/Qwen2.5-7B-Instruct' },
+      model: { uri: 'hf://Qwen/Qwen2.5-7B-Instruct', name: 'qwen25-7b-instruct' },
       replicas: 1,
       router: { scheduler: {}, route: {}, gateway: {} },
       template: {
