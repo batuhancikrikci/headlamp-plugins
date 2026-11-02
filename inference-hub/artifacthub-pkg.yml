@@ -1,10 +1,10 @@
 # Artifact Hub metadata of the Inference Hub plugin. The release workflow updates version, createdAt,
 # archive-url and archive-checksum when a tag named inference-hub-v<version> is pushed.
-version: 0.2.1
+version: 0.3.0
 name: inference-hub
 displayName: Inference Hub
-createdAt: "2026-10-20T13:27:36Z"
-digest: "b1eba16f3df9023b62241874837ba72c850b1a94f208c9b19fe4aaf5692f92b9"
+createdAt: "2026-11-02T22:14:53Z"
+digest: "53b7207f2816e5840dd558d93c3517522c45350c2dea1a901b7d8932d5a66953"
 description: 'Inference Hub: an AI/LLM platform experience for Headlamp covering KServe, llm-d, the Gateway API Inference Extension, vLLM and the NVIDIA GPU Operator'
 logoPath: docs/logo.png
 license: Apache-2.0
@@ -39,7 +39,7 @@ install: |
   ## Headlamp desktop
 
   Open the plugin catalog in Headlamp, search for "Inference Hub" and install it. Alternatively,
-  download `inference-hub-0.2.1.tar.gz` from the GitHub release and extract it into the Headlamp plugins
+  download `inference-hub-0.3.0.tar.gz` from the GitHub release and extract it into the Headlamp plugins
   directory (for example `~/.config/Headlamp/plugins/` on Linux), then reload Headlamp.
 
   ## Headlamp in-cluster
@@ -53,13 +53,29 @@ install: |
       plugins:
         - name: inference-hub
           source: https://artifacthub.io/packages/headlamp/batuhancikrikci-headlamp-plugins/inference-hub
-          version: 0.2.1
+          version: 0.3.0
   ```
 changes:
   - kind: added
-    description: "First public release."
+    description: "Edit endpoints with a form or the deploy wizard: \"Edit\" opens one page with the settings of the live endpoint and the review below them; \"Switch to the wizard\" opens the same edit as the steps of the deploy wizard, keeping what was entered. Both change only the settings you touch, keep everything the form does not show, and review the change as a YAML diff before saving with the live resourceVersion. The placement check counts the GPUs of the edited endpoint as free. The model and the served model name of an endpoint cannot change in any edit, Edit YAML included."
+  - kind: added
+    description: "Diagnose tab on the endpoint page: checks the conditions, the model cache, scheduling, image pulls, crashes and OOM kills, the model download, readiness and the llm-d scheduler, and on request scans the logs for known failures, each with evidence and a fix. The Command Center links endpoints that need attention to it."
+  - kind: added
+    description: "Ask a model: sends the diagnosis (secrets masked, reviewed before sending) to another model running in the cluster through the Kubernetes API proxy and shows its answer and reasoning. Follow-up questions continue the conversation; each request sends the whole conversation, and New conversation starts over. The token limit is set in the panel (16384 by default), Thinking can be turned off for models whose chat template reads enable_thinking (Qwen3 and others), an answer cut off by the limit, stopped or interrupted by an error can be continued, and a request that does not fit in the model's context length says so. It has a switch in Settings."
+  - kind: added
+    description: "Publish to Agent Router: the endpoint page lists the AI routes that use the endpoint and adds a rule for its model names to an existing or new AIGatewayRoute, through its InferencePool or through a Backend and AIServiceBackend owned by the endpoint, with a ReferenceGrant for other namespaces. Agent Router appears as an optional stack in Platform Readiness."
+  - kind: added
+    description: "GPU Efficiency page: GPU utilization, requests and tokens per GPU-hour of every endpoint and GPU pod over 1 hour, 24 hours or 7 days, idle and underused workloads with a stop action, and the idle GPUs of the last hour in the Command Center."
+  - kind: added
+    description: "Benchmark mode in the Playground: latency and throughput of one or two endpoints under a fixed concurrency, with the peak queue and KV cache use of the servers, CSV and JSON export and the last runs kept in the browser."
+  - kind: fixed
+    description: "InferencePools and routes no longer look failed because of old status entries of Gateways that no longer route to them."
+  - kind: changed
+    description: "The deploy wizard suggests served model names without the organization, in lowercase and without dots, e.g. `qwen35-122b-a10b-fp8` for `hf://Qwen/Qwen3.5-122B-A10B-FP8`."
+  - kind: changed
+    description: "Updated the bundled Simple Icons set."
 annotations:
-  headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/inference-hub-v0.2.1/inference-hub-0.2.1.tar.gz
-  headlamp/plugin/archive-checksum: sha256:d0273957bcb59da957cd070c155bd61f83ac0c4216430ed363c2dd62fc238a91
+  headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/inference-hub-v0.3.0/inference-hub-0.3.0.tar.gz
+  headlamp/plugin/archive-checksum: sha256:42b4a706da07d1867a889808c94559e64c4e5b5e68efd62f05db5dbaeddc9169
   headlamp/plugin/version-compat: '>=0.45.0'
   headlamp/plugin/distro-compat: in-cluster,web,desktop
