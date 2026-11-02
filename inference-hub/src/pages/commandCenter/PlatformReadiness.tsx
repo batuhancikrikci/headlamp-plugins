@@ -15,6 +15,7 @@ const STACK_ICONS: Record<string, string> = {
   kserve: 'mdi:rocket-launch-outline',
   inference: 'mdi:routes',
   gatewayApi: 'mdi:gate',
+  agentRouter: 'mdi:router-network',
   nvidia: 'mdi:expansion-card',
   dra: 'mdi:chip',
   lws: 'mdi:account-group-outline',

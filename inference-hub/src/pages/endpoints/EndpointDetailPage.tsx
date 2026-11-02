@@ -38,6 +38,7 @@ import { PodJson } from '../../resources/pod';
 import { KubeJson } from '../../resources/types';
 import { endpointEditUrl, PAGES, playgroundUrl } from '../../routes';
 import { featuresOf, useSettings } from '../../settings/settings';
+import { AgentRouterSection, useAgentRouterUses } from './AgentRouterSection';
 import { AskModelPanel } from './AskModelPanel';
 import { DiagnosePanel } from './DiagnosePanel';
 import { EndpointMetrics } from './EndpointMetrics';
@@ -64,7 +65,16 @@ function useTab(): [TabId, (tab: TabId) => void] {
   return [tab, setTab];
 }
 
-function EndpointHeader({ endpoint, group }: { endpoint: ModelEndpoint; group: string }) {
+function EndpointHeader({
+  endpoint,
+  group,
+  discovery,
+}: {
+  endpoint: ModelEndpoint;
+  group: string;
+  discovery: Discovery;
+}) {
+  const routeUses = useAgentRouterUses(endpoint, isServed(discovery, 'aigatewayroutes'));
   const cluster = useCurrentCluster();
   const history = useHistory();
   const { enqueueSnackbar } = useSnackbar();
@@ -182,10 +192,31 @@ function EndpointHeader({ endpoint, group }: { endpoint: ModelEndpoint; group: s
         open={dialog === 'delete'}
         danger
         title={t('Delete {{name}}?', { name: endpoint.name })}
-        message={t(
-          'The {{kind}} and every object KServe created for it (pods, services, routes) are deleted. Clients lose access immediately.',
-          { kind: endpoint.kind }
-        )}
+        message={
+          <>
+            {t(
+              'The {{kind}} and every object KServe created for it (pods, services, routes) are deleted. Clients lose access immediately.',
+              { kind: endpoint.kind }
+            )}
+            {routeUses.length > 0 && (
+              <Box component="span" sx={{ display: 'block', mt: 1, color: 'warning.main' }}>
+                {t(
+                  'Agent Router routes still send requests to it: {{routes}}. Remove their rules too.',
+                  {
+                    routes: routeUses
+                      .map(
+                        u =>
+                          `${u.route.metadata.namespace}/${u.route.metadata.name} (${
+                            u.models.join(', ') || '*'
+                          })`
+                      )
+                      .join('; '),
+                  }
+                )}
+              </Box>
+            )}
+          </>
+        }
         typeToConfirm={endpoint.name}
         confirmLabel={t('Delete')}
         onConfirm={async () => {
@@ -262,7 +293,7 @@ function EndpointBody({
 
   return (
     <Box>
-      <EndpointHeader endpoint={endpoint} group={location.group} />
+      <EndpointHeader endpoint={endpoint} group={location.group} discovery={discovery} />
       {item.error && (
         <ErrorState
           title={t('Showing the last known state')}
@@ -291,7 +322,12 @@ function EndpointBody({
           />
         </Tabs>
       </Box>
-      {tab === 'overview' && <EndpointOverview endpoint={endpoint} />}
+      {tab === 'overview' && (
+        <>
+          <EndpointOverview endpoint={endpoint} />
+          <AgentRouterSection endpoint={endpoint} discovery={discovery} />
+        </>
+      )}
       {tab === 'metrics' && <EndpointMetrics endpoint={endpoint} pods={pods.items} />}
       {tab === 'pods' && (
         <SectionBox title={t('Pods')}>

@@ -7,7 +7,14 @@
  * preference order (newest first); every group found in the cluster is used.
  */
 
-export type StackId = 'kserve' | 'inference' | 'gatewayApi' | 'nvidia' | 'dra' | 'lws';
+export type StackId =
+  | 'kserve'
+  | 'inference'
+  | 'gatewayApi'
+  | 'agentRouter'
+  | 'nvidia'
+  | 'dra'
+  | 'lws';
 
 export type ResourceId =
   | 'inferenceservices'
@@ -22,6 +29,10 @@ export type ResourceId =
   | 'inferencemodelrewrites'
   | 'gateways'
   | 'httproutes'
+  | 'referencegrants'
+  | 'aigatewayroutes'
+  | 'aiservicebackends'
+  | 'envoybackends'
   | 'clusterpolicies'
   | 'nvidiadrivers'
   | 'leaderworkersets'
@@ -138,6 +149,38 @@ export const RESOURCES: Record<ResourceId, ResourceDefinition> = {
     namespaced: true,
     stack: 'gatewayApi',
   },
+  referencegrants: {
+    id: 'referencegrants',
+    kind: 'ReferenceGrant',
+    plural: 'referencegrants',
+    groups: ['gateway.networking.k8s.io'],
+    namespaced: true,
+    stack: 'gatewayApi',
+  },
+  aigatewayroutes: {
+    id: 'aigatewayroutes',
+    kind: 'AIGatewayRoute',
+    plural: 'aigatewayroutes',
+    groups: ['aigateway.envoyproxy.io'],
+    namespaced: true,
+    stack: 'agentRouter',
+  },
+  aiservicebackends: {
+    id: 'aiservicebackends',
+    kind: 'AIServiceBackend',
+    plural: 'aiservicebackends',
+    groups: ['aigateway.envoyproxy.io'],
+    namespaced: true,
+    stack: 'agentRouter',
+  },
+  envoybackends: {
+    id: 'envoybackends',
+    kind: 'Backend',
+    plural: 'backends',
+    groups: ['gateway.envoyproxy.io'],
+    namespaced: true,
+    stack: 'agentRouter',
+  },
   clusterpolicies: {
     id: 'clusterpolicies',
     kind: 'ClusterPolicy',
@@ -230,6 +273,17 @@ export const STACKS: StackInfo[] = [
     installCommand:
       'kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/latest/download/standard-install.yaml',
     docsUrl: 'https://gateway-api.sigs.k8s.io/guides/',
+  },
+  {
+    id: 'agentRouter',
+    name: 'Agent Router',
+    description:
+      'Envoy AI Gateway routes (AIGatewayRoute) that publish models to clients, with per-model routing, credentials and quotas.',
+    anyOf: ['aigatewayroutes'],
+    installHint:
+      'Install Envoy Gateway and the Agent Router (Envoy AI Gateway) controller to publish endpoints through AI routes.',
+    docsUrl: 'https://aigateway.envoyproxy.io/docs',
+    optional: true,
   },
   {
     id: 'nvidia',
