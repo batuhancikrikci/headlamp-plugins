@@ -38,8 +38,8 @@ function maxTokensOf(value: string): number {
 
 interface Turn extends AskTurn {
   reasoning: string;
-  /** The answer hit the token limit. */
-  truncated: boolean;
+  /** The answer hit the token limit, or was stopped or failed partway; it can be continued. */
+  cutOff?: 'length' | 'interrupted';
 }
 
 /** A conversation keeps the model and the text it started with. */
@@ -95,8 +95,9 @@ export function AskModelPanel({
   React.useEffect(() => () => abortRef.current?.abort(), []);
 
   /**
-   * Answers the last turn of `next`, or continues its answer. A new turn that got no answer is
-   * removed again (and its question returned) when the request fails.
+   * Answers the last turn of `next`, or continues its answer. When the request fails or is
+   * stopped, a partial answer is kept and can be continued, a failed continuation keeps the
+   * answer as it was, and a new turn without any answer is removed (its question returned).
    */
   const run = async (conv: Conversation<Target>, next: Turn[], continueLast: boolean) => {
     const controller = new AbortController();
@@ -106,7 +107,7 @@ export function AskModelPanel({
       before && after ? `${before}\n\n${after}` : before || after;
     const setLast = (patch: Partial<Turn>) =>
       setTurns(ts => ts.map((turn, i) => (i === ts.length - 1 ? { ...turn, ...patch } : turn)));
-    setTurns(next.map((turn, i) => (i === next.length - 1 ? { ...turn, truncated: false } : turn)));
+    setTurns(next.map((turn, i) => (i === next.length - 1 ? { ...turn, cutOff: undefined } : turn)));
     setBusy(true);
     setError(null);
     let answered = false;
@@ -139,11 +140,15 @@ export function AskModelPanel({
       setLast({
         answer: last.answer + result.content,
         reasoning: join(last.reasoning, result.reasoning),
-        truncated: result.finishReason === 'length',
+        cutOff: result.finishReason === 'length' ? 'length' : undefined,
       });
     } catch (err) {
       setError(controller.signal.aborted ? t('Stopped.') : (err as Error).message);
-      if (!continueLast && !answered) {
+      if (answered) {
+        setLast({ cutOff: 'interrupted' });
+      } else if (continueLast) {
+        setLast({ cutOff: last.cutOff });
+      } else {
         setTurns(ts => ts.slice(0, -1));
         if (next.length > 1) setFollowUp(last.question);
         else setConversation(null);
@@ -153,7 +158,7 @@ export function AskModelPanel({
     }
   };
 
-  const turn = (q: string): Turn => ({ question: q, answer: '', reasoning: '', truncated: false });
+  const turn = (q: string): Turn => ({ question: q, answer: '', reasoning: '' });
 
   const ask = () => {
     if (!target) return;
@@ -339,7 +344,7 @@ export function AskModelPanel({
                       {last && busy && !item.answer && !item.reasoning && (
                         <CircularProgress size={18} />
                       )}
-                      {item.truncated && (
+                      {item.cutOff && (
                         <Alert
                           severity="warning"
                           sx={{ my: 1 }}
@@ -357,11 +362,15 @@ export function AskModelPanel({
                             ) : undefined
                           }
                         >
-                          {item.answer
+                          {!item.answer
+                            ? item.cutOff === 'length'
+                              ? t(
+                                  'Thinking used the whole token limit before the answer. Raise Max tokens or turn off Thinking.'
+                                )
+                              : t('The answer stopped before it began.')
+                            : item.cutOff === 'length'
                             ? t('The answer hit the token limit and is cut off.')
-                            : t(
-                                'Thinking used the whole token limit before the answer. Raise Max tokens or turn off Thinking.'
-                              )}
+                            : t('The answer is incomplete.')}
                         </Alert>
                       )}
                     </Box>
