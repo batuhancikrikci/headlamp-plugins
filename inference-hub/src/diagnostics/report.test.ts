@@ -4,7 +4,7 @@ import {
   ASK_SYSTEM_PROMPT,
   askMessages,
   CONTINUE_PROMPT,
-  continueMessages,
+  conversationMessages,
   diagnosisReport,
   maskSecrets,
   maskTokens,
@@ -123,13 +123,39 @@ describe('askMessages', () => {
   });
 });
 
-describe('continueMessages', () => {
-  it('sends the answer so far and asks to continue it', () => {
-    const base = askMessages('REPORT', 'Why?');
-    expect(continueMessages(base, 'Part one')).toEqual([
-      ...base,
-      { role: 'assistant', content: 'Part one' },
-      { role: 'user', content: CONTINUE_PROMPT },
+describe('conversationMessages', () => {
+  const first = askMessages('REPORT', 'Why?');
+
+  it('sends the report with the first question, then the answers and follow-ups', () => {
+    expect(conversationMessages('REPORT', [{ question: 'Why?', answer: '' }])).toEqual(first);
+    expect(
+      conversationMessages('REPORT', [
+        { question: 'Why?', answer: 'The GPU.' },
+        { question: 'Which flag?', answer: '' },
+      ])
+    ).toEqual([
+      ...first,
+      { role: 'assistant', content: 'The GPU.' },
+      { role: 'user', content: 'Which flag?' },
     ]);
+  });
+
+  it('asks to continue the last answer', () => {
+    expect(conversationMessages('REPORT', [{ question: 'Why?', answer: 'Part one' }], true)).toEqual(
+      [
+        ...first,
+        { role: 'assistant', content: 'Part one' },
+        { role: 'user', content: CONTINUE_PROMPT },
+      ]
+    );
+  });
+
+  it('merges a question without an answer with the next one', () => {
+    const messages = conversationMessages('REPORT', [
+      { question: 'Why?', answer: '' },
+      { question: 'Short answer please.', answer: '' },
+    ]);
+    expect(messages).toHaveLength(2);
+    expect(messages[1].content).toBe('Why?\n\nREPORT\n\nShort answer please.');
   });
 });

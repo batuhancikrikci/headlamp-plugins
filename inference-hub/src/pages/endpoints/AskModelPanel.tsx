@@ -13,16 +13,16 @@ import {
   Typography,
 } from '@mui/material';
 import React from 'react';
-import {
-  chatCompletion,
-  ChatMessage,
-  isContextLengthError,
-  resolveTarget,
-} from '../../api/openai';
+import { chatCompletion, isContextLengthError, resolveTarget } from '../../api/openai';
 import { t } from '../../common/i18n';
 import { Markdown } from '../../components/common/Markdown';
 import { Diagnosis, LogSample } from '../../diagnostics/diagnose';
-import { askMessages, continueMessages, diagnosisReport } from '../../diagnostics/report';
+import {
+  AskTurn,
+  conversationMessages,
+  DEFAULT_QUESTION,
+  diagnosisReport,
+} from '../../diagnostics/report';
 import { useCurrentCluster } from '../../hooks/useCluster';
 import { usePlaygroundTargets } from '../../hooks/usePlaygroundTargets';
 import { ModelEndpoint } from '../../resources/endpoint';
@@ -36,16 +36,23 @@ function maxTokensOf(value: string): number {
   return Number.isFinite(n) && n >= 1 ? Math.min(n, MAX_MAX_TOKENS) : DEFAULT_MAX_TOKENS;
 }
 
-/** The question that was sent, so that a cut-off answer can be continued with the same model. */
-interface Asked<T> {
+interface Turn extends AskTurn {
+  reasoning: string;
+  /** The answer hit the token limit. */
+  truncated: boolean;
+}
+
+/** A conversation keeps the model and the text it started with. */
+interface Conversation<T> {
   target: T;
-  messages: ChatMessage[];
+  report: string;
 }
 
 /**
  * Sends the diagnosis to a model that runs in this cluster, through the Kubernetes service or
  * pod proxy like the Playground: the text never leaves the cluster. The user reviews (and may
- * edit) the exact text before it is sent.
+ * edit) the exact text before it is sent, then can ask follow-up questions; each request sends
+ * the whole conversation.
  */
 export function AskModelPanel({
   endpoint,
@@ -63,6 +70,7 @@ export function AskModelPanel({
     () => targets.filter(target => target.status.health === 'ready' && target.id !== ownId),
     [targets, ownId]
   );
+  type Target = (typeof candidates)[number];
   const [targetId, setTargetId] = React.useState('');
   const target = candidates.find(c => c.id === targetId) || candidates[0];
 
@@ -76,40 +84,42 @@ export function AskModelPanel({
     if (!edited) setText(report);
   }, [report, edited]);
   const [question, setQuestion] = React.useState('');
+  const [followUp, setFollowUp] = React.useState('');
   const [maxTokens, setMaxTokens] = React.useState(String(DEFAULT_MAX_TOKENS));
   const [thinking, setThinking] = React.useState(true);
-  const [asked, setAsked] = React.useState<Asked<NonNullable<typeof target>> | null>(null);
-  const [answer, setAnswer] = React.useState('');
-  const [reasoning, setReasoning] = React.useState('');
-  const [truncated, setTruncated] = React.useState(false);
+  const [conversation, setConversation] = React.useState<Conversation<Target> | null>(null);
+  const [turns, setTurns] = React.useState<Turn[]>([]);
   const [error, setError] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
   const abortRef = React.useRef<AbortController | null>(null);
   React.useEffect(() => () => abortRef.current?.abort(), []);
 
-  /** Sends `messages`; the answer is added to `prefix` (the answer so far when continuing). */
-  const send = async (
-    to: NonNullable<typeof target>,
-    messages: ChatMessage[],
-    prefix: { answer: string; reasoning: string }
-  ) => {
+  /**
+   * Answers the last turn of `next`, or continues its answer. A new turn that got no answer is
+   * removed again (and its question returned) when the request fails.
+   */
+  const run = async (conv: Conversation<Target>, next: Turn[], continueLast: boolean) => {
     const controller = new AbortController();
     abortRef.current = controller;
+    const last = next[next.length - 1];
     const join = (before: string, after: string) =>
       before && after ? `${before}\n\n${after}` : before || after;
+    const setLast = (patch: Partial<Turn>) =>
+      setTurns(ts => ts.map((turn, i) => (i === ts.length - 1 ? { ...turn, ...patch } : turn)));
+    setTurns(next.map((turn, i) => (i === next.length - 1 ? { ...turn, truncated: false } : turn)));
     setBusy(true);
     setError(null);
-    setTruncated(false);
+    let answered = false;
     try {
-      const resolved = await resolveTarget(cluster, to);
-      const model = resolved.models.includes(to.defaultModel)
-        ? to.defaultModel
-        : resolved.models[0] || to.defaultModel;
+      const resolved = await resolveTarget(cluster, conv.target);
+      const model = resolved.models.includes(conv.target.defaultModel)
+        ? conv.target.defaultModel
+        : resolved.models[0] || conv.target.defaultModel;
       const result = await chatCompletion(
         cluster,
         resolved,
         model,
-        messages,
+        conversationMessages(conv.report, next, continueLast),
         {
           modelDefaults: false,
           temperature: 0.2,
@@ -121,34 +131,57 @@ export function AskModelPanel({
         controller.signal,
         {
           onDelta: (content, thought) => {
-            setAnswer(prefix.answer + content);
-            setReasoning(join(prefix.reasoning, thought));
+            answered = answered || !!content || !!thought;
+            setLast({ answer: last.answer + content, reasoning: join(last.reasoning, thought) });
           },
         }
       );
-      setAnswer(prefix.answer + result.content);
-      setReasoning(join(prefix.reasoning, result.reasoning));
-      setTruncated(result.finishReason === 'length');
+      setLast({
+        answer: last.answer + result.content,
+        reasoning: join(last.reasoning, result.reasoning),
+        truncated: result.finishReason === 'length',
+      });
     } catch (err) {
       setError(controller.signal.aborted ? t('Stopped.') : (err as Error).message);
+      if (!continueLast && !answered) {
+        setTurns(ts => ts.slice(0, -1));
+        if (next.length > 1) setFollowUp(last.question);
+        else setConversation(null);
+      }
     } finally {
       setBusy(false);
     }
   };
 
+  const turn = (q: string): Turn => ({ question: q, answer: '', reasoning: '', truncated: false });
+
   const ask = () => {
     if (!target) return;
-    const messages = askMessages(text, question);
-    setAsked({ target, messages });
-    setAnswer('');
-    setReasoning('');
-    send(target, messages, { answer: '', reasoning: '' });
+    const conv = { target, report: text };
+    setConversation(conv);
+    run(conv, [turn(question.trim() || DEFAULT_QUESTION)], false);
+  };
+
+  const askFollowUp = () => {
+    const q = followUp.trim();
+    if (!conversation || !q || busy) return;
+    setFollowUp('');
+    run(conversation, [...turns, turn(q)], false);
   };
 
   const continueAnswer = () => {
-    if (!asked || !answer) return;
-    send(asked.target, continueMessages(asked.messages, answer), { answer, reasoning });
+    if (conversation && turns[turns.length - 1]?.answer) run(conversation, turns, true);
   };
+
+  const newConversation = () => {
+    abortRef.current?.abort();
+    setConversation(null);
+    setTurns([]);
+    setFollowUp('');
+    setError(null);
+  };
+
+  const started = !!conversation;
 
   return (
     <Paper variant="outlined" sx={{ p: 2, mt: 2 }}>
@@ -175,12 +208,12 @@ export function AskModelPanel({
               select
               size="small"
               label={t('Model')}
-              value={target?.id || ''}
+              value={(started ? conversation.target.id : target?.id) || ''}
               onChange={e => setTargetId(e.target.value)}
               sx={{ minWidth: 280 }}
-              disabled={busy || loading}
+              disabled={busy || loading || started}
             >
-              {candidates.map(c => (
+              {(started ? [conversation.target] : candidates).map(c => (
                 <MenuItem key={c.id} value={c.id}>
                   {c.namespace}/{c.label} · {c.defaultModel}
                 </MenuItem>
@@ -189,11 +222,11 @@ export function AskModelPanel({
             <TextField
               size="small"
               label={t('Question (optional)')}
-              placeholder={t('Why is this endpoint not working, and how do I fix it?')}
+              placeholder={t(DEFAULT_QUESTION)}
               value={question}
               onChange={e => setQuestion(e.target.value)}
               sx={{ flexGrow: 1, minWidth: 280 }}
-              disabled={busy}
+              disabled={busy || started}
             />
             <TextField
               size="small"
@@ -225,18 +258,20 @@ export function AskModelPanel({
           </Box>
           <TextField
             multiline
-            minRows={6}
-            maxRows={16}
+            minRows={started ? 2 : 6}
+            maxRows={started ? 6 : 16}
             label={t('Text that will be sent')}
-            value={text}
+            value={started ? conversation.report : text}
             onChange={e => {
               setText(e.target.value);
               setEdited(true);
             }}
-            disabled={busy}
+            disabled={busy || started}
             InputProps={{ sx: { fontFamily: 'monospace', fontSize: 12 } }}
             helperText={
-              edited ? (
+              started ? (
+                t('Start a new conversation to change the model or the text.')
+              ) : edited ? (
                 <Button size="small" sx={{ p: 0 }} onClick={() => setEdited(false)}>
                   {t('Reset to the generated text')}
                 </Button>
@@ -246,77 +281,142 @@ export function AskModelPanel({
             }
           />
           <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button
-              variant="contained"
-              disabled={busy || !target || !text.trim()}
-              startIcon={busy ? <CircularProgress size={14} /> : <Icon icon="mdi:send" />}
-              onClick={ask}
-            >
-              {t('Ask')}
-            </Button>
-            {busy && <Button onClick={() => abortRef.current?.abort()}>{t('Stop')}</Button>}
+            {started ? (
+              <Button startIcon={<Icon icon="mdi:refresh" />} onClick={newConversation}>
+                {t('New conversation')}
+              </Button>
+            ) : (
+              <Button
+                variant="contained"
+                disabled={busy || !target || !text.trim()}
+                startIcon={<Icon icon="mdi:send" />}
+                onClick={ask}
+              >
+                {t('Ask')}
+              </Button>
+            )}
           </Box>
-          {error && (
-            <Alert severity="error">
-              {error}
-              {isContextLengthError(error) && (
-                <Typography variant="body2" sx={{ mt: 1 }}>
-                  {t(
-                    "The text and the answer do not fit in the model's context length (--max-model-len). Lower Max tokens or shorten the text."
-                  )}
-                </Typography>
-              )}
-            </Alert>
-          )}
-          {(answer || reasoning) && (
-            <Box sx={{ borderTop: 1, borderColor: 'divider', pt: 2 }}>
-              {reasoning && (
-                <details open={!answer}>
-                  <summary>
-                    <Typography variant="caption" color="text.secondary">
-                      {t('Reasoning')}
-                    </Typography>
-                  </summary>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ whiteSpace: 'pre-wrap', mb: 1 }}
-                  >
-                    {reasoning}
-                  </Typography>
-                </details>
-              )}
-              {answer && <Markdown text={answer} />}
-              {truncated && (
-                <Alert
-                  severity="warning"
-                  sx={{ my: 1 }}
-                  action={
-                    answer ? (
-                      <Button
-                        color="inherit"
-                        size="small"
-                        disabled={busy}
-                        startIcon={<Icon icon="mdi:play-outline" />}
-                        onClick={continueAnswer}
-                      >
-                        {t('Continue')}
-                      </Button>
-                    ) : undefined
-                  }
-                >
-                  {answer
-                    ? t('The answer hit the token limit and is cut off.')
-                    : t(
-                        'Thinking used the whole token limit before the answer. Raise Max tokens or turn off Thinking.'
+
+          {started && (
+            <Box
+              sx={{
+                borderTop: 1,
+                borderColor: 'divider',
+                pt: 2,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 2,
+              }}
+            >
+              {turns.map((item, index) => {
+                const last = index === turns.length - 1;
+                return (
+                  <Box key={index}>
+                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', mb: 1 }}>
+                      <Icon icon="mdi:account-outline" width={20} />
+                      <Typography variant="body2" sx={{ fontWeight: 600, whiteSpace: 'pre-wrap' }}>
+                        {item.question}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ pl: 3.5 }}>
+                      {item.reasoning && (
+                        <details open={!item.answer}>
+                          <summary>
+                            <Typography variant="caption" color="text.secondary">
+                              {t('Reasoning')}
+                            </Typography>
+                          </summary>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ whiteSpace: 'pre-wrap', mb: 1 }}
+                          >
+                            {item.reasoning}
+                          </Typography>
+                        </details>
                       )}
+                      {item.answer && <Markdown text={item.answer} />}
+                      {last && busy && !item.answer && !item.reasoning && (
+                        <CircularProgress size={18} />
+                      )}
+                      {item.truncated && (
+                        <Alert
+                          severity="warning"
+                          sx={{ my: 1 }}
+                          action={
+                            last && item.answer ? (
+                              <Button
+                                color="inherit"
+                                size="small"
+                                disabled={busy}
+                                startIcon={<Icon icon="mdi:play-outline" />}
+                                onClick={continueAnswer}
+                              >
+                                {t('Continue')}
+                              </Button>
+                            ) : undefined
+                          }
+                        >
+                          {item.answer
+                            ? t('The answer hit the token limit and is cut off.')
+                            : t(
+                                'Thinking used the whole token limit before the answer. Raise Max tokens or turn off Thinking.'
+                              )}
+                        </Alert>
+                      )}
+                    </Box>
+                  </Box>
+                );
+              })}
+              {error && (
+                <Alert severity="error">
+                  {error}
+                  {isContextLengthError(error) && (
+                    <Typography variant="body2" sx={{ mt: 1 }}>
+                      {t(
+                        "The conversation and the answer do not fit in the model's context length (--max-model-len). Lower Max tokens, shorten the text or start a new conversation."
+                      )}
+                    </Typography>
+                  )}
                 </Alert>
               )}
-              <Typography variant="caption" color="text.secondary">
-                {t('Answer of {{model}}. Check it before acting on it.', {
-                  model: asked?.target.defaultModel || '',
-                })}
-              </Typography>
+              {turns.some(item => item.answer) && (
+                <Typography variant="caption" color="text.secondary">
+                  {t('Answers of {{model}}. Check them before acting on them.', {
+                    model: conversation.target.defaultModel,
+                  })}
+                </Typography>
+              )}
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+                <TextField
+                  multiline
+                  maxRows={6}
+                  size="small"
+                  fullWidth
+                  label={t('Follow-up question')}
+                  placeholder={t('Enter to send, Shift+Enter for a new line')}
+                  value={followUp}
+                  onChange={e => setFollowUp(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      askFollowUp();
+                    }
+                  }}
+                />
+                {busy ? (
+                  <Button onClick={() => abortRef.current?.abort()}>{t('Stop')}</Button>
+                ) : (
+                  <Button
+                    variant="contained"
+                    disabled={!followUp.trim()}
+                    startIcon={<Icon icon="mdi:send" />}
+                    onClick={askFollowUp}
+                  >
+                    {t('Send')}
+                  </Button>
+                )}
+              </Box>
             </Box>
           )}
         </Box>

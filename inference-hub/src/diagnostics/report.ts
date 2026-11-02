@@ -99,23 +99,49 @@ export function diagnosisReport(
     : text;
 }
 
+export const DEFAULT_QUESTION = 'Why is this endpoint not working, and how do I fix it?';
+
 export const CONTINUE_PROMPT =
   'Continue your answer exactly where it stopped. Do not repeat what you already wrote.';
 
-/** Messages that ask the model to continue an answer cut off by the token limit. */
-export function continueMessages(messages: ChatMessage[], answer: string): ChatMessage[] {
-  return [
-    ...messages,
-    { role: 'assistant', content: answer },
-    { role: 'user', content: CONTINUE_PROMPT },
-  ];
-}
-
 /** Chat messages for the question about a report. */
 export function askMessages(report: string, question?: string): ChatMessage[] {
-  const ask = question?.trim() || 'Why is this endpoint not working, and how do I fix it?';
+  const ask = question?.trim() || DEFAULT_QUESTION;
   return [
     { role: 'system', content: ASK_SYSTEM_PROMPT },
     { role: 'user', content: `${ask}\n\n${report}` },
   ];
+}
+
+/** One question of a conversation and the answer so far. */
+export interface AskTurn {
+  question: string;
+  answer: string;
+}
+
+/**
+ * Messages of a conversation about a report: the report goes with the first question, then
+ * each answer and follow-up question. The answer of the last turn is not sent unless
+ * `continueLast` asks the model to continue it (it was cut off by the token limit). A turn
+ * without an answer (all its tokens went to thinking) is merged with the next question, so
+ * that user messages never follow each other.
+ */
+export function conversationMessages(
+  report: string,
+  turns: AskTurn[],
+  continueLast = false
+): ChatMessage[] {
+  const messages = askMessages(report, turns[0]?.question);
+  const add = (role: 'user' | 'assistant', content: string) => {
+    const previous = messages[messages.length - 1];
+    if (role === 'user' && previous.role === 'user') previous.content += `\n\n${content}`;
+    else messages.push({ role, content });
+  };
+  turns.forEach((turn, index) => {
+    if (index > 0) add('user', turn.question);
+    const last = index === turns.length - 1;
+    if (turn.answer && (!last || continueLast)) add('assistant', turn.answer);
+  });
+  if (continueLast) add('user', CONTINUE_PROMPT);
+  return messages;
 }

@@ -21,10 +21,11 @@ All notable changes to the Inference Hub plugin are documented here. The format 
   links endpoints that need attention to it.
 - Ask a model: sends the diagnosis (secrets masked, reviewed before sending) to another model
   running in the cluster through the Kubernetes API proxy and shows its answer and reasoning.
-  The token limit is set in the panel (16384 by default), Thinking can be turned off for models
-  whose chat template reads enable_thinking (Qwen3 and others), an answer cut off by the limit
-  can be continued, and a request that does not fit in the model's context length says so. It
-  has a switch in Settings.
+  Follow-up questions continue the conversation; each request sends the whole conversation, and
+  New conversation starts over. The token limit is set in the panel (16384 by default), Thinking
+  can be turned off for models whose chat template reads enable_thinking (Qwen3 and others), an
+  answer cut off by the limit can be continued, and a request that does not fit in the model's
+  context length says so. It has a switch in Settings.
 - Publish to Agent Router: the endpoint page lists the AI routes that use the endpoint and adds
   a rule for its model names to an existing or new AIGatewayRoute, through its InferencePool or
   through a Backend and AIServiceBackend owned by the endpoint, with a ReferenceGrant for other
