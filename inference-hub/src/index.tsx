@@ -21,7 +21,6 @@ import { VllmEnginesPage } from './pages/engines/VllmEnginesPage';
 import { InferenceGatewayPage } from './pages/gateway/InferenceGatewayPage';
 import { GpuEfficiencyPage } from './pages/gpuFleet/GpuEfficiencyPage';
 import { GpuFleetPage } from './pages/gpuFleet/GpuFleetPage';
-import { CapacityPlannerPage } from './pages/planner/CapacityPlannerPage';
 import { PlaygroundPage } from './pages/playground/PlaygroundPage';
 import { ProfileDetailPage } from './pages/profiles/ProfileDetailPage';
 import { ProfilesPage } from './pages/profiles/ProfilesPage';
@@ -53,12 +52,6 @@ const SIDEBAR_PAGES: PageRegistration[] = [
     label: 'Model Catalog',
     icon: 'mdi:bookshelf',
     component: CatalogPage,
-  },
-  {
-    page: PAGES.planner,
-    label: 'Capacity Planner',
-    icon: 'mdi:calculator-variant-outline',
-    component: CapacityPlannerPage,
   },
   {
     page: PAGES.endpoints,

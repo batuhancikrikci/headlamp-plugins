@@ -34,8 +34,7 @@ export interface EngineMetricsState {
   skipped: number;
 }
 
-/** Reads /metrics of a vLLM pod through the pod proxy. */
-export async function scrape(cluster: string, engine: VllmEngine): Promise<string> {
+async function scrape(cluster: string, engine: VllmEngine): Promise<string> {
   const path = `${podProxyPath(engine.namespace, engine.pod, engine.port, engine.scheme)}/metrics`;
   const response: Response = await ApiProxy.request(
     path,

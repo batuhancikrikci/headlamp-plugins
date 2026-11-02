@@ -489,7 +489,7 @@ export const LOG_RULES: LogRule[] = [
     pattern:
       /No available memory for the cache blocks|larger than the maximum number of tokens that can be stored in KV cache|insufficient .*KV cache/i,
     summary: 'There is not enough GPU memory left for the KV cache.',
-    hint: 'Lower --max-model-len, raise --gpu-memory-utilization, or add GPUs (Capacity Planner shows what fits).',
+    hint: 'Lower --max-model-len, raise --gpu-memory-utilization, or add GPUs per replica.',
   },
   {
     id: 'gated',

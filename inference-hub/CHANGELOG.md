@@ -19,10 +19,6 @@ All notable changes to the Inference Hub plugin are documented here. The format 
 - Ask a model: sends the diagnosis (secrets masked, reviewed before sending) to another model
   running in the cluster through the Kubernetes API proxy and shows its answer and reasoning.
   It has a switch in Settings.
-- Capacity Planner page: GPU memory for weights and KV cache, concurrent requests and context
-  length per GPU model of the cluster, the smallest tensor parallel size and placeable replicas,
-  the measured KV cache of engines that already serve the model, and a deploy with the matching
-  vLLM arguments. Catalog entries link to it.
 - Publish to Agent Router: the endpoint page lists the AI routes that use the endpoint and adds
   a rule for its model names to an existing or new AIGatewayRoute, through its InferencePool or
   through a Backend and AIServiceBackend owned by the endpoint, with a ReferenceGrant for other
