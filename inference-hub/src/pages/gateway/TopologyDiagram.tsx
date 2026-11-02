@@ -183,7 +183,9 @@ export function TopologyDiagram({ chain }: { chain: PoolChain }) {
                 {r.metadata.name}
               </Link>
               <Box sx={{ mt: 0.25 }}>
-                <StatusBadge summary={parentsHealth(r.status?.parents, 'route')} />
+                <StatusBadge
+                  summary={parentsHealth(r.status?.parents, 'route', r.metadata?.generation)}
+                />
               </Box>
               {r.spec?.hostnames?.length ? (
                 <Typography variant="caption" color="text.secondary" component="div">

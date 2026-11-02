@@ -74,6 +74,25 @@ describe('health', () => {
     ).toMatchObject({ health: 'failed', reason: 'InvalidExtensionRef' });
   });
 
+  it('ignores parents the controller no longer maintains', () => {
+    const old = {
+      controllerName: 'eg',
+      conditions: [
+        { type: 'Accepted', status: 'False', reason: 'NoMatchingParent', observedGeneration: 1 },
+      ],
+    };
+    const current = {
+      controllerName: 'eg',
+      conditions: [
+        { type: 'Accepted', status: 'True', observedGeneration: 2 },
+        { type: 'ResolvedRefs', status: 'True', observedGeneration: 2 },
+      ],
+    };
+    expect(parentsHealth([old, current], 'pool').health).toBe('failed');
+    expect(parentsHealth([old, current], 'pool', 2).health).toBe('ready');
+    expect(parentsHealth([old], 'pool', 2).health).toBe('failed');
+  });
+
   it('uses Programmed for gateways', () => {
     expect(
       gatewayHealth({

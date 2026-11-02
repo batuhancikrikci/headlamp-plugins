@@ -49,8 +49,33 @@ export function selectorOf(spec: InferencePoolJson['spec']): Record<string, stri
   return { ...(spec?.selector?.matchLabels || {}) };
 }
 
+function observedGenerationOf(entry: ParentStatus): number {
+  return Math.max(-1, ...(entry.conditions || []).map(c => c.observedGeneration ?? -1));
+}
+
+/**
+ * Drops parent entries a controller left behind: when a controller has already reported the
+ * current generation for one entry, its entries still at an older generation are no longer
+ * maintained (e.g. a Gateway that no longer routes to the pool).
+ */
+export function withoutStaleParents(parents: ParentStatus[], generation?: number): ParentStatus[] {
+  if (generation === undefined) return parents;
+  const current = new Set(
+    parents.filter(p => observedGenerationOf(p) === generation).map(p => p.controllerName || '')
+  );
+  return parents.filter(p => {
+    const observed = observedGenerationOf(p);
+    return observed < 0 || observed >= generation || !current.has(p.controllerName || '');
+  });
+}
+
 /** Health from the parent (Gateway) statuses: Accepted and ResolvedRefs on every parent. */
-export function parentsHealth(parents: ParentStatus[] | undefined, what: string): HealthSummary {
+export function parentsHealth(
+  allParents: ParentStatus[] | undefined,
+  what: string,
+  generation?: number
+): HealthSummary {
+  const parents = allParents && withoutStaleParents(allParents, generation);
   if (!parents || parents.length === 0) {
     return { health: 'unknown', reason: `No Gateway reports this ${what} yet` };
   }
@@ -100,7 +125,7 @@ export function normalizePool(raw: InferencePoolJson): InferencePool {
         }
       : undefined,
     parents: raw.status?.parents || [],
-    health: parentsHealth(raw.status?.parents, 'pool'),
+    health: parentsHealth(raw.status?.parents, 'pool', raw.metadata.generation),
     owner: owner ? { kind: owner.kind, name: owner.name } : undefined,
     raw,
   };

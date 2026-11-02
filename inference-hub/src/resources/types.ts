@@ -26,6 +26,7 @@ export interface Condition {
   message?: string;
   severity?: string;
   lastTransitionTime?: string;
+  observedGeneration?: number;
 }
 
 export interface KubeJson<Spec = object, Status = object> {
