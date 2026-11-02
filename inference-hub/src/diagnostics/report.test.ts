@@ -3,6 +3,8 @@ import { diagnose, DiagnosisInput } from './diagnose';
 import {
   ASK_SYSTEM_PROMPT,
   askMessages,
+  CONTINUE_PROMPT,
+  continueMessages,
   diagnosisReport,
   maskSecrets,
   maskTokens,
@@ -118,5 +120,16 @@ describe('askMessages', () => {
       },
     ]);
     expect(askMessages('REPORT', 'Is it the GPU?')[1].content).toBe('Is it the GPU?\n\nREPORT');
+  });
+});
+
+describe('continueMessages', () => {
+  it('sends the answer so far and asks to continue it', () => {
+    const base = askMessages('REPORT', 'Why?');
+    expect(continueMessages(base, 'Part one')).toEqual([
+      ...base,
+      { role: 'assistant', content: 'Part one' },
+      { role: 'user', content: CONTINUE_PROMPT },
+    ]);
   });
 });

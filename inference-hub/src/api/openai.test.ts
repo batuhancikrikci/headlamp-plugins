@@ -2,6 +2,7 @@ import {
   applyChunk,
   buildCurl,
   ChatTarget,
+  isContextLengthError,
   pickService,
   requestBody,
   SseParser,
@@ -124,6 +125,30 @@ describe('requests', () => {
     expect(
       buildCurl('http://svc:8000', '/v1', 'm', [], { ...params, modelDefaults: true })
     ).not.toContain('temperature');
+  });
+
+  it('turns thinking off in the chat template only when asked', () => {
+    expect(requestBody('m', [], params, false)).not.toHaveProperty('chat_template_kwargs');
+    expect(requestBody('m', [], { ...params, thinking: true }, false)).not.toHaveProperty(
+      'chat_template_kwargs'
+    );
+    expect(requestBody('m', [], { ...params, thinking: false }, false)).toMatchObject({
+      chat_template_kwargs: { enable_thinking: false },
+    });
+  });
+
+  it('recognizes context length errors of vLLM', () => {
+    expect(
+      isContextLengthError(
+        "This model's maximum context length is 8192 tokens. However, you requested 20000 tokens."
+      )
+    ).toBe(true);
+    expect(
+      isContextLengthError(
+        "'max_tokens' or 'max_completion_tokens' is too large: 16384. This model's maximum context length is 8192 tokens"
+      )
+    ).toBe(true);
+    expect(isContextLengthError('HTTP 503')).toBe(false);
   });
 
   it('builds a shell-safe curl command', () => {

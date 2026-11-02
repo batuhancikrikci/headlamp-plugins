@@ -47,6 +47,13 @@ export class ChatError extends Error {
   }
 }
 
+/** The prompt and max_tokens do not fit in the context length of the model (--max-model-len). */
+export function isContextLengthError(message: string): boolean {
+  return /maximum context length|max_tokens.{0,40}too large|max_completion_tokens.{0,40}too large/i.test(
+    message
+  );
+}
+
 function errorOf(err: unknown): ChatError {
   const e = err as { status?: number; message?: string };
   return new ChatError(e?.message || String(err), e?.status);
@@ -176,6 +183,11 @@ export interface ChatParams {
   topP: number;
   maxTokens: number;
   stream: boolean;
+  /**
+   * false sends `enable_thinking: false` to the chat template (Qwen3 and other reasoning models
+   * whose template reads it), so the model answers without thinking first.
+   */
+  thinking?: boolean;
 }
 
 export interface Usage {
@@ -212,6 +224,7 @@ export function requestBody(
     messages,
     ...(params.modelDefaults ? {} : { temperature: params.temperature, top_p: params.topP }),
     max_tokens: params.maxTokens,
+    ...(params.thinking === false ? { chat_template_kwargs: { enable_thinking: false } } : {}),
     stream,
     ...(stream && streamUsage ? { stream_options: { include_usage: true } } : {}),
   };

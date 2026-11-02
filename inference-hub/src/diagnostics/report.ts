@@ -99,6 +99,18 @@ export function diagnosisReport(
     : text;
 }
 
+export const CONTINUE_PROMPT =
+  'Continue your answer exactly where it stopped. Do not repeat what you already wrote.';
+
+/** Messages that ask the model to continue an answer cut off by the token limit. */
+export function continueMessages(messages: ChatMessage[], answer: string): ChatMessage[] {
+  return [
+    ...messages,
+    { role: 'assistant', content: answer },
+    { role: 'user', content: CONTINUE_PROMPT },
+  ];
+}
+
 /** Chat messages for the question about a report. */
 export function askMessages(report: string, question?: string): ChatMessage[] {
   const ask = question?.trim() || 'Why is this endpoint not working, and how do I fix it?';
