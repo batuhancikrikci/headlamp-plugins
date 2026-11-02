@@ -1,10 +1,10 @@
 # Artifact Hub metadata of the Gateway API plugin. The release workflow updates version, createdAt,
 # archive-url and archive-checksum when a tag named gateway-v<version> is pushed.
-version: 0.1.0
+version: 0.1.1
 name: gateway
 displayName: Gateway API
-createdAt: "2026-10-20T13:26:51Z"
-digest: "84498b352678a2a974f9904ffdbce4579961a57e95b2640db667a673e86f4139"
+createdAt: "2026-11-02T22:14:34Z"
+digest: "bd6345deee0a84c1706b079c257d501b7e7670f552a4b247bd41e6ac532acc12"
 description: 'Headlamp plugin for the Kubernetes Gateway API: overview, topology, guided forms, wizards and relationship-aware detail views'
 logoPath: docs/logo.png
 license: Apache-2.0
@@ -39,7 +39,7 @@ install: |
   ## Headlamp desktop
 
   Open the plugin catalog in Headlamp, search for "Gateway API" and install it. Alternatively,
-  download `gateway-0.1.0.tar.gz` from the GitHub release and extract it into the Headlamp plugins
+  download `gateway-0.1.1.tar.gz` from the GitHub release and extract it into the Headlamp plugins
   directory (for example `~/.config/Headlamp/plugins/` on Linux), then reload Headlamp.
 
   ## Headlamp in-cluster
@@ -53,13 +53,15 @@ install: |
       plugins:
         - name: gateway
           source: https://artifacthub.io/packages/headlamp/batuhancikrikci-headlamp-plugins/gateway
-          version: 0.1.0
+          version: 0.1.1
   ```
 changes:
-  - kind: added
-    description: "First public release."
+  - kind: fixed
+    description: "A route whose parent was changed no longer stays Pending because of the status entry the controller left behind for the removed parent; the Overview condition count ignores it too."
+  - kind: fixed
+    description: "A BackendTLSPolicy no longer stays Pending because of ancestors the controller stopped maintaining (for example after a target was removed)."
 annotations:
-  headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/gateway-v0.1.0/gateway-0.1.0.tar.gz
-  headlamp/plugin/archive-checksum: sha256:c8aecbb2da263bdc736d82ef2b8610f7b5baef5abadb60e94ad1fb28bed604e2
+  headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/gateway-v0.1.1/gateway-0.1.1.tar.gz
+  headlamp/plugin/archive-checksum: sha256:f145213a7d3039335a4859cd9635af9d135e660f741ad6e673ec023ae8e461d4
   headlamp/plugin/version-compat: '>=0.45.0'
   headlamp/plugin/distro-compat: in-cluster,web,desktop
