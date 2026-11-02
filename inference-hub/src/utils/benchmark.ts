@@ -62,6 +62,8 @@ export interface RequestResult {
   totalMs: number;
   outputTokens?: number;
   error?: string;
+  /** Cut off by stopping the test; not counted in the summary. */
+  aborted?: boolean;
 }
 
 /**
@@ -124,7 +126,8 @@ export interface BenchmarkSummary {
   errors: Array<{ message: string; count: number }>;
 }
 
-export function summarize(results: RequestResult[], wallMs: number): BenchmarkSummary {
+export function summarize(all: RequestResult[], wallMs: number): BenchmarkSummary {
+  const results = all.filter(r => !r.aborted);
   const ok = results.filter(r => r.ok);
   const failed = results.length - ok.length;
   const outputTokens = ok.reduce((sum, r) => sum + (r.outputTokens || 0), 0);

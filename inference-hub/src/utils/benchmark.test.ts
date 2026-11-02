@@ -86,6 +86,14 @@ describe('summarize', () => {
     expect(s.perRequestTps).toBeCloseTo(66.67, 1);
   });
 
+  it('leaves out requests cut off by stopping the test', () => {
+    const s = summarize(
+      [...results, { ok: false, totalMs: 10, error: 'aborted', aborted: true }],
+      4000
+    );
+    expect(s).toMatchObject({ completed: 3, failed: 1, errorRate: 0.25 });
+  });
+
   it('handles empty runs', () => {
     expect(summarize([], 0)).toMatchObject({ completed: 0, errorRate: 0, ttftMs: {} });
     expect(percentile([], 50)).toBeUndefined();

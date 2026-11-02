@@ -47,6 +47,8 @@ interface ServerPeak {
 }
 
 interface RunRecord {
+  /** The test was stopped before all requests were sent. */
+  stopped?: boolean;
   id: string;
   target: string;
   model: string;
@@ -148,6 +150,10 @@ export function BenchmarkPanel({
     [initialTargetId || ready[0]?.id || ''].filter(Boolean)
   );
   const [compare, setCompare] = React.useState(false);
+  // The endpoint list may arrive after the first render: preselect the first ready one.
+  React.useEffect(() => {
+    if (targetIds.length === 0 && ready.length > 0) setTargetIds([ready[0].id]);
+  }, [targetIds.length, ready]);
   const [preset, setPreset] = React.useState<string>(PROMPT_PRESETS[0].id);
   const [config, setConfig] = React.useState<BenchmarkConfig>({
     concurrency: 4,
@@ -213,6 +219,7 @@ export function BenchmarkPanel({
             ok: false,
             totalMs: performance.now() - t0,
             error: (err as Error).message || String(err),
+            aborted: signal.aborted,
           };
         }
       },
@@ -253,6 +260,7 @@ export function BenchmarkPanel({
       config: effective,
       startedAt,
       summary: summarize(results, wallMs),
+      stopped: signal.aborted,
       results,
       server,
     };
@@ -476,6 +484,11 @@ export function BenchmarkPanel({
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
             <Typography variant="subtitle1" sx={{ fontWeight: 600, flexGrow: 1 }}>
               {t('Results')}
+              {runs.some(r => r.stopped) && (
+                <Typography component="span" variant="body2" color="warning.main" sx={{ ml: 1 }}>
+                  {t('(stopped early: requests cut off are not counted)')}
+                </Typography>
+              )}
             </Typography>
             <Button
               size="small"

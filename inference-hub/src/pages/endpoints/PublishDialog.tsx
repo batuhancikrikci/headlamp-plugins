@@ -102,6 +102,14 @@ export function PublishDialog({
   const { enqueueSnackbar } = useSnackbar();
   const routes = useResourceList<KubeJson>('aigatewayroutes', open ? {} : null);
   const gateways = useResourceList<KubeJson>('gateways', open ? {} : null);
+  const serviceBackends = useResourceList<KubeJson>(
+    'aiservicebackends',
+    open ? { namespace: endpoint.namespace } : null
+  );
+  const envoyBackends = useResourceList<KubeJson>(
+    'envoybackends',
+    open ? { namespace: endpoint.namespace } : null
+  );
   const backend = useBackend(endpoint, open);
   const [step, setStep] = React.useState(0);
   const [form, setForm] = React.useState<PublishForm>(() => ({
@@ -141,7 +149,10 @@ export function PublishDialog({
   ];
   const plan =
     backend.status === 'ready' && errors.length === 0
-      ? publishPlan(endpoint.raw, backend.backend, form, versions, existingRoute)
+      ? publishPlan(endpoint.raw, backend.backend, form, versions, existingRoute, [
+          ...serviceBackends.items,
+          ...envoyBackends.items,
+        ])
       : null;
   const crossNamespace = form.routeNamespace !== endpoint.namespace;
 
@@ -385,6 +396,16 @@ export function PublishDialog({
                 ))}
               </Alert>
             )}
+            {plan &&
+              backend.status === 'ready' &&
+              backend.backend.type === 'service' &&
+              !plan.create.some(o => o.kind === 'AIServiceBackend') && (
+                <Alert severity="info">
+                  {t(
+                    'The endpoint already has its Backend and AIServiceBackend (from an earlier publication); the new rule uses them.'
+                  )}
+                </Alert>
+              )}
             {plan &&
               [
                 ...plan.create.map(obj => ({ obj, action: t('Create') })),

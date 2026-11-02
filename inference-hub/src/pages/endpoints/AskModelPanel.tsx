@@ -19,11 +19,12 @@ import { useCurrentCluster } from '../../hooks/useCluster';
 import { usePlaygroundTargets } from '../../hooks/usePlaygroundTargets';
 import { ModelEndpoint } from '../../resources/endpoint';
 
+// Reasoning models (e.g. Qwen3) spend part of the budget on thinking before they answer.
 const ASK_PARAMS = {
   modelDefaults: false,
   temperature: 0.2,
   topP: 1,
-  maxTokens: 1500,
+  maxTokens: 4096,
   stream: true,
 };
 
@@ -62,6 +63,8 @@ export function AskModelPanel({
   }, [report, edited]);
   const [question, setQuestion] = React.useState('');
   const [answer, setAnswer] = React.useState('');
+  const [reasoning, setReasoning] = React.useState('');
+  const [truncated, setTruncated] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
   const abortRef = React.useRef<AbortController | null>(null);
@@ -74,6 +77,8 @@ export function AskModelPanel({
     setBusy(true);
     setError(null);
     setAnswer('');
+    setReasoning('');
+    setTruncated(false);
     try {
       const resolved = await resolveTarget(cluster, target);
       const model = resolved.models.includes(target.defaultModel)
@@ -86,9 +91,16 @@ export function AskModelPanel({
         askMessages(text, question),
         ASK_PARAMS,
         controller.signal,
-        { onDelta: content => setAnswer(content) }
+        {
+          onDelta: (content, thinking) => {
+            setAnswer(content);
+            setReasoning(thinking);
+          },
+        }
       );
       setAnswer(result.content);
+      setReasoning(result.reasoning);
+      setTruncated(result.finishReason === 'length');
     } catch (err) {
       setError(controller.signal.aborted ? t('Stopped.') : (err as Error).message);
     } finally {
@@ -176,9 +188,30 @@ export function AskModelPanel({
             {busy && <Button onClick={() => abortRef.current?.abort()}>{t('Stop')}</Button>}
           </Box>
           {error && <Alert severity="error">{error}</Alert>}
-          {answer && (
+          {(answer || reasoning) && (
             <Box sx={{ borderTop: 1, borderColor: 'divider', pt: 2 }}>
-              <Markdown text={answer} />
+              {reasoning && (
+                <details open={!answer}>
+                  <summary>
+                    <Typography variant="caption" color="text.secondary">
+                      {t('Reasoning')}
+                    </Typography>
+                  </summary>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ whiteSpace: 'pre-wrap', mb: 1 }}
+                  >
+                    {reasoning}
+                  </Typography>
+                </details>
+              )}
+              {answer && <Markdown text={answer} />}
+              {truncated && (
+                <Alert severity="warning" sx={{ my: 1 }}>
+                  {t('The answer hit the token limit and is cut off.')}
+                </Alert>
+              )}
               <Typography variant="caption" color="text.secondary">
                 {t('Answer of {{model}}. Check it before acting on it.', {
                   model: target?.defaultModel || '',

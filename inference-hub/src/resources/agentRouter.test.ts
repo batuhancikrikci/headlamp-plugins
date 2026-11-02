@@ -159,6 +159,28 @@ describe('publishPlan', () => {
     expect((plan.route.spec as any).rules[0].backendRefs).toEqual([{ name: 'gemma' }]);
   });
 
+  it('reuses the backends the endpoint already owns', () => {
+    const address = serviceAddress('http://gemma-predictor.llm.svc:80', '/openai/v1')!;
+    const owned = (kind: string, uid: string) =>
+      ({
+        kind,
+        metadata: { name: 'gemma', namespace: 'llm', ownerReferences: [{ uid }] },
+      } as KubeJson);
+    const backend = { type: 'service' as const, address };
+    const again = publishPlan(isvc, backend, form({ routeName: 'second' }), versions, undefined, [
+      owned('Backend', 'u-2'),
+      owned('AIServiceBackend', 'u-2'),
+    ]);
+    expect(again.create).toEqual([]);
+    expect((again.route.spec as any).rules[0].backendRefs).toEqual([{ name: 'gemma' }]);
+    // Objects of the same name that belong to something else are not adopted.
+    const foreign = publishPlan(isvc, backend, form(), versions, undefined, [
+      owned('Backend', 'other'),
+      owned('AIServiceBackend', 'other'),
+    ]);
+    expect(foreign.create.map(o => o.kind)).toEqual(['Backend', 'AIServiceBackend']);
+  });
+
   it('adds a rule to an existing route in another namespace, with a ReferenceGrant', () => {
     const plan = publishPlan(
       llm,

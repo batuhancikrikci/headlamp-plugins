@@ -282,11 +282,24 @@ export function publishPlan(
   backend: PublishBackend,
   form: PublishForm,
   versions: ApiVersions,
-  existingRoute?: KubeJson
+  existingRoute?: KubeJson,
+  /** Backends and AIServiceBackends of the endpoint namespace, to reuse the endpoint's own. */
+  existingBackends: KubeJson[] = []
 ): PublishPlan {
   const endpointNamespace = endpoint.metadata.namespace || '';
+  // An endpoint published before (on another route) already owns its backends: reuse them.
+  const ownedAlready = (obj: KubeJson) =>
+    existingBackends.some(
+      e =>
+        e.kind === obj.kind &&
+        e.metadata.name === obj.metadata.name &&
+        (e.metadata.namespace || '') === endpointNamespace &&
+        (e.metadata.ownerReferences || []).some(o => !!o.uid && o.uid === endpoint.metadata.uid)
+    );
   const create: KubeJson[] =
-    backend.type === 'service' ? serviceBackendObjects(endpoint, backend.address, versions) : [];
+    backend.type === 'service'
+      ? serviceBackendObjects(endpoint, backend.address, versions).filter(o => !ownedAlready(o))
+      : [];
   const crossNamespace = form.routeNamespace !== endpointNamespace;
   const grant = crossNamespace && form.createGrant && !!versions.referenceGrant;
   if (grant) {
