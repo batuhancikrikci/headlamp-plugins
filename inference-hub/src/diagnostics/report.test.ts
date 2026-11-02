@@ -141,13 +141,13 @@ describe('conversationMessages', () => {
   });
 
   it('asks to continue the last answer', () => {
-    expect(conversationMessages('REPORT', [{ question: 'Why?', answer: 'Part one' }], true)).toEqual(
-      [
-        ...first,
-        { role: 'assistant', content: 'Part one' },
-        { role: 'user', content: CONTINUE_PROMPT },
-      ]
-    );
+    expect(
+      conversationMessages('REPORT', [{ question: 'Why?', answer: 'Part one' }], true)
+    ).toEqual([
+      ...first,
+      { role: 'assistant', content: 'Part one' },
+      { role: 'user', content: CONTINUE_PROMPT },
+    ]);
   });
 
   it('merges a question without an answer with the next one', () => {

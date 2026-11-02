@@ -107,7 +107,9 @@ export function AskModelPanel({
       before && after ? `${before}\n\n${after}` : before || after;
     const setLast = (patch: Partial<Turn>) =>
       setTurns(ts => ts.map((turn, i) => (i === ts.length - 1 ? { ...turn, ...patch } : turn)));
-    setTurns(next.map((turn, i) => (i === next.length - 1 ? { ...turn, cutOff: undefined } : turn)));
+    setTurns(
+      next.map((turn, i) => (i === next.length - 1 ? { ...turn, cutOff: undefined } : turn))
+    );
     setBusy(true);
     setError(null);
     let answered = false;
