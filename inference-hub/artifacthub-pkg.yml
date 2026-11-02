@@ -4,7 +4,7 @@ version: 0.2.1
 name: inference-hub
 displayName: Inference Hub
 createdAt: "2026-10-20T13:27:36Z"
-digest: "2eb93ed00b33166ccc4845b212cf04bbadebd3ed62ec650807724e7fe58921e0"
+digest: "4209ef50cf31f4c5785e419be509494261288387fe7cf2e61a15b048ec17a2f3"
 description: 'Inference Hub: an AI/LLM platform experience for Headlamp covering KServe, llm-d, the Gateway API Inference Extension, vLLM and the NVIDIA GPU Operator'
 logoPath: docs/logo.png
 license: Apache-2.0

@@ -8,6 +8,8 @@ import {
   Paper,
   Switch,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Tooltip,
   Typography,
 } from '@mui/material';
@@ -20,6 +22,7 @@ import { DiscoveryGate } from '../../components/common/DiscoveryGate';
 import { SafeSlider } from '../../components/common/SafeSlider';
 import { usePlaygroundTargets } from '../../hooks/usePlaygroundTargets';
 import { featuresOf, useSettings } from '../../settings/settings';
+import { BenchmarkPanel } from './BenchmarkPanel';
 import { ChatPane, ChatPaneHandle } from './ChatPane';
 
 // Temperature and top P come from the model (generation_config.json) unless the user overrides
@@ -139,6 +142,9 @@ function Playground() {
   const initial = new URLSearchParams(location.search).get('target');
   const [targetIds, setTargetIds] = React.useState<Array<string | null>>([initial, null]);
   const [compare, setCompare] = React.useState(false);
+  const [mode, setMode] = React.useState<'chat' | 'benchmark'>(
+    new URLSearchParams(location.search).get('mode') === 'benchmark' ? 'benchmark' : 'chat'
+  );
   const [systemPrompt, setSystemPrompt] = React.useState('');
   const [params, setParams] = React.useState<ChatParams>(DEFAULT_PARAMS);
   const [input, setInput] = React.useState('');
@@ -198,88 +204,111 @@ function Playground() {
       title={t('Playground')}
       headerProps={{
         titleSideActions: [
-          <FormControlLabel
-            key="compare"
-            control={<Switch checked={compare} onChange={e => setCompare(e.target.checked)} />}
-            label={t('Compare two models')}
-          />,
+          <Box key="actions" sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {mode === 'chat' && (
+              <FormControlLabel
+                control={<Switch checked={compare} onChange={e => setCompare(e.target.checked)} />}
+                label={t('Compare two models')}
+              />
+            )}
+            <ToggleButtonGroup
+              exclusive
+              size="small"
+              value={mode}
+              onChange={(_, v) => v && setMode(v)}
+              aria-label={t('Playground mode')}
+            >
+              <ToggleButton value="chat">
+                <Icon icon="mdi:chat-processing-outline" style={{ marginRight: 6 }} />
+                {t('Chat')}
+              </ToggleButton>
+              <ToggleButton value="benchmark">
+                <Icon icon="mdi:speedometer" style={{ marginRight: 6 }} />
+                {t('Benchmark')}
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Box>,
         ],
       }}
     >
-      <Grid container spacing={2}>
-        <Grid item xs={12} lg={9}>
-          <Grid container spacing={2}>
-            {activePanes.map(i => (
-              <Grid item xs={12} md={compare ? 6 : 12} key={i}>
-                <ChatPane
-                  ref={panes[i]}
-                  targets={targets}
-                  targetId={targetIds[i]}
-                  onTargetChange={id => setTarget(i, id)}
-                  systemPrompt={systemPrompt}
-                  params={params}
-                  onBusyChange={busyHandlers[i]}
-                  compact={compare}
-                />
-              </Grid>
-            ))}
-          </Grid>
-          <Box sx={{ display: 'flex', gap: 1, mt: 2, alignItems: 'flex-end' }}>
-            <TextField
-              fullWidth
-              multiline
-              maxRows={8}
-              placeholder={t('Send a message (Enter to send, Shift+Enter for a new line)')}
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
-                  e.preventDefault();
-                  send();
-                }
-              }}
-              inputProps={{ 'aria-label': t('Message') }}
-            />
-            {anyBusy ? (
-              <Button
-                variant="outlined"
-                color="warning"
-                onClick={() => activePanes.forEach(i => panes[i].current?.stop())}
-                startIcon={<Icon icon="mdi:stop" />}
-              >
-                {t('Stop')}
-              </Button>
-            ) : (
-              <Button
-                variant="contained"
-                onClick={send}
-                disabled={!input.trim()}
-                startIcon={<Icon icon="mdi:send" />}
-              >
-                {t('Send')}
-              </Button>
-            )}
-            <Tooltip title={t('Clear the conversation')}>
-              <span>
+      {mode === 'benchmark' ? (
+        <BenchmarkPanel targets={targets} initialTargetId={targetIds[0]} />
+      ) : (
+        <Grid container spacing={2}>
+          <Grid item xs={12} lg={9}>
+            <Grid container spacing={2}>
+              {activePanes.map(i => (
+                <Grid item xs={12} md={compare ? 6 : 12} key={i}>
+                  <ChatPane
+                    ref={panes[i]}
+                    targets={targets}
+                    targetId={targetIds[i]}
+                    onTargetChange={id => setTarget(i, id)}
+                    systemPrompt={systemPrompt}
+                    params={params}
+                    onBusyChange={busyHandlers[i]}
+                    compact={compare}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+            <Box sx={{ display: 'flex', gap: 1, mt: 2, alignItems: 'flex-end' }}>
+              <TextField
+                fullWidth
+                multiline
+                maxRows={8}
+                placeholder={t('Send a message (Enter to send, Shift+Enter for a new line)')}
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                    e.preventDefault();
+                    send();
+                  }
+                }}
+                inputProps={{ 'aria-label': t('Message') }}
+              />
+              {anyBusy ? (
                 <Button
-                  onClick={() => activePanes.forEach(i => panes[i].current?.reset())}
-                  startIcon={<Icon icon="mdi:broom" />}
+                  variant="outlined"
+                  color="warning"
+                  onClick={() => activePanes.forEach(i => panes[i].current?.stop())}
+                  startIcon={<Icon icon="mdi:stop" />}
                 >
-                  {t('Reset')}
+                  {t('Stop')}
                 </Button>
-              </span>
-            </Tooltip>
-          </Box>
+              ) : (
+                <Button
+                  variant="contained"
+                  onClick={send}
+                  disabled={!input.trim()}
+                  startIcon={<Icon icon="mdi:send" />}
+                >
+                  {t('Send')}
+                </Button>
+              )}
+              <Tooltip title={t('Clear the conversation')}>
+                <span>
+                  <Button
+                    onClick={() => activePanes.forEach(i => panes[i].current?.reset())}
+                    startIcon={<Icon icon="mdi:broom" />}
+                  >
+                    {t('Reset')}
+                  </Button>
+                </span>
+              </Tooltip>
+            </Box>
+          </Grid>
+          <Grid item xs={12} lg={3}>
+            <ParamsPanel
+              systemPrompt={systemPrompt}
+              onSystemPrompt={setSystemPrompt}
+              params={params}
+              onParams={setParams}
+            />
+          </Grid>
         </Grid>
-        <Grid item xs={12} lg={3}>
-          <ParamsPanel
-            systemPrompt={systemPrompt}
-            onSystemPrompt={setSystemPrompt}
-            params={params}
-            onParams={setParams}
-          />
-        </Grid>
-      </Grid>
+      )}
     </SectionBox>
   );
 }
