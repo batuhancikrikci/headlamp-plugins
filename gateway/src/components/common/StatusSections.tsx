@@ -18,12 +18,12 @@ import { conditionsHealth } from '../../utils/conditions';
 import { asArray, asRecord } from '../../utils/objects';
 import { CheckedRef, checkReferences } from '../../utils/referenceGrants';
 import {
+  isCurrentParent,
   parentRefTargets,
   parentStatusFor,
   ResolvedParentRef,
   resolveParentRef,
   routeParentRefs,
-  sameRef,
 } from '../../utils/refs';
 import { controllerLabel } from '../../utils/templates';
 import { RefLink } from './RefLink';
@@ -120,16 +120,9 @@ export function ParentsSection({ route, data }: { route: KubeJson; data: Gateway
   // Status entries whose parentRef is no longer in the spec (or was written by another controller
   // for an implicit parent) are still worth showing.
   const reported = asArray<RouteParentStatus>(asRecord(route.status).parents);
-  const orphaned = reported.filter(entry => {
-    if (!entry?.parentRef) return false;
-    const resolved = resolveParentRef(entry.parentRef, namespace);
-    return !refs.some(
-      ref =>
-        sameRef(ref, resolved) &&
-        (ref.sectionName || '') === (resolved.sectionName || '') &&
-        (ref.port ?? null) === (resolved.port ?? null)
-    );
-  });
+  const orphaned = reported.filter(
+    entry => !!entry?.parentRef && !isCurrentParent(entry.parentRef, refs, namespace)
+  );
 
   if (refs.length === 0 && orphaned.length === 0) {
     return (

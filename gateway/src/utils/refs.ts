@@ -193,6 +193,24 @@ export function uniqueRouteBackends(route: RouteLike): ResolvedBackendRef[] {
   return result;
 }
 
+/**
+ * Whether a status entry reported for `parentRef` is about one of the route's current parentRefs.
+ * Controllers may leave entries behind for parents that were removed from the spec.
+ */
+export function isCurrentParent(
+  parentRef: ParentReference,
+  refs: ResolvedParentRef[],
+  namespace?: string
+): boolean {
+  const resolved = resolveParentRef(parentRef, namespace);
+  return refs.some(
+    ref =>
+      sameRef(ref, resolved) &&
+      (ref.sectionName || '') === (resolved.sectionName || '') &&
+      (ref.port ?? null) === (resolved.port ?? null)
+  );
+}
+
 /** The resolved parentRefs of a route. */
 export function routeParentRefs(route: RouteLike): ResolvedParentRef[] {
   return asArray<ParentReference>(asRecord(route.spec).parentRefs)

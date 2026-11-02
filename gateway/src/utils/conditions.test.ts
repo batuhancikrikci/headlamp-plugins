@@ -145,7 +145,9 @@ describe('computeHealth', () => {
     const health = computeHealth({
       kind: 'HTTPRoute',
       metadata: { namespace: 'apps' },
-      spec: { parentRefs: [{ name: 'eg' }, { name: 'other' }] },
+      spec: {
+        parentRefs: [{ name: 'eg' }, { name: 'other', namespace: 'infra', sectionName: 'https' }],
+      },
       status: {
         parents: [
           {
@@ -168,6 +170,44 @@ describe('computeHealth', () => {
     expect(health.label).toBe('Not accepted');
     expect(health.problems).toHaveLength(1);
     expect(health.problems[0].scope).toBe('Parent infra/other/https');
+  });
+
+  it('ignores status entries of parents that are no longer in spec.parentRefs', () => {
+    // A route moved from a Gateway to a ListenerSet: the controller left the old entry behind.
+    const moved = {
+      kind: 'TLSRoute',
+      metadata: { namespace: 'apps', generation: 3 },
+      spec: {
+        parentRefs: [{ kind: 'ListenerSet', name: 'passthrough', namespace: 'infra' }],
+      },
+      status: {
+        parents: [
+          {
+            parentRef: { name: 'eg', namespace: 'infra' },
+            controllerName: 'example.com/controller',
+            conditions: [
+              condition('Accepted', 'True', 'Accepted', { observedGeneration: 2 }),
+              condition('ResolvedRefs', 'True', 'ResolvedRefs', { observedGeneration: 2 }),
+            ],
+          },
+          {
+            parentRef: { kind: 'ListenerSet', name: 'passthrough', namespace: 'infra' },
+            controllerName: 'example.com/controller',
+            conditions: [
+              condition('Accepted', 'True', 'Accepted', { observedGeneration: 3 }),
+              condition('ResolvedRefs', 'True', 'ResolvedRefs', { observedGeneration: 3 }),
+            ],
+          },
+        ],
+      },
+    };
+    expect(computeHealth(moved)).toMatchObject({ level: 'healthy', label: 'Accepted' });
+
+    expect(tallyCondition([moved], 'Accepted')).toMatchObject({ true: 1, false: 0 });
+
+    // Only the old parent has reported so far.
+    const waiting = { ...moved, status: { parents: [moved.status.parents[0]] } };
+    expect(computeHealth(waiting)).toMatchObject({ level: 'pending', label: 'Pending' });
   });
 
   it('reports a route without status as pending, and explains missing parentRefs', () => {

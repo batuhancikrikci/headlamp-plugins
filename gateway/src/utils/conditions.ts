@@ -15,6 +15,7 @@ import {
   RouteParentStatus,
 } from '../resources/types';
 import { asArray, asRecord, isPlainObject } from './objects';
+import { isCurrentParent, routeParentRefs } from './refs';
 
 export type HealthLevel = 'healthy' | 'warning' | 'error' | 'pending' | 'none';
 
@@ -236,6 +237,19 @@ interface StatusObject {
   status?: unknown;
 }
 
+/**
+ * The status entries of a route that are about its current parentRefs. Controllers may leave
+ * entries behind for parents that were removed from the spec; those no longer describe the route.
+ */
+export function currentParents(obj: StatusObject): RouteParentStatus[] {
+  const parents = asArray<RouteParentStatus>(asRecord(obj.status).parents);
+  const refs = routeParentRefs({ metadata: obj.metadata, spec: obj.spec });
+  if (refs.length === 0) return parents;
+  return parents.filter(
+    parent => !parent?.parentRef || isCurrentParent(parent.parentRef, refs, obj.metadata?.namespace)
+  );
+}
+
 /** Expected top-level conditions per kind that reports its own conditions. */
 const EXPECTED_CONDITIONS: Record<string, string[]> = {
   GatewayClass: ['Accepted'],
@@ -310,7 +324,23 @@ export function computeHealth(obj: StatusObject | null | undefined): Health {
         ],
       };
     }
-    const problems = parents.flatMap(parent =>
+    const current = currentParents(obj);
+    if (current.length === 0) {
+      return {
+        level: 'pending',
+        label: 'Pending',
+        problems: [
+          {
+            level: 'pending',
+            scope: '',
+            type: 'Accepted',
+            reason: 'Pending',
+            message: 'No controller has reported a status for the current parentRefs yet.',
+          },
+        ],
+      };
+    }
+    const problems = current.flatMap(parent =>
       evaluateConditions(parent?.conditions, {
         expected: ['Accepted', 'ResolvedRefs'],
         generation,
@@ -437,7 +467,7 @@ export function tallyCondition(
       ancestors?: PolicyAncestorStatus[];
     }>(obj.status);
     if (Array.isArray(status.conditions)) add(status.conditions);
-    for (const parent of asArray<RouteParentStatus>(status.parents)) add(parent?.conditions);
+    for (const parent of currentParents(obj)) add(parent?.conditions);
     for (const ancestor of asArray<PolicyAncestorStatus>(status.ancestors)) {
       add(ancestor?.conditions);
     }
