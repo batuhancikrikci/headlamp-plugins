@@ -15,6 +15,7 @@ import {
   formChanges,
   formFromEndpoint,
   lineDiff,
+  modelChangeError,
   restartsPods,
   writableCopy,
 } from './editModel';
@@ -300,17 +301,41 @@ describe('applyFormToEndpoint', () => {
     expect((after.metadata as any).managedFields).toBeUndefined();
   });
 
-  it('rewrites the InferenceService args only when the name or arguments change', () => {
-    const model = (edited(liveIsvc(), { servedModelName: 'gemma' }).spec as any).predictor.model;
-    expect(model.args).toEqual([
-      '--model_name=gemma',
-      '--max_model_len=8192',
-      '--dtype',
-      'bfloat16',
-    ]);
+  it('never changes the model, and keeps --model_name when the arguments change', () => {
+    for (const live of [liveLlm(), liveIsvc()]) {
+      expect(
+        edited(live, { uri: 'hf://other/model', servedModelName: 'other', source: 'custom' })
+      ).toEqual(writableCopy(live));
+    }
+    const model = (edited(liveIsvc(), { extraArgs: '--dtype half --model_name=evil' }).spec as any)
+      .predictor.model;
+    expect(model.args).toEqual(['--model_name=gemma4', '--dtype', 'half']);
     expect((edited(liveIsvc(), { replicas: 2 }).spec as any).predictor.model.args).toEqual(
-      liveIsvc().spec && (liveIsvc().spec as any).predictor.model.args
+      (liveIsvc().spec as any).predictor.model.args
     );
+  });
+});
+
+describe('modelChangeError', () => {
+  it('rejects edits that change the model of an endpoint', () => {
+    const llm = liveLlm();
+    const otherUri = JSON.parse(JSON.stringify(llm));
+    otherUri.spec.model.uri = 'hf://Qwen/Qwen3-32B';
+    const otherName = JSON.parse(JSON.stringify(llm));
+    otherName.spec.model.name = 'renamed';
+    const replicas = JSON.parse(JSON.stringify(llm));
+    replicas.spec.replicas = 3;
+    expect(modelChangeError(llm, otherUri)).toMatch(/cannot change \(qwen3-14b-fp8\)/);
+    expect(modelChangeError(llm, otherName)).toBeDefined();
+    expect(modelChangeError(llm, replicas)).toBeUndefined();
+
+    const isvc = liveIsvc();
+    const renamed = JSON.parse(JSON.stringify(isvc));
+    renamed.spec.predictor.model.args = ['--model_name=other'];
+    const sameName = JSON.parse(JSON.stringify(isvc));
+    sameName.spec.predictor.model.args = ['--model_name=gemma4'];
+    expect(modelChangeError(isvc, renamed)).toBeDefined();
+    expect(modelChangeError(isvc, sameName)).toBeUndefined();
   });
 });
 

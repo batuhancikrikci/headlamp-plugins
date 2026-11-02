@@ -13,6 +13,7 @@ import {
   formChanges,
   isStoppedObject,
   lineDiff,
+  modelChangeError,
   restartsPods,
   writableCopy,
 } from './editModel';
@@ -160,6 +161,7 @@ export function EditReview({
           'The YAML below is what will be saved. Validate it against the API server, then save. If the endpoint changed since you opened the wizard, saving fails: open the wizard again from the endpoint page.'
         )}
         initial={after}
+        validate={obj => modelChangeError(live, obj)}
         onClose={() => setOpen(false)}
         onApplied={() => {
           setOpen(false);

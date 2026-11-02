@@ -1,4 +1,5 @@
 import { Icon } from '@iconify/react';
+import { NameValueTable } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
 import {
   Alert,
   Autocomplete,
@@ -281,10 +282,47 @@ function CustomUri({ form, update, errors, discovery, editing }: StepProps) {
   );
 }
 
+/** The model of an endpoint being edited: shown, never changed. */
+export function ModelSummary({ form }: { form: StepProps['form'] }) {
+  const model = parseModelUri(form.uri, form.servedModelName);
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+        <ModelAvatar model={model} size={40} />
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+            {form.servedModelName || model.name}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-all' }}>
+            {form.uri}
+          </Typography>
+        </Box>
+      </Box>
+      <NameValueTable
+        rows={[
+          { name: t('Endpoint'), value: `${form.namespace}/${form.name}` },
+          { name: t('Served model name'), value: form.servedModelName || '—' },
+          { name: t('Model URI'), value: form.uri },
+          {
+            name: t('Catalog entry'),
+            value: form.source === 'catalog' && form.cacheName ? form.cacheName : t('none'),
+          },
+        ]}
+      />
+      <Alert severity="info" icon={<Icon icon="mdi:lock-outline" />}>
+        {t(
+          'The model, the served model name and the identity of an endpoint cannot change: clients and routes depend on them. Deploy a new endpoint for another model.'
+        )}
+      </Alert>
+    </Box>
+  );
+}
+
 export function SourceStep(props: StepProps) {
   const { form, update, errors, discovery, editing } = props;
-  const namespaces = useCoreList('v1', 'namespaces', false, {}, 60000);
+  const namespaces = useCoreList('v1', 'namespaces', false, editing ? null : {}, 60000);
   const catalogAvailable = isServed(discovery, 'localmodelcaches');
+  if (editing) return <ModelSummary form={form} />;
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>

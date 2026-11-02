@@ -339,11 +339,10 @@ function applyLlmWorkload(workload: Json, original: DeployForm, form: DeployForm
   }
 }
 
+// The model of an endpoint (URI and served name) never changes: clients and routes depend on it,
+// so a different model is a new endpoint. The form fields are read-only and ignored here.
+
 function applyLlm(spec: Json, original: DeployForm, form: DeployForm) {
-  if (changed(original, form, 'uri', 'servedModelName')) {
-    spec.model = { ...(spec.model || {}), uri: form.uri.trim() };
-    setOrDelete(spec.model, 'name', form.servedModelName.trim());
-  }
   if (changed(original, form, 'profiles')) {
     setOrDelete(
       spec,
@@ -395,14 +394,12 @@ function applyIsvc(spec: Json, original: DeployForm, form: DeployForm) {
   const predictor = spec.predictor as Json;
   predictor.model = predictor.model || {};
   const model = predictor.model as Json;
-  if (changed(original, form, 'uri')) model.storageUri = form.uri.trim();
   if (changed(original, form, 'runtime')) setOrDelete(model, 'runtime', form.runtime);
   if (changed(original, form, 'image')) setOrDelete(model, 'image', form.image);
-  if (changed(original, form, 'servedModelName', 'extraArgs')) {
-    const args = splitArgs(form.extraArgs);
-    const hasModelName = args.some(a => a.startsWith('--model_name'));
+  if (changed(original, form, 'extraArgs')) {
+    const args = splitArgs(form.extraArgs).filter(a => !a.startsWith('--model_name'));
     setOrDelete(model, 'args', [
-      ...(hasModelName ? [] : [`--model_name=${form.servedModelName.trim()}`]),
+      ...(original.servedModelName ? [`--model_name=${original.servedModelName}`] : []),
       ...args,
     ]);
   }
@@ -446,8 +443,6 @@ export interface FormChange {
 }
 
 const CHANGE_LABELS: Array<[FormKey[], string, (f: DeployForm) => string]> = [
-  [['uri'], 'Model URI', f => f.uri],
-  [['servedModelName'], 'Served model name', f => f.servedModelName],
   [['routing'], 'Routing', f => f.routing],
   [
     ['gatewayName', 'gatewayNamespace'],
@@ -495,8 +490,6 @@ export function restartsPods(original: DeployForm, form: DeployForm): boolean {
   return changed(
     original,
     form,
-    'uri',
-    'servedModelName',
     'runtime',
     'image',
     'extraArgs',
@@ -508,6 +501,29 @@ export function restartsPods(original: DeployForm, form: DeployForm): boolean {
     'nodeSelector',
     'prefillDecode'
   );
+}
+
+/** The model of an endpoint object: its URI and the name clients send. */
+export function endpointModel(obj: KubeJson): { uri: string; name: string } {
+  const spec = asObject(obj.spec);
+  if (obj.kind === 'LLMInferenceService') {
+    return { uri: spec.model?.uri || '', name: spec.model?.name || '' };
+  }
+  const model = asObject(asObject(spec.predictor).model);
+  return {
+    uri: model.storageUri || '',
+    name: parseIsvcArgs(model.args).servedModelName,
+  };
+}
+
+/** Error when an edit changes the model of an endpoint, which is not allowed. */
+export function modelChangeError(live: KubeJson, edited: KubeJson): string | undefined {
+  const before = endpointModel(live);
+  const after = endpointModel(edited);
+  if (before.uri === after.uri && before.name === after.name) return undefined;
+  return `The model of an endpoint cannot change (${
+    before.name || before.uri
+  }). Deploy a new endpoint for another model.`;
 }
 
 export function isStoppedObject(obj: KubeJson): boolean {

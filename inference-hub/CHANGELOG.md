@@ -11,7 +11,8 @@ All notable changes to the Inference Hub plugin are documented here. The format 
 - Edit endpoints with the deploy wizard: "Edit" opens the wizard on the live endpoint, changes
   only the settings you touch, keeps everything the form does not show, and reviews the change
   as a YAML diff before saving with the live resourceVersion. The placement check counts the
-  GPUs of the edited endpoint as free.
+  GPUs of the edited endpoint as free. The model and the served model name of an endpoint
+  cannot change in any edit, Edit YAML included.
 - Diagnose tab on the endpoint page: checks the conditions, the model cache, scheduling, image
   pulls, crashes and OOM kills, the model download, readiness and the llm-d scheduler, and on
   request scans the logs for known failures, each with evidence and a fix. The Command Center

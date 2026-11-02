@@ -66,6 +66,8 @@ interface YamlEditorDialogProps {
   description?: React.ReactNode;
   onClose: () => void;
   onApplied?: (obj: KubeJson) => void;
+  /** Extra check of the edited object before it is validated or saved; returns an error. */
+  validate?: (obj: KubeJson) => string | undefined;
 }
 
 /**
@@ -80,6 +82,7 @@ export function YamlEditorDialog({
   description,
   onClose,
   onApplied,
+  validate,
 }: YamlEditorDialogProps) {
   const theme = useTheme();
   const cluster = useCurrentCluster();
@@ -111,6 +114,11 @@ export function YamlEditorDialog({
 
   const run = async (dryRun: boolean) => {
     if (!parsed.obj) return;
+    const invalid = validate?.(parsed.obj);
+    if (invalid) {
+      setResult({ ok: false, message: invalid });
+      return;
+    }
     setBusy(dryRun ? 'validate' : 'apply');
     setResult(null);
     try {

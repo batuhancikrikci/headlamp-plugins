@@ -38,6 +38,7 @@ import { PodJson } from '../../resources/pod';
 import { KubeJson } from '../../resources/types';
 import { endpointEditUrl, PAGES, playgroundUrl } from '../../routes';
 import { featuresOf, useSettings } from '../../settings/settings';
+import { modelChangeError } from '../../wizards/deploy/editModel';
 import { AgentRouterSection, useAgentRouterUses } from './AgentRouterSection';
 import { AskModelPanel } from './AskModelPanel';
 import { DiagnosePanel } from './DiagnosePanel';
@@ -174,6 +175,7 @@ function EndpointHeader({
         mode="edit"
         title={t('Edit {{name}}', { name: endpoint.name })}
         initial={endpoint.raw}
+        validate={obj => modelChangeError(endpoint.raw, obj)}
         onClose={() => setDialog(null)}
       />
       <ConfirmDialog
