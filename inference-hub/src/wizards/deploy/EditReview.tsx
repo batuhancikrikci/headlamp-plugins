@@ -70,7 +70,7 @@ function YamlDiff({ before, after }: { before: KubeJson; after: KubeJson }) {
 }
 
 /**
- * Review step of the wizard for an existing endpoint: what changes, what is kept, and the final
+ * Review of the changes to an existing endpoint (wizard and form): what changes, what is kept, and the final
  * YAML, which is validated with a dry run and saved with the live object's resourceVersion.
  */
 export function EditReview({
@@ -158,7 +158,7 @@ export function EditReview({
         mode="edit"
         title={t('Save {{name}}', { name: live.metadata.name })}
         description={t(
-          'The YAML below is what will be saved. Validate it against the API server, then save. If the endpoint changed since you opened the wizard, saving fails: open the wizard again from the endpoint page.'
+          'The YAML below is what will be saved. Validate it against the API server, then save. If the endpoint changed since you started editing, saving fails: open Edit again from the endpoint page.'
         )}
         initial={after}
         validate={obj => modelChangeError(live, obj)}

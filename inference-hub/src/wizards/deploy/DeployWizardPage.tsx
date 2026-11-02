@@ -36,6 +36,7 @@ import { ResourcesStep } from './ResourcesStep';
 import { ScalingStep } from './ScalingStep';
 import { ServingStep } from './ServingStep';
 import { LocalModelCacheJson, SourceStep } from './SourceStep';
+import { EditingEndpoint } from './stepTypes';
 
 const STEP_LABELS: Record<StepId, { label: string; help: string }> = {
   source: {
@@ -121,7 +122,49 @@ function Summary({ form }: { form: DeployForm }) {
   );
 }
 
-/** An existing endpoint opened in the wizard. */
+/** Why the user cannot save the endpoint (and its catalog entry), if they cannot. */
+function useBlockedReason(
+  discovery: Discovery,
+  form: DeployForm,
+  editing: boolean
+): string | undefined {
+  const target =
+    form.mode === 'llm'
+      ? locationsOf(discovery, 'llminferenceservices')[0]
+      : locationsOf(discovery, 'inferenceservices')[0];
+  const canCreate = useCan(
+    target && form.namespace
+      ? {
+          verb: editing ? 'update' : 'create',
+          group: target.group,
+          resource: form.mode === 'llm' ? 'llminferenceservices' : 'inferenceservices',
+          namespace: form.namespace,
+          ...(editing ? { name: form.name } : {}),
+        }
+      : null
+  );
+  const cacheLoc = locationsOf(discovery, 'localmodelcaches')[0];
+  const canCreateCache = useCan(
+    form.source === 'custom' && form.addToCatalog && cacheLoc
+      ? { verb: 'create', group: cacheLoc.group, resource: 'localmodelcaches' }
+      : null
+  );
+  return canCreate.allowed === false
+    ? canCreate.reason
+    : form.source === 'custom' && form.addToCatalog && canCreateCache.allowed === false
+    ? canCreateCache.reason
+    : undefined;
+}
+
+function editingOf(form: DeployForm): EditingEndpoint {
+  return {
+    kind: form.mode === 'llm' ? 'LLMInferenceService' : 'InferenceService',
+    name: form.name,
+    namespace: form.namespace,
+  };
+}
+
+/** An existing endpoint opened in the wizard or the form. */
 interface EditState {
   slug: EndpointSlug;
   /** The live object when the wizard was opened. */
@@ -135,10 +178,13 @@ function Wizard({
   discovery,
   initial,
   edit,
+  onSwitch,
 }: {
   discovery: Discovery;
   initial: DeployForm;
   edit?: EditState;
+  /** Opens the form instead, with what was entered so far. */
+  onSwitch?: (form: DeployForm) => void;
 }) {
   const history = useHistory();
   const [form, setForm] = React.useState<DeployForm>(initial);
@@ -190,33 +236,7 @@ function Wizard({
   // The endpoint being built (the last object; a catalog entry may come first).
   const draft = edit ? edit.live : buildObjects(form, versions).slice(-1)[0];
 
-  const target =
-    form.mode === 'llm'
-      ? locationsOf(discovery, 'llminferenceservices')[0]
-      : locationsOf(discovery, 'inferenceservices')[0];
-  const canCreate = useCan(
-    target && form.namespace
-      ? {
-          verb: edit ? 'update' : 'create',
-          group: target.group,
-          resource: form.mode === 'llm' ? 'llminferenceservices' : 'inferenceservices',
-          namespace: form.namespace,
-          ...(edit ? { name: form.name } : {}),
-        }
-      : null
-  );
-  const cacheLoc = locationsOf(discovery, 'localmodelcaches')[0];
-  const canCreateCache = useCan(
-    form.source === 'custom' && form.addToCatalog && cacheLoc
-      ? { verb: 'create', group: cacheLoc.group, resource: 'localmodelcaches' }
-      : null
-  );
-  const blocked =
-    canCreate.allowed === false
-      ? canCreate.reason
-      : form.source === 'custom' && form.addToCatalog && canCreateCache.allowed === false
-      ? canCreateCache.reason
-      : undefined;
+  const blocked = useBlockedReason(discovery, form, !!edit);
 
   const goTo = (index: number) => {
     // Moving forward requires the current step to be valid.
@@ -242,15 +262,7 @@ function Wizard({
     update,
     errors: shownErrors,
     discovery,
-    editing: edit
-      ? {
-          kind: (form.mode === 'llm' ? 'LLMInferenceService' : 'InferenceService') as
-            | 'LLMInferenceService'
-            | 'InferenceService',
-          name: form.name,
-          namespace: form.namespace,
-        }
-      : undefined,
+    editing: edit ? editingOf(form) : undefined,
   };
 
   return (
@@ -258,6 +270,18 @@ function Wizard({
       title={edit ? t('Edit {{name}}', { name: form.name }) : t('Deploy a model')}
       headerProps={{
         titleSideActions: [
+          ...(onSwitch
+            ? [
+                <Button
+                  key="switch"
+                  size="small"
+                  startIcon={<Icon icon="mdi:form-select" />}
+                  onClick={() => onSwitch(form)}
+                >
+                  {t('Switch to the form')}
+                </Button>,
+              ]
+            : []),
           <DocsDrawer key="docs" apiVersion={draft?.apiVersion} kind={draft?.kind} value={draft} />,
         ],
       }}
@@ -354,6 +378,92 @@ export function DeployWizardPage() {
   );
 }
 
+const FORM_SECTIONS = ['source', 'serving', 'resources', 'scaling'] as const;
+
+/**
+ * An existing endpoint edited on one page: the steps of the wizard one below the other, then the
+ * review of the changes. Errors are shown while typing; fields still equal to the live object
+ * are not validated.
+ */
+function EditForm({
+  discovery,
+  initial,
+  edit,
+  onSwitch,
+}: {
+  discovery: Discovery;
+  initial: DeployForm;
+  edit: EditState;
+  /** Opens the wizard instead, with what was entered so far. */
+  onSwitch: (form: DeployForm) => void;
+}) {
+  const history = useHistory();
+  const [form, setForm] = React.useState<DeployForm>(initial);
+  const update = React.useCallback(
+    (patch: Partial<DeployForm>) => setForm(f => ({ ...f, ...patch })),
+    []
+  );
+  const errors = React.useMemo(
+    () => validateStep('review', form, edit.original),
+    [form, edit.original]
+  );
+  const blocked = useBlockedReason(discovery, form, true);
+  const props = { form, update, errors, discovery, editing: editingOf(form) };
+
+  return (
+    <SectionBox
+      title={t('Edit {{name}}', { name: form.name })}
+      headerProps={{
+        titleSideActions: [
+          <Button
+            key="switch"
+            size="small"
+            startIcon={<Icon icon="mdi:auto-fix" />}
+            onClick={() => onSwitch(form)}
+          >
+            {t('Switch to the wizard')}
+          </Button>,
+          <DocsDrawer
+            key="docs"
+            apiVersion={edit.live.apiVersion}
+            kind={edit.live.kind}
+            value={edit.live}
+          />,
+        ],
+      }}
+    >
+      {FORM_SECTIONS.map(section => (
+        <Box key={section} component="section" sx={{ mb: 4 }}>
+          <Typography variant="h6" sx={{ mb: 1.5 }}>
+            {t(STEP_LABELS[section].label)}
+          </Typography>
+          {section === 'source' && <SourceStep {...props} />}
+          {section === 'serving' && <ServingStep {...props} />}
+          {section === 'resources' && <ResourcesStep {...props} />}
+          {section === 'scaling' && <ScalingStep {...props} />}
+        </Box>
+      ))}
+      <Box component="section">
+        <Typography variant="h6" sx={{ mb: 1.5 }}>
+          {t('Review & save')}
+        </Typography>
+        {Object.keys(errors).length > 0 ? (
+          <Typography color="error">{t('Fix the highlighted fields above first.')}</Typography>
+        ) : (
+          <EditReview
+            live={edit.live}
+            original={edit.original}
+            form={form}
+            notes={edit.notes}
+            disabledReason={blocked}
+            onSaved={() => history.push(endpointUrl(edit.slug, form.namespace, form.name))}
+          />
+        )}
+      </Box>
+    </SectionBox>
+  );
+}
+
 const RESOURCE_BY_SLUG = { llm: 'llminferenceservices', isvc: 'inferenceservices' } as const;
 
 function EditWizard({
@@ -368,6 +478,17 @@ function EditWizard({
   name: string;
 }) {
   const history = useHistory();
+  const routerLocation = useLocation();
+  // The form is the default; ?view=wizard opens the wizard. Switching keeps what was entered.
+  const [view, setView] = React.useState<'form' | 'wizard'>(() =>
+    new URLSearchParams(routerLocation.search).get('view') === 'wizard' ? 'wizard' : 'form'
+  );
+  const [draft, setDraft] = React.useState<DeployForm | null>(null);
+  const switchTo = (next: 'form' | 'wizard') => (form: DeployForm) => {
+    setDraft(form);
+    setView(next);
+    history.replace({ search: next === 'wizard' ? '?view=wizard' : '' });
+  };
   const id = RESOURCE_BY_SLUG[slug];
   const location = locationsOf(discovery, id)[0];
   const item = useLivePath<KubeJson>(customItemPath(RESOURCES[id], location, name, namespace));
@@ -438,10 +559,27 @@ function EditWizard({
       </SectionBox>
     );
   }
-  return <Wizard discovery={discovery} initial={state.original} edit={state} />;
+  const initial = draft || state.original;
+  return view === 'wizard' ? (
+    <Wizard
+      key="wizard"
+      discovery={discovery}
+      initial={initial}
+      edit={state}
+      onSwitch={switchTo('form')}
+    />
+  ) : (
+    <EditForm
+      key="form"
+      discovery={discovery}
+      initial={initial}
+      edit={state}
+      onSwitch={switchTo('wizard')}
+    />
+  );
 }
 
-/** The Deploy Model wizard for an existing endpoint. */
+/** The edit form of an existing endpoint, or the Deploy Model wizard with ?view=wizard. */
 export function EditEndpointPage() {
   const { slug, namespace, name } = useParams<{
     slug: EndpointSlug;

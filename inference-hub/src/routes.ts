@@ -53,7 +53,7 @@ export function endpointUrl(slug: EndpointSlug, namespace: string, name: string,
   return tab ? `${url}?tab=${tab}` : url;
 }
 
-/** The Deploy Model wizard opened on an existing endpoint. */
+/** The edit form of an existing endpoint (?view=wizard opens the Deploy Model wizard). */
 export function endpointEditUrl(slug: EndpointSlug, namespace: string, name: string) {
   return Router.createRouteURL(DETAIL_PAGES.endpointEdit.name, { slug, namespace, name });
 }
