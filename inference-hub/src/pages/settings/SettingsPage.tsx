@@ -56,6 +56,11 @@ const FEATURES: Array<{ key: keyof FeatureToggles; label: string; help: string }
     help: 'Chat with endpoints through the Kubernetes service proxy.',
   },
   {
+    key: 'askModel',
+    label: 'Ask a model in the Diagnose tab',
+    help: 'Lets the Diagnose tab send its findings to a model running in this cluster, after you review the text.',
+  },
+  {
     key: 'podMetricsScrape',
     label: 'Read vLLM metrics from pods',
     help: 'When Prometheus is not available, read /metrics of vLLM pods through the pod proxy.',

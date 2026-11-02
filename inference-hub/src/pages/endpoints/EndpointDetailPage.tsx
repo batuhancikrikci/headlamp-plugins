@@ -38,6 +38,7 @@ import { PodJson } from '../../resources/pod';
 import { KubeJson } from '../../resources/types';
 import { endpointEditUrl, PAGES, playgroundUrl } from '../../routes';
 import { featuresOf, useSettings } from '../../settings/settings';
+import { AskModelPanel } from './AskModelPanel';
 import { DiagnosePanel } from './DiagnosePanel';
 import { EndpointMetrics } from './EndpointMetrics';
 import { EndpointOverview } from './EndpointOverview';
@@ -213,6 +214,7 @@ function EndpointBody({
   const item = useLivePath<KubeJson>(customItemPath(RESOURCES[id], location, name, namespace));
   const [tab, setTab] = useTab();
   const history = useHistory();
+  const askModel = featuresOf(useSettings()).askModel;
   const endpoint = React.useMemo(() => {
     if (!item.data) return null;
     return slug === 'llm'
@@ -321,7 +323,13 @@ function EndpointBody({
           podsForbidden={pods.forbidden}
           catalogServed={isServed(discovery, 'localmodelcaches')}
           onOpenTab={next => setTab(next as TabId)}
-        />
+        >
+          {askModel
+            ? (diagnosis, logs) => (
+                <AskModelPanel endpoint={endpoint} diagnosis={diagnosis} logs={logs} />
+              )
+            : undefined}
+        </DiagnosePanel>
       )}
     </Box>
   );

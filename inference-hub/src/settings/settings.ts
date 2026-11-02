@@ -35,6 +35,8 @@ export interface ClusterSettings {
 export interface FeatureToggles {
   /** Chat with endpoints through the Kubernetes service proxy. */
   playground: boolean;
+  /** "Ask a model" in the Diagnose tab: send the diagnosis to a model running in the cluster. */
+  askModel: boolean;
   /** Read /metrics of vLLM pods through the pod proxy when Prometheus is not available. */
   podMetricsScrape: boolean;
   /** GPU section on native Node detail pages. */
@@ -55,6 +57,7 @@ export const MIN_REFRESH_SECONDS = 5;
 
 export const DEFAULT_FEATURES: FeatureToggles = {
   playground: true,
+  askModel: true,
   podMetricsScrape: true,
   nodeGpuSection: true,
   podAiSection: true,
