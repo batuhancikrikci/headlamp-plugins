@@ -24,7 +24,8 @@ import { PodJson } from '../../resources/pod';
 const TAIL_CHOICES = [100, 500, 2000];
 const FOLLOW_MS = 3000;
 
-async function fetchLogs(
+/** Tail of one container's log; `previous` reads the last crashed instance. */
+export async function fetchLogs(
   cluster: string,
   pod: PodJson,
   container: string,

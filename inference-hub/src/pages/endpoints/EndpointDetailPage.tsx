@@ -5,7 +5,7 @@ import { Box, Button, Chip, Paper, Tab, Tabs, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React from 'react';
 import { useHistory, useLocation, useParams } from 'react-router-dom';
-import { locationsOf } from '../../api/discovery';
+import { isServed, locationsOf } from '../../api/discovery';
 import { Discovery } from '../../api/discovery';
 import { isNotFound } from '../../api/liveStore';
 import { deleteObject, patchAnnotations } from '../../api/mutations';
@@ -38,10 +38,11 @@ import { PodJson } from '../../resources/pod';
 import { KubeJson } from '../../resources/types';
 import { endpointEditUrl, PAGES, playgroundUrl } from '../../routes';
 import { featuresOf, useSettings } from '../../settings/settings';
+import { DiagnosePanel } from './DiagnosePanel';
 import { EndpointMetrics } from './EndpointMetrics';
 import { EndpointOverview } from './EndpointOverview';
 
-const TABS = ['overview', 'metrics', 'pods', 'events', 'logs'] as const;
+const TABS = ['overview', 'metrics', 'pods', 'events', 'logs', 'diagnose'] as const;
 type TabId = (typeof TABS)[number];
 
 const RESOURCE_BY_SLUG: Record<EndpointSlug, ResourceId> = {
@@ -279,6 +280,13 @@ function EndpointBody({
           <Tab value="pods" label={t('Pods ({{n}})', { n: pods.items.length })} />
           <Tab value="events" label={t('Events')} />
           <Tab value="logs" label={t('Logs')} />
+          <Tab
+            value="diagnose"
+            icon={<Icon icon="mdi:stethoscope" width={18} />}
+            iconPosition="start"
+            label={t('Diagnose')}
+            sx={{ minHeight: 48 }}
+          />
         </Tabs>
       </Box>
       {tab === 'overview' && <EndpointOverview endpoint={endpoint} />}
@@ -305,6 +313,15 @@ function EndpointBody({
         <SectionBox title={t('Logs')}>
           <LogsPanel pods={pods.items} />
         </SectionBox>
+      )}
+      {tab === 'diagnose' && (
+        <DiagnosePanel
+          endpoint={endpoint}
+          pods={pods.items}
+          podsForbidden={pods.forbidden}
+          catalogServed={isServed(discovery, 'localmodelcaches')}
+          onOpenTab={next => setTab(next as TabId)}
+        />
       )}
     </Box>
   );

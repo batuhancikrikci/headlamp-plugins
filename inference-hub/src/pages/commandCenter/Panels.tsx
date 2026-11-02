@@ -1,7 +1,7 @@
 import { Icon } from '@iconify/react';
 import { Router } from '@kinvolk/headlamp-plugin/lib';
 import { DateLabel, Link, SimpleTable } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
-import { Box, Button, Paper, Tooltip, Typography } from '@mui/material';
+import { Box, Button, IconButton, Paper, Tooltip, Typography } from '@mui/material';
 import React from 'react';
 import { useHistory } from 'react-router-dom';
 import { t } from '../../common/i18n';
@@ -10,7 +10,7 @@ import { StatusBadge } from '../../components/common/StatusBadge';
 import { UsageBar } from '../../components/common/UsageBar';
 import { EventJson, eventTime } from '../../components/detail/EventsPanel';
 import { ModelEndpoint } from '../../resources/endpoint';
-import { DETAIL_PAGES, PAGES } from '../../routes';
+import { DETAIL_PAGES, endpointUrl, PAGES } from '../../routes';
 import { Health, HEALTH_META } from '../../utils/health';
 import { formatPercent, formatRate, formatSeconds } from '../../utils/vllmMetrics';
 import { TrafficRow } from './overview';
@@ -106,6 +106,7 @@ export function HealthBar({ counts }: { counts: Record<Health, number> }) {
 
 /** Endpoints that need attention: failed first, then deploying. */
 export function AttentionList({ endpoints }: { endpoints: ModelEndpoint[] }) {
+  const history = useHistory();
   const items = endpoints
     .filter(
       e =>
@@ -133,7 +134,7 @@ export function AttentionList({ endpoints }: { endpoints: ModelEndpoint[] }) {
           sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}
         >
           <StatusBadge summary={e.status} />
-          <Box sx={{ minWidth: 0 }}>
+          <Box sx={{ minWidth: 0, flexGrow: 1 }}>
             <Link
               routeName={DETAIL_PAGES.endpoint.name}
               params={{ slug: e.slug, namespace: e.namespace, name: e.name }}
@@ -151,6 +152,15 @@ export function AttentionList({ endpoints }: { endpoints: ModelEndpoint[] }) {
               </Typography>
             )}
           </Box>
+          <Tooltip title={t('Diagnose')}>
+            <IconButton
+              size="small"
+              aria-label={t('Diagnose {{name}}', { name: e.name })}
+              onClick={() => history.push(endpointUrl(e.slug, e.namespace, e.name, 'diagnose'))}
+            >
+              <Icon icon="mdi:stethoscope" width={18} />
+            </IconButton>
+          </Tooltip>
         </Box>
       ))}
     </Box>
