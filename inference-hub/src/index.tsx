@@ -19,6 +19,7 @@ import { EndpointDetailPage } from './pages/endpoints/EndpointDetailPage';
 import { EndpointsPage } from './pages/endpoints/EndpointsPage';
 import { VllmEnginesPage } from './pages/engines/VllmEnginesPage';
 import { InferenceGatewayPage } from './pages/gateway/InferenceGatewayPage';
+import { GpuEfficiencyPage } from './pages/gpuFleet/GpuEfficiencyPage';
 import { GpuFleetPage } from './pages/gpuFleet/GpuFleetPage';
 import { CapacityPlannerPage } from './pages/planner/CapacityPlannerPage';
 import { PlaygroundPage } from './pages/playground/PlaygroundPage';
@@ -94,6 +95,12 @@ const SIDEBAR_PAGES: PageRegistration[] = [
     label: 'GPU Fleet',
     icon: 'mdi:expansion-card-variant',
     component: GpuFleetPage,
+  },
+  {
+    page: PAGES.efficiency,
+    label: 'GPU Efficiency',
+    icon: 'mdi:gauge',
+    component: GpuEfficiencyPage,
   },
   {
     page: PAGES.storage,

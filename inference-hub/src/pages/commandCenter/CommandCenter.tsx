@@ -16,6 +16,7 @@ import { docsTargets } from '../../components/docs/docsTargets';
 import { MetricsSourceNote } from '../../components/engines/EngineMetricsView';
 import { useCatalog } from '../../hooks/useCatalog';
 import { useDiscovery } from '../../hooks/useDiscovery';
+import { useEfficiency } from '../../hooks/useEfficiency';
 import { useEndpoints } from '../../hooks/useEndpoints';
 import { useGpuFleet } from '../../hooks/useGpuFleet';
 import { useCoreList, useResourceList } from '../../hooks/useLive';
@@ -222,6 +223,7 @@ function Overview({ discovery }: { discovery: Discovery }) {
   const { endpoints, notInstalled } = useEndpoints();
   const counts = healthCounts(endpoints);
   const fleet = useGpuFleet({ withMetrics: false });
+  const efficiency = useEfficiency('1h');
   const gpu = totals(fleet.nodes);
   const { engines } = useVllmEngines();
   const engineState = useEngineMetrics(engines);
@@ -285,6 +287,18 @@ function Overview({ discovery }: { discovery: Discovery }) {
               icon: 'mdi:expansion-card-variant',
               color: 'primary.main',
             },
+            ...(efficiency.prometheus.status === 'ready'
+              ? [
+                  {
+                    id: 'idle',
+                    label: t('Idle GPUs (1 hour)'),
+                    value: efficiency.totals.idleGpus,
+                    icon: 'mdi:sleep',
+                    color: efficiency.totals.idleGpus ? 'warning.main' : 'text.secondary',
+                    onClick: () => history.push(Router.createRouteURL(PAGES.efficiency.name)),
+                  },
+                ]
+              : []),
             {
               id: 'tps',
               label: t('Tokens / s'),

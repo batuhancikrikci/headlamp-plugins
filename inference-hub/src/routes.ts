@@ -16,6 +16,7 @@ export const PAGES = {
   profiles: { name: 'inference-hub-profiles', path: `${URL_PREFIX}/serving-profiles` },
   engines: { name: 'inference-hub-engines', path: `${URL_PREFIX}/vllm-engines` },
   gpuFleet: { name: 'inference-hub-gpu-fleet', path: `${URL_PREFIX}/gpu-fleet` },
+  efficiency: { name: 'inference-hub-gpu-efficiency', path: `${URL_PREFIX}/gpu-efficiency` },
   settings: { name: 'inference-hub-settings', path: `${URL_PREFIX}/settings` },
 } as const;
 
