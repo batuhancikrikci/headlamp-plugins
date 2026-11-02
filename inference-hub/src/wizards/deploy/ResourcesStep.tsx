@@ -12,11 +12,12 @@ import {
   FIT_REASON_TEXT,
   gpusForMemory,
   NodeFit,
+  withoutEndpoint,
 } from '../../utils/gpuFit';
 import { parseModelUri } from '../../utils/modelInfo';
 import { formatBytes } from '../../utils/quantity';
 import { DeployForm } from './deployModel';
-import { fieldError, StepProps } from './stepTypes';
+import { EditingEndpoint, fieldError, StepProps } from './stepTypes';
 
 const PRODUCT_LABEL = 'nvidia.com/gpu.product';
 
@@ -28,13 +29,17 @@ export function replicasToPlace(form: DeployForm): number {
 /** Live fit check of the requested GPUs against the inventory (warning only, never blocking). */
 export function FitCheck({
   form,
-  nodes,
+  nodes: inventory,
   podsForbidden,
+  editing,
 }: {
   form: DeployForm;
   nodes: GpuNode[];
   podsForbidden: boolean;
+  editing?: EditingEndpoint;
 }) {
+  // An edited endpoint's own GPUs are free again once KServe replaces its pods.
+  const nodes = editing ? withoutEndpoint(inventory, editing) : inventory;
   const model = parseModelUri(form.uri, form.servedModelName);
   const estimate = model.paramsB
     ? estimateServingMemory(model.paramsB, model.quantization)
@@ -102,7 +107,7 @@ export function FitCheck({
   );
 }
 
-export function ResourcesStep({ form, update, errors }: StepProps) {
+export function ResourcesStep({ form, update, errors, editing }: StepProps) {
   const fleet = useGpuFleet({ withMetrics: false });
   const model = parseModelUri(form.uri, form.servedModelName);
   const estimate = model.paramsB
@@ -252,7 +257,12 @@ export function ResourcesStep({ form, update, errors }: StepProps) {
         ) : fleet.nodes.length === 0 ? (
           <Alert severity="warning">{t('No GPU nodes were found in this cluster.')}</Alert>
         ) : (
-          <FitCheck form={form} nodes={fleet.nodes} podsForbidden={fleet.podsForbidden} />
+          <FitCheck
+            form={form}
+            nodes={fleet.nodes}
+            podsForbidden={fleet.podsForbidden}
+            editing={editing}
+          />
         )}
       </Box>
     </Box>

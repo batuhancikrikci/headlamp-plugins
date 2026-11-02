@@ -2,15 +2,21 @@ import { Icon } from '@iconify/react';
 import { NameValueTable, SectionBox } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
 import { Box, Button, Grid, Step, StepButton, Stepper, Typography } from '@mui/material';
 import React from 'react';
-import { useHistory, useLocation } from 'react-router-dom';
+import { useHistory, useLocation, useParams } from 'react-router-dom';
 import { Discovery, isServed, locationsOf } from '../../api/discovery';
+import { isNotFound } from '../../api/liveStore';
+import { customItemPath } from '../../api/paths';
 import { DocsDrawer } from '../../common/docs/DocsDrawer';
 import { t } from '../../common/i18n';
+import { EmptyState, ErrorState, LoadingState } from '../../common/States';
 import { DiscoveryGate } from '../../components/common/DiscoveryGate';
 import { MultiYamlEditor } from '../../components/common/MultiYamlEditor';
 import { useCan } from '../../hooks/useCan';
 import { useDefaultNamespace } from '../../hooks/useEndpoints';
-import { useResourceList } from '../../hooks/useLive';
+import { useLivePath, useResourceList } from '../../hooks/useLive';
+import { RESOURCES } from '../../resources/definitions';
+import { EndpointSlug } from '../../resources/endpoint';
+import { KubeJson } from '../../resources/types';
 import { endpointUrl } from '../../routes';
 import {
   buildObjects,
@@ -24,6 +30,8 @@ import {
   totalGpus,
   validateStep,
 } from './deployModel';
+import { formFromEndpoint } from './editModel';
+import { EditReview } from './EditReview';
 import { ResourcesStep } from './ResourcesStep';
 import { ScalingStep } from './ScalingStep';
 import { ServingStep } from './ServingStep';
@@ -113,13 +121,27 @@ function Summary({ form }: { form: DeployForm }) {
   );
 }
 
-function Wizard({ discovery }: { discovery: Discovery }) {
-  const location = useLocation();
+/** An existing endpoint opened in the wizard. */
+interface EditState {
+  slug: EndpointSlug;
+  /** The live object when the wizard was opened. */
+  live: KubeJson;
+  /** Form of the live object; fields still equal to it are left untouched. */
+  original: DeployForm;
+  notes: string[];
+}
+
+function Wizard({
+  discovery,
+  initial,
+  edit,
+}: {
+  discovery: Discovery;
+  initial: DeployForm;
+  edit?: EditState;
+}) {
   const history = useHistory();
-  const defaultNamespace = useDefaultNamespace();
-  const [form, setForm] = React.useState<DeployForm>(() =>
-    initialForm(location.search, defaultNamespace, discovery)
-  );
+  const [form, setForm] = React.useState<DeployForm>(initial);
   const [active, setActive] = React.useState(0);
   const [showErrors, setShowErrors] = React.useState<Record<string, boolean>>({});
   const caches = useResourceList<LocalModelCacheJson>(
@@ -145,8 +167,12 @@ function Wizard({ discovery }: { discovery: Discovery }) {
   );
   const step = STEPS[active];
   const errorsByStep = React.useMemo(
-    () => Object.fromEntries(STEPS.map(s => [s, validateStep(s, form)])) as Record<StepId, Errors>,
-    [form]
+    () =>
+      Object.fromEntries(STEPS.map(s => [s, validateStep(s, form, edit?.original)])) as Record<
+        StepId,
+        Errors
+      >,
+    [form, edit]
   );
   const stepErrors = errorsByStep[step];
   const shownErrors = showErrors[step] ? stepErrors : {};
@@ -157,12 +183,12 @@ function Wizard({ discovery }: { discovery: Discovery }) {
     cache: locationsOf(discovery, 'localmodelcaches')[0]?.apiVersion,
   };
   const objects = React.useMemo(
-    () => (step === 'review' ? buildObjects(form, versions) : []),
-    [step, form, versions.llm, versions.isvc, versions.cache]
+    () => (step === 'review' && !edit ? buildObjects(form, versions) : []),
+    [step, form, edit, versions.llm, versions.isvc, versions.cache]
   );
 
   // The endpoint being built (the last object; a catalog entry may come first).
-  const draft = buildObjects(form, versions).slice(-1)[0];
+  const draft = edit ? edit.live : buildObjects(form, versions).slice(-1)[0];
 
   const target =
     form.mode === 'llm'
@@ -171,10 +197,11 @@ function Wizard({ discovery }: { discovery: Discovery }) {
   const canCreate = useCan(
     target && form.namespace
       ? {
-          verb: 'create',
+          verb: edit ? 'update' : 'create',
           group: target.group,
           resource: form.mode === 'llm' ? 'llminferenceservices' : 'inferenceservices',
           namespace: form.namespace,
+          ...(edit ? { name: form.name } : {}),
         }
       : null
   );
@@ -210,11 +237,25 @@ function Wizard({ discovery }: { discovery: Discovery }) {
     setActive(index);
   };
 
-  const props = { form, update, errors: shownErrors, discovery };
+  const props = {
+    form,
+    update,
+    errors: shownErrors,
+    discovery,
+    editing: edit
+      ? {
+          kind: (form.mode === 'llm' ? 'LLMInferenceService' : 'InferenceService') as
+            | 'LLMInferenceService'
+            | 'InferenceService',
+          name: form.name,
+          namespace: form.namespace,
+        }
+      : undefined,
+  };
 
   return (
     <SectionBox
-      title={t('Deploy a model')}
+      title={edit ? t('Edit {{name}}', { name: form.name }) : t('Deploy a model')}
       headerProps={{
         titleSideActions: [
           <DocsDrawer key="docs" apiVersion={draft?.apiVersion} kind={draft?.kind} value={draft} />,
@@ -247,6 +288,15 @@ function Wizard({ discovery }: { discovery: Discovery }) {
                 <Typography color="error">
                   {t('Fix the highlighted fields in the earlier steps first.')}
                 </Typography>
+              ) : edit ? (
+                <EditReview
+                  live={edit.live}
+                  original={edit.original}
+                  form={form}
+                  notes={edit.notes}
+                  disabledReason={blocked}
+                  onSaved={() => history.push(endpointUrl(edit.slug, form.namespace, form.name))}
+                />
               ) : (
                 <MultiYamlEditor
                   objects={objects}
@@ -286,13 +336,124 @@ function Wizard({ discovery }: { discovery: Discovery }) {
   );
 }
 
+function CreateWizard({ discovery }: { discovery: Discovery }) {
+  const location = useLocation();
+  const defaultNamespace = useDefaultNamespace();
+  const [initial] = React.useState(() => initialForm(location.search, defaultNamespace, discovery));
+  return <Wizard discovery={discovery} initial={initial} />;
+}
+
 export function DeployWizardPage() {
   return (
     <DiscoveryGate
       title={t('Deploy a model')}
       anyOf={['llminferenceservices', 'inferenceservices']}
     >
-      {discovery => <Wizard discovery={discovery} />}
+      {discovery => <CreateWizard discovery={discovery} />}
+    </DiscoveryGate>
+  );
+}
+
+const RESOURCE_BY_SLUG = { llm: 'llminferenceservices', isvc: 'inferenceservices' } as const;
+
+function EditWizard({
+  discovery,
+  slug,
+  namespace,
+  name,
+}: {
+  discovery: Discovery;
+  slug: EndpointSlug;
+  namespace: string;
+  name: string;
+}) {
+  const history = useHistory();
+  const id = RESOURCE_BY_SLUG[slug];
+  const location = locationsOf(discovery, id)[0];
+  const item = useLivePath<KubeJson>(customItemPath(RESOURCES[id], location, name, namespace));
+  const catalogServed = isServed(discovery, 'localmodelcaches');
+  const caches = useResourceList<LocalModelCacheJson>(
+    'localmodelcaches',
+    catalogServed ? {} : null,
+    60000
+  );
+  const catalogReady = !catalogServed || !caches.loading;
+
+  // The live object is taken once: later updates must not reset the form being edited.
+  const [state, setState] = React.useState<(EditState & { blocked?: string }) | null>(null);
+  React.useEffect(() => {
+    if (state || !item.data || !catalogReady) return;
+    const kind = slug === 'llm' ? 'LLMInferenceService' : 'InferenceService';
+    const source = formFromEndpoint(
+      item.data,
+      kind,
+      caches.items
+        .filter(c => c.spec?.sourceModelUri)
+        .map(c => ({ name: c.metadata.name, uri: c.spec!.sourceModelUri! }))
+    );
+    setState({
+      slug,
+      live: item.data,
+      original: source.form,
+      notes: source.notes,
+      blocked: source.blocked,
+    });
+  }, [state, item.data, catalogReady, caches.items, slug]);
+
+  const back = () => history.push(endpointUrl(slug, namespace, name));
+  if (!state) {
+    if (isNotFound(item.error)) {
+      return (
+        <SectionBox title={t('Edit {{name}}', { name })}>
+          <EmptyState
+            icon="mdi:file-question-outline"
+            title={t('Endpoint {{ns}}/{{name}} was not found', { ns: namespace, name })}
+            description={t('It may have been deleted.')}
+          />
+        </SectionBox>
+      );
+    }
+    if (item.error && !item.data) {
+      return (
+        <SectionBox title={t('Edit {{name}}', { name })}>
+          <ErrorState error={item.error} onRetry={item.refetch} />
+        </SectionBox>
+      );
+    }
+    return <LoadingState title={t('Loading endpoint…')} />;
+  }
+  if (state.blocked) {
+    return (
+      <SectionBox title={t('Edit {{name}}', { name })}>
+        <EmptyState
+          icon="mdi:file-document-edit-outline"
+          title={t('This endpoint cannot be edited with the form')}
+          description={t(state.blocked)}
+          action={
+            <Button variant="outlined" startIcon={<Icon icon="mdi:arrow-left" />} onClick={back}>
+              {t('Back to the endpoint')}
+            </Button>
+          }
+        />
+      </SectionBox>
+    );
+  }
+  return <Wizard discovery={discovery} initial={state.original} edit={state} />;
+}
+
+/** The Deploy Model wizard for an existing endpoint. */
+export function EditEndpointPage() {
+  const { slug, namespace, name } = useParams<{
+    slug: EndpointSlug;
+    namespace: string;
+    name: string;
+  }>();
+  const id = RESOURCE_BY_SLUG[slug] || RESOURCE_BY_SLUG.llm;
+  return (
+    <DiscoveryGate title={t('Edit {{name}}', { name })} anyOf={[id]}>
+      {discovery => (
+        <EditWizard discovery={discovery} slug={slug} namespace={namespace} name={name} />
+      )}
     </DiscoveryGate>
   );
 }

@@ -162,7 +162,7 @@ function CatalogPicker({ form, update, errors }: Pick<StepProps, 'form' | 'updat
   );
 }
 
-function CustomUri({ form, update, errors, discovery }: StepProps) {
+function CustomUri({ form, update, errors, discovery, editing }: StepProps) {
   const groups = useResourceList<KubeJson>(
     'localmodelnodegroups',
     isServed(discovery, 'localmodelcaches') ? {} : null,
@@ -233,7 +233,7 @@ function CustomUri({ form, update, errors, discovery }: StepProps) {
           </Box>
         </Box>
       )}
-      {catalogAvailable && (
+      {catalogAvailable && !editing && (
         <Box>
           <FormControlLabel
             control={
@@ -282,7 +282,7 @@ function CustomUri({ form, update, errors, discovery }: StepProps) {
 }
 
 export function SourceStep(props: StepProps) {
-  const { form, update, errors, discovery } = props;
+  const { form, update, errors, discovery, editing } = props;
   const namespaces = useCoreList('v1', 'namespaces', false, {}, 60000);
   const catalogAvailable = isServed(discovery, 'localmodelcaches');
 
@@ -322,6 +322,7 @@ export function SourceStep(props: StepProps) {
             freeSolo
             options={namespaces.items.map(n => n.metadata.name)}
             value={form.namespace}
+            disabled={!!editing}
             onInputChange={(_, v) => update({ namespace: v })}
             renderInput={p => (
               <TextField {...p} label={t('Namespace')} {...fieldError(errors, 'namespace')} />
@@ -333,11 +334,14 @@ export function SourceStep(props: StepProps) {
             fullWidth
             label={t('Endpoint name')}
             value={form.name}
+            disabled={!!editing}
             onChange={e => update({ name: e.target.value.trim() })}
             {...fieldError(errors, 'name')}
             helperText={
               errors.name
                 ? t(errors.name)
+                : editing
+                ? t('The name and namespace of an endpoint cannot change.')
                 : t('Short names keep the generated service names readable.')
             }
           />

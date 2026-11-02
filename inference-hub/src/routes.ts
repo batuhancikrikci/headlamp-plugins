@@ -25,6 +25,11 @@ export const DETAIL_PAGES = {
     path: `${URL_PREFIX}/endpoints/:slug/:namespace/:name`,
     sidebar: PAGES.endpoints.name,
   },
+  endpointEdit: {
+    name: 'inference-hub-endpoint-edit',
+    path: `${URL_PREFIX}/endpoints/:slug/:namespace/:name/edit`,
+    sidebar: PAGES.endpoints.name,
+  },
   catalogEntry: {
     name: 'inference-hub-catalog-entry',
     path: `${URL_PREFIX}/catalog/:name`,
@@ -45,6 +50,11 @@ export const DETAIL_PAGES = {
 export function endpointUrl(slug: EndpointSlug, namespace: string, name: string, tab?: string) {
   const url = Router.createRouteURL(DETAIL_PAGES.endpoint.name, { slug, namespace, name });
   return tab ? `${url}?tab=${tab}` : url;
+}
+
+/** The Deploy Model wizard opened on an existing endpoint. */
+export function endpointEditUrl(slug: EndpointSlug, namespace: string, name: string) {
+  return Router.createRouteURL(DETAIL_PAGES.endpointEdit.name, { slug, namespace, name });
 }
 
 export function playgroundUrl(targetId: string) {

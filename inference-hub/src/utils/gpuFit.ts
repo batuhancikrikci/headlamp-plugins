@@ -104,6 +104,39 @@ export interface FitResult {
   nodes: NodeFit[];
 }
 
+/**
+ * The inventory as if the pods of one endpoint were gone: used when editing an endpoint, whose
+ * own GPUs become free when its pods are replaced.
+ */
+export function withoutEndpoint(
+  nodes: GpuNode[],
+  endpoint: { kind: string; name: string; namespace: string }
+): GpuNode[] {
+  return nodes.map(node => {
+    const own = node.workloads.filter(
+      w =>
+        w.namespace === endpoint.namespace &&
+        w.endpoint?.kind === endpoint.kind &&
+        w.endpoint?.name === endpoint.name
+    );
+    if (own.length === 0) return node;
+    const released: Record<string, number> = {};
+    for (const w of own) {
+      for (const [resource, count] of Object.entries(w.requests)) {
+        released[resource] = (released[resource] || 0) + count;
+      }
+    }
+    return {
+      ...node,
+      resources: node.resources.map(r => ({
+        ...r,
+        requested: Math.max(0, r.requested - (released[r.name] || 0)),
+      })),
+      workloads: node.workloads.filter(w => !own.includes(w)),
+    };
+  });
+}
+
 export function checkFit(nodes: GpuNode[], req: FitRequest): FitResult {
   const perReplica = Math.max(1, req.gpusPerReplica);
   let placeable = 0;

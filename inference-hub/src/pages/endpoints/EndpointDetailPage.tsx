@@ -36,7 +36,7 @@ import {
 } from '../../resources/endpoint';
 import { PodJson } from '../../resources/pod';
 import { KubeJson } from '../../resources/types';
-import { PAGES, playgroundUrl } from '../../routes';
+import { endpointEditUrl, PAGES, playgroundUrl } from '../../routes';
 import { featuresOf, useSettings } from '../../settings/settings';
 import { EndpointMetrics } from './EndpointMetrics';
 import { EndpointOverview } from './EndpointOverview';
@@ -115,6 +115,15 @@ function EndpointHeader({ endpoint, group }: { endpoint: ModelEndpoint; group: s
               {t('Open in Playground')}
             </Button>
           )}
+          <GuardedButton
+            check={access('update')}
+            label={t('Edit')}
+            icon="mdi:file-document-edit-outline"
+            variant="outlined"
+            onClick={() =>
+              history.push(endpointEditUrl(endpoint.slug, endpoint.namespace, endpoint.name))
+            }
+          />
           <GuardedButton
             check={access('update')}
             label={t('Edit YAML')}

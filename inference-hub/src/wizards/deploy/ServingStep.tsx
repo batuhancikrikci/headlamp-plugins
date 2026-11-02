@@ -212,7 +212,7 @@ function LlmOptions({ form, update, errors, discovery }: StepProps) {
   );
 }
 
-function IsvcOptions({ form, update }: StepProps) {
+function IsvcOptions({ form, update, editing }: StepProps) {
   return (
     <Grid container spacing={2}>
       <Grid item xs={12} sm={6}>
@@ -221,10 +221,15 @@ function IsvcOptions({ form, update }: StepProps) {
           fullWidth
           label={t('Deployment mode')}
           value={form.isvcDeploymentMode}
+          disabled={!!editing}
           onChange={e =>
             update({ isvcDeploymentMode: e.target.value as typeof form.isvcDeploymentMode })
           }
-          helperText={t('Standard uses Deployments and HPA; Knative adds scale-to-zero.')}
+          helperText={
+            editing
+              ? t('The deployment mode cannot change after the endpoint is created.')
+              : t('Standard uses Deployments and HPA; Knative adds scale-to-zero.')
+          }
         >
           <MenuItem value="">{t('Cluster default')}</MenuItem>
           <MenuItem value="Standard">Standard</MenuItem>
@@ -247,7 +252,7 @@ function IsvcOptions({ form, update }: StepProps) {
 }
 
 export function ServingStep(props: StepProps) {
-  const { form, update, errors, discovery } = props;
+  const { form, update, errors, discovery, editing } = props;
   const accounts = useCoreList(
     'v1',
     'serviceaccounts',
@@ -260,7 +265,9 @@ export function ServingStep(props: StepProps) {
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <Grid container spacing={2}>
         {MODES.map(m => {
-          const served = isServed(discovery, m.resource);
+          const installed = isServed(discovery, m.resource);
+          // An endpoint cannot change its kind: the other card is disabled when editing.
+          const served = installed && (!editing || m.id === form.mode);
           const selected = form.mode === m.id;
           return (
             <Grid item xs={12} md={6} key={m.id}>
@@ -289,7 +296,11 @@ export function ServingStep(props: StepProps) {
                     {selected && <Icon icon="mdi:check-circle" width={22} />}
                   </Box>
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    {served ? t(m.text) : t('Not installed in this cluster.')}
+                    {served
+                      ? t(m.text)
+                      : installed
+                      ? t('An existing endpoint cannot change its type.')
+                      : t('Not installed in this cluster.')}
                   </Typography>
                 </CardActionArea>
               </Card>

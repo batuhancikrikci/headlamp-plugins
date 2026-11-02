@@ -147,7 +147,11 @@ function validQuantity(v: string) {
   return v.trim() !== '' && isFinite(parseQuantity(v)) && parseQuantity(v) > 0;
 }
 
-export function validateStep(step: StepId, form: DeployForm): Errors {
+/**
+ * Errors of one step. When editing, `original` is the form of the live object: fields still equal
+ * to it are not validated, because the API server already accepted them.
+ */
+export function validateStep(step: StepId, form: DeployForm, original?: DeployForm): Errors {
   const e: Errors = {};
   if (step === 'source' || step === 'review') {
     if (form.source === 'catalog' && !form.cacheName)
@@ -197,6 +201,11 @@ export function validateStep(step: StepId, form: DeployForm): Errors {
       e.replicas = 'Replicas must be at least 1.';
     }
   }
+  if (original) {
+    for (const key of Object.keys(e) as Array<keyof DeployForm>) {
+      if (JSON.stringify(form[key]) === JSON.stringify(original[key])) delete e[key];
+    }
+  }
   return e;
 }
 
@@ -206,7 +215,7 @@ export interface ApiVersions {
   cache?: string;
 }
 
-function resources(form: DeployForm) {
+export function resources(form: DeployForm) {
   const gpu = form.gpus > 0 ? { [form.gpuResource]: String(form.gpus) } : {};
   return {
     requests: { cpu: form.cpu, memory: form.memory, ...gpu },
@@ -214,13 +223,13 @@ function resources(form: DeployForm) {
   };
 }
 
-function splitArgs(args: string): string[] {
+export function splitArgs(args: string): string[] {
   return (args.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) || []).map(a =>
     a.replace(/^(['"])(.*)\1$/, '$2')
   );
 }
 
-function llmContainer(form: DeployForm) {
+export function llmContainer(form: DeployForm) {
   return {
     name: 'main',
     ...(form.image ? { image: form.image } : {}),
@@ -231,7 +240,8 @@ function llmContainer(form: DeployForm) {
   };
 }
 
-function router(form: DeployForm) {
+/** spec.router of an LLMInferenceService for the routing choice; undefined for in-cluster only. */
+export function routerFor(form: DeployForm) {
   const gateway = form.gatewayName
     ? {
         refs: [
@@ -252,12 +262,25 @@ function router(form: DeployForm) {
   }
 }
 
-export function buildLLMInferenceService(form: DeployForm, apiVersion: string): KubeJson {
-  const podExtras = {
+/** Pod settings shared by the decode and prefill templates. */
+export function podExtras(form: DeployForm) {
+  return {
     ...(Object.keys(form.nodeSelector).length ? { nodeSelector: form.nodeSelector } : {}),
     ...(form.serviceAccountName ? { serviceAccountName: form.serviceAccountName } : {}),
   };
-  const r = router(form);
+}
+
+/** spec.prefill of an LLMInferenceService: same server settings as the decode pool. */
+export function prefillSpec(form: DeployForm) {
+  return {
+    replicas: form.prefillReplicas,
+    ...(form.gpus > 1 ? { parallelism: { tensor: form.gpus } } : {}),
+    template: { ...podExtras(form), containers: [llmContainer(form)] },
+  };
+}
+
+export function buildLLMInferenceService(form: DeployForm, apiVersion: string): KubeJson {
+  const r = routerFor(form);
   const spec: Record<string, unknown> = {
     model: { uri: form.uri.trim(), name: form.servedModelName.trim() },
     ...(form.profiles.length ? { baseRefs: form.profiles.map(name => ({ name })) } : {}),
@@ -267,15 +290,9 @@ export function buildLLMInferenceService(form: DeployForm, apiVersion: string): 
       : { replicas: form.replicas }),
     ...(form.gpus > 1 ? { parallelism: { tensor: form.gpus } } : {}),
     ...(r ? { router: r } : {}),
-    template: { ...podExtras, containers: [llmContainer(form)] },
+    template: { ...podExtras(form), containers: [llmContainer(form)] },
   };
-  if (form.prefillDecode) {
-    spec.prefill = {
-      replicas: form.prefillReplicas,
-      ...(form.gpus > 1 ? { parallelism: { tensor: form.gpus } } : {}),
-      template: { ...podExtras, containers: [llmContainer(form)] },
-    };
-  }
+  if (form.prefillDecode) spec.prefill = prefillSpec(form);
   return {
     apiVersion,
     kind: 'LLMInferenceService',

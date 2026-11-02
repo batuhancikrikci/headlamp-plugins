@@ -27,7 +27,7 @@ import { PluginSettingsPanel, SettingsPage } from './pages/settings/SettingsPage
 import { ModelStoragePage } from './pages/storage/ModelStoragePage';
 import { DETAIL_PAGES, PAGES, SIDEBAR_ROOT } from './routes';
 import { PLUGIN_NAME } from './settings/settings';
-import { DeployWizardPage } from './wizards/deploy/DeployWizardPage';
+import { DeployWizardPage, EditEndpointPage } from './wizards/deploy/DeployWizardPage';
 
 registerKindDocs(KIND_DOCS);
 
@@ -105,6 +105,7 @@ const DETAIL_ROUTES: Array<{
   { route: DETAIL_PAGES.profile, component: ProfileDetailPage },
   { route: DETAIL_PAGES.catalogEntry, component: CatalogEntryPage },
   { route: DETAIL_PAGES.deploy, component: DeployWizardPage },
+  { route: DETAIL_PAGES.endpointEdit, component: EditEndpointPage },
 ];
 
 registerSidebarEntry({
