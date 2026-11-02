@@ -1,6 +1,6 @@
 {
   "name": "gateway",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Headlamp plugin for the Kubernetes Gateway API: overview, topology, guided forms, wizards and relationship-aware detail views",
   "keywords": [
     "headlamp",

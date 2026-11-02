@@ -4,6 +4,15 @@ All notable changes to the Gateway API plugin are documented here. The format fo
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the plugin uses
 [semantic versioning](https://semver.org/).
 
+## [0.1.1] — unreleased
+
+### Fixed
+
+- A route whose parent was changed no longer stays Pending because of the status entry the
+  controller left behind for the removed parent; the Overview condition count ignores it too.
+- A BackendTLSPolicy no longer stays Pending because of ancestors the controller stopped
+  maintaining (for example after a target was removed).
+
 ## [0.1.0] — 2026-10-20
 
 First public release.

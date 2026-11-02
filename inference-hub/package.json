@@ -1,6 +1,6 @@
 {
   "name": "inference-hub",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Inference Hub: an AI/LLM platform experience for Headlamp covering KServe, llm-d, the Gateway API Inference Extension, vLLM and the NVIDIA GPU Operator",
   "keywords": [
     "headlamp",

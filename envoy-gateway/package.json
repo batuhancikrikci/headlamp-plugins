@@ -1,6 +1,6 @@
 {
   "name": "envoy-gateway",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Headlamp plugin for managing Envoy Gateway (gateway.envoyproxy.io) resources: overview, relationships, guided forms and wizards",
   "keywords": [
     "headlamp",
