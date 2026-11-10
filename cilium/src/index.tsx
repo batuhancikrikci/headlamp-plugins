@@ -28,6 +28,7 @@ import {
   BGPPeeringPolicyDetail,
   BGPPeeringPolicyList,
 } from './components/bgp/Views';
+import { ClusterMeshPage } from './components/clustermesh/ClusterMeshPage';
 import { GroupPage } from './components/common/Views';
 import {
   EgressGatewayPolicyDetail,
@@ -87,7 +88,7 @@ import {
   URL_PREFIX,
 } from './resources/registry';
 import { API_GROUP } from './resources/types';
-import { ADVANCED_ROUTE, GENERIC_DETAIL_ROUTE, OVERVIEW_ROUTE } from './routes';
+import { ADVANCED_ROUTE, CLUSTERMESH_ROUTE, GENERIC_DETAIL_ROUTE, OVERVIEW_ROUTE } from './routes';
 import { validateResource } from './utils/validation';
 
 registerResourceValidator(validateResource);
@@ -198,6 +199,23 @@ for (const info of CRDS) {
     API_GROUP
   );
 }
+
+const CLUSTERMESH_SIDEBAR = `${SIDEBAR_ROOT}-clustermesh`;
+
+registerSidebarEntry({
+  parent: SIDEBAR_ROOT,
+  name: CLUSTERMESH_SIDEBAR,
+  label: 'Cluster Mesh',
+  url: `${URL_PREFIX}/clustermesh`,
+});
+
+registerRoute({
+  path: `${URL_PREFIX}/clustermesh`,
+  sidebar: CLUSTERMESH_SIDEBAR,
+  name: CLUSTERMESH_ROUTE,
+  exact: true,
+  component: withBoundary(ClusterMeshPage),
+});
 
 registerSidebarEntry({
   parent: SIDEBAR_ROOT,

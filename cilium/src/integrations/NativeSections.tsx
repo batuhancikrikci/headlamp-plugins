@@ -8,10 +8,12 @@ import {
   SectionBox,
   SimpleTable,
 } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
-import { Box, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import React from 'react';
+import { globalServiceSettings } from '../api/clustermesh';
 import { ErrorBoundary } from '../common/ErrorBoundary';
 import { useText } from '../common/i18n';
+import { GlobalServiceDialog } from '../components/clustermesh/GlobalServiceDialog';
 import { EndpointState, EnforcementChips } from '../components/common/EndpointsTable';
 import { CiliumLink, ResourceRefList } from '../components/common/ResourceRefLink';
 import { HealthLabel, StringArray, UsageBar } from '../components/common/Shared';
@@ -327,8 +329,33 @@ function L2LeaseHolder({ service }: { service: ServiceLike }) {
   );
 }
 
+/** Cluster Mesh settings of a global service, with an edit dialog. */
+function GlobalServiceRow({ service }: { service: ServiceLike }) {
+  const { t } = useText();
+  const [open, setOpen] = React.useState(false);
+  const mesh = globalServiceSettings(service.metadata.annotations);
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+      <Typography variant="body2" component="span">
+        {[
+          t('Global service'),
+          mesh.shared ? t('endpoints shared') : t('endpoints not shared'),
+          mesh.affinity !== 'none' ? t('{{a}} affinity', { a: mesh.affinity }) : null,
+        ]
+          .filter(Boolean)
+          .join(' · ')}
+      </Typography>
+      <Button size="small" onClick={() => setOpen(true)}>
+        {t('Edit')}
+      </Button>
+      {open && <GlobalServiceDialog service={service} onClose={() => setOpen(false)} />}
+    </Box>
+  );
+}
+
 function ServiceSection({ service }: { service: ServiceLike }) {
   const { t } = useText();
+  const global = globalServiceSettings(service.metadata.annotations).global;
   const namespace = service.metadata.namespace;
   const pools = useCiliumList<CiliumLoadBalancerIPPool>('CiliumLoadBalancerIPPool');
   const l2 = useCiliumList<CiliumL2AnnouncementPolicy>('CiliumL2AnnouncementPolicy');
@@ -358,6 +385,7 @@ function ServiceSection({ service }: { service: ServiceLike }) {
   );
 
   const hasContent =
+    global ||
     (lb && (pools.items || []).length > 0) ||
     l2Policies.length + bgp.length + lrps.length + envoyConfigs.length > 0;
   if (!hasContent) return null;
@@ -366,6 +394,11 @@ function ServiceSection({ service }: { service: ServiceLike }) {
     <SectionBox title={t('Cilium')}>
       <NameValueTable
         rows={[
+          {
+            name: t('Cluster Mesh'),
+            value: <GlobalServiceRow service={service} />,
+            hide: !global,
+          },
           {
             name: t('LB IPAM pool'),
             value:

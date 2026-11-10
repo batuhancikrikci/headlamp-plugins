@@ -2,3 +2,4 @@
 export const OVERVIEW_ROUTE = 'cilium-overview';
 export const ADVANCED_ROUTE = 'cilium-advanced';
 export const GENERIC_DETAIL_ROUTE = 'cilium-generic-detail';
+export const CLUSTERMESH_ROUTE = 'cilium-clustermesh';

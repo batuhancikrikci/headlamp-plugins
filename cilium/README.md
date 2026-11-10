@@ -17,18 +17,19 @@ as long as they serve the `cilium.io` API group.
 
 ### Features
 
-| Area                     | What you get                                                                                                                                                                                                                                                        |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Overview**             | Agent / operator / Envoy / Hubble pod health and version, features enabled in `cilium-config`, KPI tiles (policies, endpoints, policy coverage, identities, BGP sessions, LB IPs), a "Needs attention" list, policy coverage per namespace, resource counts per CRD |
-| **Lists**                | Kind-specific columns (selectors, rule counts, feature chips, selected endpoints, session state, IP usage, …), filtering, namespace awareness, status indicators, row actions and bulk delete                                                                       |
-| **Details**              | Structured sections instead of raw JSON, related resources, conditions and events                                                                                                                                                                                   |
-| **Create / edit**        | Form, YAML and CRD documentation tabs in one dialog; form and YAML stay in sync in both directions; client-side validation                                                                                                                                          |
-| **Wizards**              | Network policy, BGP setup, LoadBalancer IP pool + L2 announcement, egress gateway                                                                                                                                                                                   |
-| **Policy visualization** | Allowed and denied ingress/egress per rule, with peers, ports and L7 rules                                                                                                                                                                                          |
-| **Relationships**        | Policies ↔ selected endpoints, identities ↔ endpoints, CIDR groups ↔ policies, BGP cluster config ↔ peer config ↔ advertisement ↔ nodes, IP pools / L2 policies ↔ services, egress policies ↔ pods and gateway nodes                                                |
-| **Native pages**         | A "Cilium" section on Headlamp's Pod, Namespace, Node and Service pages                                                                                                                                                                                             |
-| **Resource map**         | Map sources for network policies, BGP, load balancing and egress gateways                                                                                                                                                                                           |
-| **Robustness**           | Runtime API discovery, hidden or disabled views for missing CRDs, deprecation notices, loading / empty / error / forbidden states, an error boundary around every view                                                                                              |
+| Area                     | What you get                                                                                                                                                                                                                                                                                                      |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Overview**             | Agent / operator / Envoy / Hubble pod health and version, features enabled in `cilium-config`, KPI tiles (policies, endpoints, policy coverage, identities, BGP sessions, LB IPs), a "Needs attention" list, policy coverage per namespace, resource counts per CRD                                               |
+| **Lists**                | Kind-specific columns (selectors, rule counts, feature chips, selected endpoints, session state, IP usage, …), filtering, namespace awareness, status indicators, row actions and bulk delete                                                                                                                     |
+| **Details**              | Structured sections instead of raw JSON, related resources, conditions and events                                                                                                                                                                                                                                 |
+| **Create / edit**        | Form, YAML and CRD documentation tabs in one dialog; form and YAML stay in sync in both directions; client-side validation                                                                                                                                                                                        |
+| **Wizards**              | Network policy, BGP setup, LoadBalancer IP pool + L2 announcement, egress gateway                                                                                                                                                                                                                                 |
+| **Policy visualization** | Allowed and denied ingress/egress per rule, with peers, ports and L7 rules                                                                                                                                                                                                                                        |
+| **Relationships**        | Policies ↔ selected endpoints, identities ↔ endpoints, CIDR groups ↔ policies, BGP cluster config ↔ peer config ↔ advertisement ↔ nodes, IP pools / L2 policies ↔ services, egress policies ↔ pods and gateway nodes                                                                                              |
+| **Native pages**         | A "Cilium" section on Headlamp's Pod, Namespace, Node and Service pages                                                                                                                                                                                                                                           |
+| **Cluster Mesh**         | This cluster's name and ID (with what keeps it out of a mesh), the Cluster Mesh API server and how other clusters reach it, the remote clusters with the readiness the agents report, global services with their settings, and a wizard that checks another Headlamp cluster and gives the commands to connect it |
+| **Resource map**         | Map sources for network policies, BGP, load balancing and egress gateways                                                                                                                                                                                                                                         |
+| **Robustness**           | Runtime API discovery, hidden or disabled views for missing CRDs, deprecation notices, loading / empty / error / forbidden states, an error boundary around every view                                                                                                                                            |
 
 The UI is English only.
 
@@ -45,6 +46,7 @@ The UI is English only.
 | Egress                 | Egress Gateways, Local Redirects                                                                                         |
 | Service Mesh / Envoy   | Envoy Configs, Clusterwide Envoy Configs                                                                                 |
 | Advanced               | API inventory, other `cilium.io` kinds, Hubble status                                                                    |
+| Cluster Mesh           | This cluster, API server, remote clusters, global services                                                               |
 
 Each group is one page; the tab is part of the URL (`/cilium/policies/ciliumnetworkpolicies`), so
 every list can be linked. Tabs of CRDs that are not installed are disabled with an explanation,
@@ -58,6 +60,7 @@ and a group disappears from the sidebar when none of its CRDs are installed.
 | BGP setup                 | BGP → Create menu, Overview            | `CiliumBGPAdvertisement`, `CiliumBGPPeerConfig` and `CiliumBGPClusterConfig`, wired together by name and label                                                                                                                                                                                                                                                                                             |
 | IP pool + L2 announcement | Load Balancing → Create menu, Overview | `CiliumLoadBalancerIPPool` and, optionally, a `CiliumL2AnnouncementPolicy` for the same services                                                                                                                                                                                                                                                                                                           |
 | Egress gateway            | Egress → Create, Overview              | One `CiliumEgressGatewayPolicy`: source pods (with a live preview), destinations, gateway node and source address                                                                                                                                                                                                                                                                                          |
+| Connect a cluster         | Cluster Mesh → Connect a cluster       | Nothing: checks this cluster against another cluster configured in Headlamp (names and IDs, maximum of connected clusters, datapath mode, pod CIDRs, Cilium versions, API servers) and gives the `cilium clustermesh` commands or the Helm values for both sides                                                                                                                                           |
 
 Wizards that create several resources apply them in dependency order, stop at the first failure
 and can be applied again.
@@ -250,6 +253,12 @@ rules:
     verbs: ['get']
 ```
 
+The Cluster Mesh page also reads the `clustermesh-remote-users` ConfigMap (`get`) and the agent
+DaemonSet (`list` on `daemonsets` in the Cilium namespace). Editing a global service needs `patch`
+on `services`. Remote cluster readiness comes from Prometheus through the service proxy (`list` on
+`services`, `get` on `services/proxy` in its namespace). The connect wizard reads the other cluster
+with the same permissions there. Secrets are never read.
+
 To create, edit and delete with the forms and wizards, add the write verbs for the kinds users
 should manage, for example:
 
@@ -312,6 +321,11 @@ API versions are discovered at runtime; the table lists the versions used during
   slices, but `CiliumEndpoint` objects still exist and are what the relationship views use.
 - **Hubble**: the plugin shows whether Hubble Relay and Hubble UI are deployed and links to the UI
   service. Flows are not shown, because they are only available over the Hubble Relay gRPC API.
+- **Cluster Mesh**: the `cilium-clustermesh` Secret is not read, because it may hold etcd client
+  keys. Remote clusters come from the `clustermesh-remote-users` ConfigMap, the agents' host
+  aliases and the agents' `cilium_clustermesh_remote_cluster_*` metrics; their readiness needs
+  Prometheus. The connect wizard applies nothing: certificates and the Cilium installation are
+  managed by the cilium CLI or Helm.
 - **Envoy resources** are free-form xDS and are edited as YAML; they are not validated beyond
   requiring an `@type`.
 - **Large clusters**: relationship views list endpoints, pods and services of the whole cluster
@@ -407,18 +421,19 @@ grubunu sunan diğer Cilium sürümleri de çalışır.
 
 ### Özellikler
 
-| Alan                        | Neler sunar                                                                                                                                                                                                                                                                                       |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Genel bakış**             | Agent / operator / Envoy / Hubble pod sağlığı ve sürümü, `cilium-config` içinde açık özellikler, KPI kutuları (politikalar, endpoint'ler, politika kapsamı, kimlikler, BGP oturumları, LB IP'leri), "dikkat gerektirenler" listesi, namespace başına politika kapsamı, CRD başına kaynak sayıları |
-| **Listeler**                | Türe özgü sütunlar (seçiciler, kural sayıları, özellik chip'leri, seçilen endpoint'ler, oturum durumu, IP kullanımı, …), filtreleme, namespace farkındalığı, durum göstergeleri, satır eylemleri ve toplu silme                                                                                   |
-| **Detaylar**                | Ham JSON yerine yapılandırılmış bölümler, ilgili kaynaklar, koşullar ve olaylar                                                                                                                                                                                                                   |
-| **Oluşturma / düzenleme**   | Tek pencerede form, YAML ve CRD dokümantasyonu sekmeleri; form ve YAML iki yönlü senkron; istemci tarafı doğrulama                                                                                                                                                                                |
-| **Sihirbazlar**             | Ağ politikası, BGP kurulumu, LoadBalancer IP havuzu + L2 duyurusu, egress gateway                                                                                                                                                                                                                 |
-| **Politika görselleştirme** | Kural başına izin verilen ve reddedilen ingress/egress; eşler, portlar ve L7 kurallarıyla                                                                                                                                                                                                         |
-| **İlişkiler**               | Politikalar ↔ seçilen endpoint'ler, kimlikler ↔ endpoint'ler, CIDR grupları ↔ politikalar, BGP cluster config ↔ peer config ↔ advertisement ↔ node'lar, IP havuzları / L2 politikaları ↔ service'ler, egress politikaları ↔ pod'lar ve gateway node'ları                                          |
-| **Yerel sayfalar**          | Headlamp'in Pod, Namespace, Node ve Service sayfalarında bir "Cilium" bölümü                                                                                                                                                                                                                      |
-| **Resource map**            | Ağ politikaları, BGP, yük dengeleme ve egress gateway'ler için harita kaynakları                                                                                                                                                                                                                  |
-| **Dayanıklılık**            | Çalışma zamanında API keşfi, eksik CRD'ler için gizlenen veya devre dışı görünümler, kullanımdan kaldırılma (deprecation) uyarıları, yükleniyor / boş / hata / yetki yok durumları, her görünümün etrafında hata yakalama                                                                         |
+| Alan                        | Neler sunar                                                                                                                                                                                                                                                                                                |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Genel bakış**             | Agent / operator / Envoy / Hubble pod sağlığı ve sürümü, `cilium-config` içinde açık özellikler, KPI kutuları (politikalar, endpoint'ler, politika kapsamı, kimlikler, BGP oturumları, LB IP'leri), "dikkat gerektirenler" listesi, namespace başına politika kapsamı, CRD başına kaynak sayıları          |
+| **Listeler**                | Türe özgü sütunlar (seçiciler, kural sayıları, özellik chip'leri, seçilen endpoint'ler, oturum durumu, IP kullanımı, …), filtreleme, namespace farkındalığı, durum göstergeleri, satır eylemleri ve toplu silme                                                                                            |
+| **Detaylar**                | Ham JSON yerine yapılandırılmış bölümler, ilgili kaynaklar, koşullar ve olaylar                                                                                                                                                                                                                            |
+| **Oluşturma / düzenleme**   | Tek pencerede form, YAML ve CRD dokümantasyonu sekmeleri; form ve YAML iki yönlü senkron; istemci tarafı doğrulama                                                                                                                                                                                         |
+| **Sihirbazlar**             | Ağ politikası, BGP kurulumu, LoadBalancer IP havuzu + L2 duyurusu, egress gateway                                                                                                                                                                                                                          |
+| **Politika görselleştirme** | Kural başına izin verilen ve reddedilen ingress/egress; eşler, portlar ve L7 kurallarıyla                                                                                                                                                                                                                  |
+| **İlişkiler**               | Politikalar ↔ seçilen endpoint'ler, kimlikler ↔ endpoint'ler, CIDR grupları ↔ politikalar, BGP cluster config ↔ peer config ↔ advertisement ↔ node'lar, IP havuzları / L2 politikaları ↔ service'ler, egress politikaları ↔ pod'lar ve gateway node'ları                                                   |
+| **Yerel sayfalar**          | Headlamp'in Pod, Namespace, Node ve Service sayfalarında bir "Cilium" bölümü                                                                                                                                                                                                                               |
+| **Cluster Mesh**            | Bu kümenin adı ve ID'si (mesh'e katılmasını engelleyenlerle), Cluster Mesh API sunucusu ve diğer kümelerin ona nasıl ulaştığı, agent'ların bildirdiği hazır olma durumuyla uzak kümeler, ayarlarıyla global servisler ve Headlamp'teki başka bir kümeyi denetleyip bağlantı komutlarını veren bir sihirbaz |
+| **Resource map**            | Ağ politikaları, BGP, yük dengeleme ve egress gateway'ler için harita kaynakları                                                                                                                                                                                                                           |
+| **Dayanıklılık**            | Çalışma zamanında API keşfi, eksik CRD'ler için gizlenen veya devre dışı görünümler, kullanımdan kaldırılma (deprecation) uyarıları, yükleniyor / boş / hata / yetki yok durumları, her görünümün etrafında hata yakalama                                                                                  |
 
 Arayüz yalnızca İngilizcedir.
 
@@ -435,6 +450,7 @@ Arayüz yalnızca İngilizcedir.
 | Egress                 | Egress Gateways, Local Redirects                                                                                           |
 | Service Mesh / Envoy   | Envoy Configs, Clusterwide Envoy Configs                                                                                   |
 | Advanced               | API envanteri, diğer `cilium.io` türleri, Hubble durumu                                                                    |
+| Cluster Mesh           | Bu küme, API sunucusu, uzak kümeler, global servisler                                                                      |
 
 Her grup tek bir sayfadır; sekme URL'nin parçasıdır (`/cilium/policies/ciliumnetworkpolicies`),
 böylece her listeye bağlantı verilebilir. Kurulu olmayan CRD'lerin sekmeleri bilgilendirme mesajıyla devre dışı
@@ -448,6 +464,7 @@ bırakılır; hiçbir CRD'si kurulu olmayan gruplar ise kenar çubuğundan gizle
 | BGP kurulumu            | BGP → Create menüsü, Overview            | Ad ve etiketle birbirine bağlanan `CiliumBGPAdvertisement`, `CiliumBGPPeerConfig` ve `CiliumBGPClusterConfig`                                                                                                                                                                                                                                                                                                                              |
 | IP havuzu + L2 duyurusu | Load Balancing → Create menüsü, Overview | `CiliumLoadBalancerIPPool` ve isteğe bağlı olarak aynı service'ler için bir `CiliumL2AnnouncementPolicy`                                                                                                                                                                                                                                                                                                                                   |
 | Egress gateway          | Egress → Create, Overview                | Tek bir `CiliumEgressGatewayPolicy`: kaynak pod'lar (canlı önizlemeyle), hedefler, gateway node'u ve kaynak adres                                                                                                                                                                                                                                                                                                                          |
+| Connect a cluster       | Cluster Mesh → Connect a cluster         | Hiçbir şey: bu kümeyi Headlamp'te tanımlı başka bir kümeyle karşılaştırır (ad ve ID'ler, bağlı küme üst sınırı, datapath modu, pod CIDR'ları, Cilium sürümleri, API sunucuları) ve iki taraf için `cilium clustermesh` komutlarını ya da Helm değerlerini verir                                                                                                                                                                            |
 
 Birden fazla kaynak oluşturan sihirbazlar işlemleri bağımlılık sırasına göre yürütür; herhangi bir adımda hata oluşursa işlem anında durdurulur ve
 düzeltme sonrası güvenle tekrar çalıştırılabilir (idempotent).
@@ -639,6 +656,12 @@ rules:
     verbs: ['get']
 ```
 
+Cluster Mesh sayfası ayrıca `clustermesh-remote-users` ConfigMap'ini (`get`) ve agent DaemonSet'ini
+(Cilium namespace'inde `daemonsets` üzerinde `list`) okur. Global servis düzenlemek için `services`
+üzerinde `patch` gerekir. Uzak kümelerin hazır olma durumu service proxy üzerinden Prometheus'tan
+gelir (`services` üzerinde `list`, onun namespace'inde `services/proxy` üzerinde `get`). Bağlantı
+sihirbazı diğer kümeyi oradaki aynı izinlerle okur. Secret'lar hiç okunmaz.
+
 Formlar ve sihirbazlarla oluşturma, düzenleme ve silme işlemleri yapabilmek için kullanıcıların yönetmesi gereken
 türlere yazma izinlerini (verbs) ekleyin; örneğin:
 
@@ -701,6 +724,11 @@ API sürümleri çalışma zamanında keşfedilir; tabloda geliştirme ve test s
   kullanır, ama `CiliumEndpoint` nesneleri yine vardır ve ilişki görünümleri bunları kullanır.
 - **Hubble:** eklenti Hubble Relay ve Hubble UI'ın kurulu olup olmadığını gösterir ve UI servisine
   bağlantı verir. Akışlar gösterilmez, çünkü yalnızca Hubble Relay gRPC API'si üzerinden alınabilir.
+- **Cluster Mesh:** `cilium-clustermesh` Secret'ı etcd istemci anahtarları içerebileceği için
+  okunmaz. Uzak kümeler `clustermesh-remote-users` ConfigMap'inden, agent'ların host alias'larından
+  ve agent'ların `cilium_clustermesh_remote_cluster_*` metriklerinden gelir; hazır olma durumu için
+  Prometheus gerekir. Bağlantı sihirbazı hiçbir şey uygulamaz: sertifikalar ve Cilium kurulumu
+  cilium CLI ya da Helm ile yönetilir.
 - **Envoy kaynakları** serbest biçimli xDS'tir ve YAML olarak düzenlenir; `@type` zorunluluğu
   dışında doğrulanmaz.
 - **Büyük kümeler:** ilişki görünümleri tüm kümenin (ya da kapsam izin veriyorsa bir namespace'in)
