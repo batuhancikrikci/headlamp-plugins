@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import React from 'react';
 import { buildCurl, ChatMessage, ChatParams, ResolvedTarget } from '../../api/openai';
+import { requestHeaders } from '../../api/requestHeaders';
 import { t } from '../../common/i18n';
 import { CopyableCode } from '../../components/common/CopyableCode';
 import { PlaygroundTarget } from '../../hooks/usePlaygroundTargets';
@@ -45,11 +46,16 @@ export function CurlDialog({
     ? messages
     : [{ role: 'user', content: 'Hello! What can you do?' }];
 
-  const svcHost = resolved.inClusterUrl.replace(/^https?:\/\//, '');
-  const scheme = resolved.inClusterUrl.startsWith('https') ? 'https' : 'http';
-  const port = svcHost.split(':').pop() || '8000';
-  const svcName = svcHost.split('.')[0];
+  // e.g. http://qwen-kserve-workload-svc.ai.svc:8000 or, through a gateway,
+  // http://envoy-ai-gw-1a2b.envoy-gateway-system.svc:80/ai/qwen
+  const url = new URL(resolved.inClusterUrl.replace('<pod-ip>', 'pod-ip'));
+  const scheme = url.protocol.replace(':', '');
+  const port = url.port || (scheme === 'https' ? '443' : '80');
+  const [svcName, svcNamespace] = url.hostname.split('.');
+  const path = url.pathname.replace(/\/$/, '');
   const resource = target.kind === 'Engine' ? `pod/${target.name}` : `svc/${svcName}`;
+  const namespace = target.kind === 'Engine' ? target.namespace : svcNamespace;
+  const headers = Object.keys(requestHeaders(resolved.headersKey));
 
   let command = '';
   let note = '';
@@ -59,20 +65,31 @@ export function CurlDialog({
       target.kind === 'InferenceService' ? resolved.apiPrefix : '/v1',
       model,
       example,
-      params
+      params,
+      headers
     );
     note = t(
       'Uses the public URL of the endpoint (gateway or ingress). Add an Authorization header if your gateway requires one.'
     );
   } else if (variant === 'incluster') {
-    command = buildCurl(resolved.inClusterUrl, resolved.apiPrefix, model, example, params);
+    command = buildCurl(resolved.inClusterUrl, resolved.apiPrefix, model, example, params, headers);
     note = t('Run from a pod inside the cluster.');
   } else {
     command = [
-      `kubectl port-forward -n ${target.namespace} ${resource} ${port}:${port} &`,
-      buildCurl(`${scheme}://localhost:${port}`, resolved.apiPrefix, model, example, params),
+      `kubectl port-forward -n ${namespace} ${resource} ${port}:${port} &`,
+      buildCurl(
+        `${scheme}://localhost:${port}${path}`,
+        resolved.apiPrefix,
+        model,
+        example,
+        params,
+        headers
+      ),
     ].join('\n');
     note = t('Forwards the port to your machine with kubectl, then calls it locally.');
+  }
+  if (headers.length) {
+    note = `${note} ${t('Replace the <header> placeholders with the values of your headers.')}`;
   }
 
   return (

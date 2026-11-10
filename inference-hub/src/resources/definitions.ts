@@ -33,6 +33,7 @@ export type ResourceId =
   | 'aigatewayroutes'
   | 'aiservicebackends'
   | 'envoybackends'
+  | 'securitypolicies'
   | 'clusterpolicies'
   | 'nvidiadrivers'
   | 'leaderworkersets'
@@ -154,6 +155,14 @@ export const RESOURCES: Record<ResourceId, ResourceDefinition> = {
     kind: 'ReferenceGrant',
     plural: 'referencegrants',
     groups: ['gateway.networking.k8s.io'],
+    namespaced: true,
+    stack: 'gatewayApi',
+  },
+  securitypolicies: {
+    id: 'securitypolicies',
+    kind: 'SecurityPolicy',
+    plural: 'securitypolicies',
+    groups: ['gateway.envoyproxy.io'],
     namespaced: true,
     stack: 'gatewayApi',
   },

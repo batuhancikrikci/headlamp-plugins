@@ -17,8 +17,9 @@ import React from 'react';
 import { chatCompletion, resolveTarget } from '../../api/openai';
 import { promQuery } from '../../api/prometheus';
 import { t } from '../../common/i18n';
+import { GatewayAccess } from '../../components/playground/GatewayAccess';
 import { useCurrentCluster } from '../../hooks/useCluster';
-import { PlaygroundTarget } from '../../hooks/usePlaygroundTargets';
+import { endpointIdOf, PlaygroundTarget } from '../../hooks/usePlaygroundTargets';
 import { usePrometheus } from '../../hooks/usePrometheus';
 import { useVllmEngines } from '../../hooks/useVllmEngines';
 import { VllmEngine } from '../../resources/engine';
@@ -76,7 +77,7 @@ const num = (v?: number, digits = 1) => (v === undefined ? '—' : v.toFixed(dig
 function enginesOf(target: PlaygroundTarget, engines: VllmEngine[]): VllmEngine[] {
   if (target.kind === 'Engine')
     return engines.filter(e => e.pod === target.name && e.namespace === target.namespace);
-  const slug = target.kind === 'LLMInferenceService' ? 'llm' : 'isvc';
+  const slug = endpointIdOf(target).split('/')[0];
   return engines.filter(
     e =>
       e.namespace === target.namespace &&
@@ -328,6 +329,12 @@ export function BenchmarkPanel({
                   </MenuItem>
                 ))}
               </TextField>
+              <Box sx={{ mt: 1 }}>
+                <GatewayAccess
+                  target={ready.find(target => target.id === targetIds[i])}
+                  disabled={running}
+                />
+              </Box>
             </Grid>
           ))}
           <Grid item xs={12}>

@@ -28,6 +28,7 @@ import { t } from '../../common/i18n';
 import { Markdown } from '../../components/common/Markdown';
 import { ModelAvatar } from '../../components/common/ModelAvatar';
 import { StatusBadge } from '../../components/common/StatusBadge';
+import { GatewayAccess } from '../../components/playground/GatewayAccess';
 import { useCan } from '../../hooks/useCan';
 import { useCurrentCluster } from '../../hooks/useCluster';
 import { PlaygroundTarget } from '../../hooks/usePlaygroundTargets';
@@ -199,7 +200,8 @@ function MessageBubble({ message }: { message: PaneMessage }) {
 }
 
 function proxyCheck(target: PlaygroundTarget | undefined) {
-  if (!target) return null;
+  // A gateway target goes through the gateway's Service, whose namespace is found later.
+  if (!target || target.kind === 'Gateway') return null;
   return {
     verb: 'create' as const,
     group: '',
@@ -343,7 +345,13 @@ export const ChatPane = React.forwardRef<ChatPaneHandle, ChatPaneProps>(function
           }}
           getOptionLabel={o => `${o.namespace}/${o.label}`}
           isOptionEqualToValue={(a, b) => a.id === b.id}
-          groupBy={o => (o.kind === 'Engine' ? t('vLLM engine pods') : t('Model endpoints'))}
+          groupBy={o =>
+            o.kind === 'Engine'
+              ? t('vLLM engine pods')
+              : o.kind === 'Gateway'
+              ? t('Through a gateway')
+              : t('Model endpoints')
+          }
           renderOption={(props, o) => (
             <Box
               component="li"
@@ -410,6 +418,11 @@ export const ChatPane = React.forwardRef<ChatPaneHandle, ChatPaneProps>(function
               s: target.status.reason || target.status.health,
             })}
           </Alert>
+        )}
+        {target?.gateway && (
+          <Box sx={{ mb: 1 }}>
+            <GatewayAccess target={target} disabled={busy} />
+          </Box>
         )}
         {can.allowed === false && (
           <Alert severity="error" sx={{ mb: 1 }}>

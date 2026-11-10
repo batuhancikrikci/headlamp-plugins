@@ -40,7 +40,10 @@ vi.mock('../../api/openai', async importOriginal => ({
   },
 }));
 vi.mock('../../hooks/useCluster', () => ({ useCurrentCluster: () => 'test' }));
+// Gateway access has its own tests; the targets here are not behind a gateway.
+vi.mock('../../components/playground/GatewayAccess', () => ({ GatewayAccess: () => null }));
 vi.mock('../../hooks/usePlaygroundTargets', () => ({
+  endpointIdOf: (target: { id: string }) => target.id,
   usePlaygroundTargets: () => ({
     loading: false,
     targets: [

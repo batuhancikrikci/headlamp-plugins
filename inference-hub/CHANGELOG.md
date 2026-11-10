@@ -8,6 +8,11 @@ All notable changes to the Inference Hub plugin are documented here. The format 
 
 ### Added
 
+- Playground, Benchmark and Ask a model can reach an endpoint through a gateway: through the
+  route KServe manages for an LLMInferenceService or through an Agent Router route, so the
+  requests run the gateway's routing, llm-d scheduler and policies. The Envoy Gateway
+  SecurityPolicy of the gateway or route is explained, and request headers such as an API key
+  can be added for the session.
 - The edit form and the edit wizard warn when someone changes or deletes the endpoint while it
   is being edited; Reload starts again from the current version.
 

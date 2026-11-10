@@ -3,9 +3,12 @@
  * service (or pod) proxy via the Headlamp backend. Nothing leaves the cluster connection.
  */
 import { ApiProxy } from '@kinvolk/headlamp-plugin/lib';
+import { gatewayServiceSelectors, GatewayVia, pickGatewayPort } from '../resources/gatewayTargets';
+import { KubeJson } from '../resources/types';
 import { clusterParams, podProxyPath, serviceProxyPath } from './paths';
+import { requestHeaders } from './requestHeaders';
 
-export type TargetKind = 'LLMInferenceService' | 'InferenceService' | 'Engine';
+export type TargetKind = 'LLMInferenceService' | 'InferenceService' | 'Engine' | 'Gateway';
 
 /** Something the Playground can talk to. */
 export interface ChatTarget {
@@ -19,6 +22,8 @@ export interface ChatTarget {
   publicUrl?: string;
   /** Engine pods: port and scheme of the vLLM server. */
   pod?: { port: number; scheme: 'http' | 'https' };
+  /** Gateway targets: the gateway and route the requests go through. */
+  gateway?: GatewayVia;
 }
 
 export interface ResolvedTarget {
@@ -29,6 +34,8 @@ export interface ResolvedTarget {
   /** In-cluster base URL for curl, e.g. http://x.ai.svc:8000 */
   inClusterUrl: string;
   models: string[];
+  /** Key of the extra request headers (gateway targets), read at every request. */
+  headersKey?: string;
 }
 
 interface ServiceJson {
@@ -73,6 +80,14 @@ async function listServices(
   return res.items || [];
 }
 
+async function listServicesEverywhere(cluster: string, selector: string): Promise<ServiceJson[]> {
+  const res: { items?: ServiceJson[] } = await ApiProxy.request(
+    `/api/v1/services?labelSelector=${encodeURIComponent(selector)}`,
+    clusterParams(cluster)
+  );
+  return res.items || [];
+}
+
 function serviceScheme(port?: { name?: string; appProtocol?: string }): 'http' | 'https' {
   return port?.name === 'https' || port?.appProtocol === 'https' ? 'https' : 'http';
 }
@@ -95,10 +110,14 @@ export function pickService(target: ChatTarget, services: ServiceJson[]): Servic
   );
 }
 
-async function fetchModels(cluster: string, path: string): Promise<string[]> {
+async function fetchModels(cluster: string, path: string, headersKey?: string): Promise<string[]> {
+  const headers = requestHeaders(headersKey);
   const res: { data?: Array<{ id: string }> } = await ApiProxy.request(
     path,
-    clusterParams(cluster, { timeout: 15000 })
+    clusterParams(cluster, {
+      timeout: 15000,
+      ...(Object.keys(headers).length ? { headers } : {}),
+    })
   );
   if (!Array.isArray(res?.data)) throw new ChatError('Not an OpenAI /models response');
   return res.data.map(m => m.id);
@@ -113,8 +132,67 @@ export function schemeOrder(preferred: 'http' | 'https'): Array<'http' | 'https'
   return preferred === 'https' ? ['https', 'http'] : ['http', 'https'];
 }
 
+/**
+ * Finds the Service of the gateway a gateway target goes through, and the path its route
+ * publishes the model API under. The models are listed when the route allows it; when it does
+ * not (e.g. it only routes chat completions), the target's model is used.
+ */
+async function resolveGateway(cluster: string, target: ChatTarget): Promise<ResolvedTarget> {
+  const via = target.gateway!;
+  let services: ServiceJson[] = [];
+  try {
+    for (const { allNamespaces, selector } of gatewayServiceSelectors(via)) {
+      services = allNamespaces
+        ? await listServicesEverywhere(cluster, selector)
+        : await listServices(cluster, via.namespace, selector);
+      if (services.length) break;
+    }
+  } catch (err) {
+    throw errorOf(err);
+  }
+  const svc = services.find(s => s.spec?.type !== 'ExternalName' && s.spec?.ports?.length);
+  if (!svc) {
+    throw new ChatError(
+      `No Service of Gateway ${via.namespace}/${via.name} was found (looked for Envoy Gateway and Gateway API labels).`
+    );
+  }
+  let gateway: KubeJson | undefined;
+  try {
+    gateway = await ApiProxy.request(
+      `/apis/gateway.networking.k8s.io/v1/namespaces/${encodeURIComponent(
+        via.namespace
+      )}/gateways/${encodeURIComponent(via.name)}`,
+      clusterParams(cluster)
+    );
+  } catch {
+    // Without the Gateway object, the ports of the Service decide.
+  }
+  const picked = pickGatewayPort(gateway, svc.spec?.ports || []);
+  if (!picked) throw new ChatError(`Service ${svc.metadata.name} has no ports.`);
+  const svcNs = svc.metadata.namespace || via.namespace;
+  const proxyBase = `${serviceProxyPath(svcNs, svc.metadata.name, picked.port, picked.scheme)}${
+    via.pathPrefix
+  }`;
+  const inClusterUrl = `${picked.scheme}://${svc.metadata.name}.${svcNs}.svc:${picked.port}${via.pathPrefix}`;
+  let models: string[];
+  try {
+    models = await fetchModels(cluster, `${proxyBase}/v1/models`, target.id);
+  } catch (err) {
+    const status = (err as { status?: number }).status;
+    if (status === 401 || status === 403) {
+      throw new ChatError(
+        `The gateway refused the request (HTTP ${status}). Add the headers its security policy expects.`,
+        status
+      );
+    }
+    models = [target.defaultModel];
+  }
+  return { proxyBase, apiPrefix: '/v1', inClusterUrl, models, headersKey: target.id };
+}
+
 /** Finds the proxy path and API prefix of a target and lists its models. */
 export async function resolveTarget(cluster: string, target: ChatTarget): Promise<ResolvedTarget> {
+  if (target.kind === 'Gateway' && target.gateway) return resolveGateway(cluster, target);
   const candidates: Array<{ proxyBase: string; inClusterUrl: string }> = [];
   if (target.kind === 'Engine' && target.pod) {
     const { port } = target.pod;
@@ -313,7 +391,8 @@ async function post(
   path: string,
   body: unknown,
   signal: AbortSignal,
-  stream: boolean
+  stream: boolean,
+  headersKey?: string
 ): Promise<Response> {
   try {
     return await ApiProxy.request(
@@ -321,6 +400,7 @@ async function post(
       clusterParams(cluster, {
         method: 'POST',
         headers: {
+          ...requestHeaders(headersKey),
           'Content-Type': 'application/json',
           Accept: stream ? 'text/event-stream' : 'application/json',
         },
@@ -364,7 +444,8 @@ export async function chatCompletion(
         path,
         requestBody(model, messages, params, true),
         signal,
-        true
+        true,
+        resolved.headersKey
       );
     } catch (err) {
       // Older servers reject stream_options; retry once without it.
@@ -374,7 +455,8 @@ export async function chatCompletion(
           path,
           requestBody(model, messages, params, true, false),
           signal,
-          true
+          true,
+          resolved.headersKey
         );
       } else {
         throw err;
@@ -386,7 +468,8 @@ export async function chatCompletion(
       path,
       requestBody(model, messages, params, false),
       signal,
-      false
+      false,
+      resolved.headersKey
     );
   }
 
@@ -445,7 +528,9 @@ export function buildCurl(
   apiPrefix: string,
   model: string,
   messages: ChatMessage[],
-  params: ChatParams
+  params: ChatParams,
+  /** Extra header names; their values are left as placeholders. */
+  headers: string[] = []
 ): string {
   const body = JSON.stringify(requestBody(model, messages, params, params.stream), null, 2);
   const url = `${baseUrl.replace(/\/$/, '')}${apiPrefix}/chat/completions`;
@@ -453,6 +538,7 @@ export function buildCurl(
     `curl ${params.stream ? '-N ' : ''}${url.startsWith('https') ? '-k ' : ''}${shellQuote(
       url
     )} \\`,
+    ...headers.map(name => `  -H ${shellQuote(`${name}: <${name}>`)} \\`),
     `  -H 'Content-Type: application/json' \\`,
     `  -d ${shellQuote(body)}`,
   ].join('\n');

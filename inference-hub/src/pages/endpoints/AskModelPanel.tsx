@@ -16,6 +16,7 @@ import React from 'react';
 import { chatCompletion, isContextLengthError, resolveTarget } from '../../api/openai';
 import { t } from '../../common/i18n';
 import { Markdown } from '../../components/common/Markdown';
+import { GatewayAccess } from '../../components/playground/GatewayAccess';
 import { Diagnosis, LogSample } from '../../diagnostics/diagnose';
 import {
   AskTurn,
@@ -24,7 +25,7 @@ import {
   diagnosisReport,
 } from '../../diagnostics/report';
 import { useCurrentCluster } from '../../hooks/useCluster';
-import { usePlaygroundTargets } from '../../hooks/usePlaygroundTargets';
+import { endpointIdOf, usePlaygroundTargets } from '../../hooks/usePlaygroundTargets';
 import { ModelEndpoint } from '../../resources/endpoint';
 
 // Reasoning models (e.g. Qwen3) spend part of the budget on thinking before they answer.
@@ -67,7 +68,8 @@ export function AskModelPanel({
   const { targets, loading } = usePlaygroundTargets();
   const ownId = `${endpoint.slug}/${endpoint.namespace}/${endpoint.name}`;
   const candidates = React.useMemo(
-    () => targets.filter(target => target.status.health === 'ready' && target.id !== ownId),
+    () =>
+      targets.filter(target => target.status.health === 'ready' && endpointIdOf(target) !== ownId),
     [targets, ownId]
   );
   type Target = (typeof candidates)[number];
@@ -263,6 +265,7 @@ export function AskModelPanel({
               />
             </Tooltip>
           </Box>
+          <GatewayAccess target={started ? conversation.target : target} disabled={busy} />
           <TextField
             multiline
             minRows={started ? 2 : 6}
