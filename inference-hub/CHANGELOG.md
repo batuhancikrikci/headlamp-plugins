@@ -6,6 +6,11 @@ All notable changes to the Inference Hub plugin are documented here. The format 
 
 ## [0.4.0] — unreleased
 
+### Removed
+
+- Benchmark no longer keeps the last runs in the browser, and removes the runs stored by 0.3.0.
+  Export a run as CSV or JSON to keep it.
+
 ### Fixed
 
 - Lists and objects no page uses any more are dropped from memory after five minutes, so a long

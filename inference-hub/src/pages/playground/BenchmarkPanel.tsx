@@ -38,8 +38,8 @@ import {
 } from '../../utils/benchmark';
 import { podMatcher } from '../../utils/vllmMetrics';
 
-const HISTORY_KEY = 'inference-hub.benchmarks';
-const HISTORY_SIZE = 10;
+/** Earlier versions kept the last runs in the browser; the stored runs are removed. */
+const OLD_HISTORY_KEY = 'inference-hub.benchmarks';
 
 interface ServerPeak {
   maxWaiting?: number;
@@ -57,23 +57,6 @@ interface RunRecord {
   summary: BenchmarkSummary;
   results: RequestResult[];
   server?: ServerPeak;
-}
-
-function loadHistory(): RunRecord[] {
-  try {
-    const raw = window.localStorage.getItem(HISTORY_KEY);
-    return raw ? (JSON.parse(raw) as RunRecord[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveHistory(runs: RunRecord[]) {
-  try {
-    window.localStorage.setItem(HISTORY_KEY, JSON.stringify(runs.slice(0, HISTORY_SIZE)));
-  } catch {
-    // Storage may be full or disabled; the history is a convenience only.
-  }
 }
 
 function download(name: string, type: string, text: string) {
@@ -168,7 +151,13 @@ export function BenchmarkPanel({
     target: string;
   } | null>(null);
   const [runs, setRuns] = React.useState<RunRecord[]>([]);
-  const [history, setHistory] = React.useState<RunRecord[]>(loadHistory);
+  React.useEffect(() => {
+    try {
+      window.localStorage.removeItem(OLD_HISTORY_KEY);
+    } catch {
+      // Storage may be disabled; nothing to remove then.
+    }
+  }, []);
   const [error, setError] = React.useState<string | null>(null);
   const abortRef = React.useRef<AbortController | null>(null);
   React.useEffect(() => () => abortRef.current?.abort(), []);
@@ -279,9 +268,6 @@ export function BenchmarkPanel({
         done.push(await runOne(target, controller.signal));
         setRuns([...done]);
       }
-      const next = [...done, ...history].slice(0, HISTORY_SIZE);
-      setHistory(next);
-      saveHistory(next);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -539,43 +525,6 @@ export function BenchmarkPanel({
               </Grid>
             ))}
           </Grid>
-        </Paper>
-      )}
-
-      {history.length > 0 && (
-        <Paper variant="outlined" sx={{ p: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 600, flexGrow: 1 }}>
-              {t('Earlier runs (this browser)')}
-            </Typography>
-            <Button
-              size="small"
-              onClick={() => {
-                setHistory([]);
-                saveHistory([]);
-              }}
-            >
-              {t('Clear')}
-            </Button>
-          </Box>
-          <SimpleTable
-            data={history}
-            columns={[
-              {
-                label: t('Started'),
-                getter: (r: RunRecord) => new Date(r.startedAt).toLocaleString(),
-              },
-              { label: t('Endpoint'), getter: (r: RunRecord) => r.target },
-              {
-                label: t('Load'),
-                getter: (r: RunRecord) => `${r.config.requests} × ${r.config.concurrency}`,
-              },
-              { label: t('TTFT p50'), getter: (r: RunRecord) => ms(r.summary.ttftMs.p50) },
-              { label: t('Latency p95'), getter: (r: RunRecord) => ms(r.summary.e2eMs.p95) },
-              { label: t('Tokens/s in total'), getter: (r: RunRecord) => num(r.summary.totalTps) },
-              { label: t('Failed'), getter: (r: RunRecord) => r.summary.failed },
-            ]}
-          />
         </Paper>
       )}
     </Box>
