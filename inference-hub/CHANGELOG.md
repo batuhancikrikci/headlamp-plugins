@@ -4,6 +4,13 @@ All notable changes to the Inference Hub plugin are documented here. The format 
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the plugin uses
 [semantic versioning](https://semver.org/).
 
+## [0.4.0] — unreleased
+
+### Fixed
+
+- Lists and objects no page uses any more are dropped from memory after five minutes, so a long
+  session no longer keeps every list it ever opened.
+
 ## [0.3.0] — 2026-11-02
 
 ### Added

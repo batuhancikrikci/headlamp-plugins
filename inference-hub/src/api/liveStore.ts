@@ -3,7 +3,8 @@
  *
  * Every (cluster, path) pair is fetched by at most one request at a time and by one timer,
  * however many components use it. Polling pauses while the window is hidden and stops when
- * the last subscriber leaves (the last value stays cached for quick remounts).
+ * the last subscriber leaves. The last value stays cached for quick remounts and is dropped
+ * after EVICT_AFTER_MS without subscribers, so a long session does not keep every list it opened.
  */
 import { ApiProxy } from '@kinvolk/headlamp-plugin/lib';
 
@@ -27,9 +28,45 @@ interface Entry {
   listeners: Map<symbol, { intervalMs: number; notify: () => void }>;
   timer?: ReturnType<typeof setTimeout>;
   inflight?: Promise<void>;
+  /** When the last subscriber left (or the entry was created without one). */
+  idleSince?: number;
 }
 
 const entries = new Map<string, Entry>();
+
+export const EVICT_AFTER_MS = 5 * 60 * 1000;
+let sweepTimer: ReturnType<typeof setTimeout> | undefined;
+
+/** Drops entries without subscribers that have been idle for EVICT_AFTER_MS; returns how many. */
+export function evictIdle(now = Date.now()): number {
+  let evicted = 0;
+  entries.forEach((entry, key) => {
+    if (
+      entry.listeners.size === 0 &&
+      !entry.inflight &&
+      entry.idleSince !== undefined &&
+      now - entry.idleSince >= EVICT_AFTER_MS
+    ) {
+      entries.delete(key);
+      evicted++;
+    }
+  });
+  return evicted;
+}
+
+/** Number of cached paths (for tests). */
+export function cachedPaths(): number {
+  return entries.size;
+}
+
+function scheduleSweep() {
+  if (sweepTimer) return;
+  sweepTimer = setTimeout(() => {
+    sweepTimer = undefined;
+    evictIdle();
+    if (Array.from(entries.values()).some(e => e.listeners.size === 0)) scheduleSweep();
+  }, EVICT_AFTER_MS);
+}
 
 export function toApiError(err: unknown): ApiError {
   const e = err as { status?: number; message?: string };
@@ -101,8 +138,15 @@ function getEntry(cluster: string, path: string): Entry {
   const k = entryKey(cluster, path);
   let entry = entries.get(k);
   if (!entry) {
-    entry = { cluster, path, snapshot: { loading: true }, listeners: new Map() };
+    entry = {
+      cluster,
+      path,
+      snapshot: { loading: true },
+      listeners: new Map(),
+      idleSince: Date.now(),
+    };
     entries.set(k, entry);
+    scheduleSweep();
   }
   return entry;
 }
@@ -123,6 +167,7 @@ export function subscribe(
 ): () => void {
   const entry = getEntry(cluster, path);
   const id = Symbol(path);
+  entry.idleSince = undefined;
   entry.listeners.set(id, { intervalMs: intervalMs > 0 ? intervalMs : Infinity, notify });
   const age = entry.snapshot.updatedAt ? Date.now() - entry.snapshot.updatedAt : Infinity;
   if (entry.snapshot.loading || age >= Math.min(interval(entry), 5000)) {
@@ -132,9 +177,11 @@ export function subscribe(
   }
   return () => {
     entry.listeners.delete(id);
-    if (entry.listeners.size === 0 && entry.timer) {
-      clearTimeout(entry.timer);
+    if (entry.listeners.size === 0) {
+      if (entry.timer) clearTimeout(entry.timer);
       entry.timer = undefined;
+      entry.idleSince = Date.now();
+      scheduleSweep();
     }
   };
 }
