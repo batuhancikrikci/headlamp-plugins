@@ -1,6 +1,6 @@
 {
   "name": "multi-cluster",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Multicluster Hub: Headlamp plugin for managing Open Cluster Management (OCM) hubs — clusters, cluster sets, placements, ManifestWorks, add-ons, application subscriptions and GitOps, with guided forms and wizards",
   "keywords": [
     "headlamp",

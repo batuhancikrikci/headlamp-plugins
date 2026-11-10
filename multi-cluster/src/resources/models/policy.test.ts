@@ -3,6 +3,8 @@ import {
   bindingsOf,
   bindingsOfPlacement,
   clusterCompliance,
+  Compliance,
+  complianceMatrix,
   configurationPolicyTemplate,
   isReplicatedPolicy,
   operatorPolicyTemplate,
@@ -213,5 +215,47 @@ describe('toPolicyGenerator', () => {
         ],
       },
     ]);
+  });
+});
+
+describe('complianceMatrix', () => {
+  const policy = (name: string, status: Array<[string, Compliance | undefined]>): PolicyJson => ({
+    apiVersion: 'policy.open-cluster-management.io/v1',
+    kind: 'Policy',
+    metadata: { name, namespace: 'policies' },
+    status: { status: status.map(([clustername, compliant]) => ({ clustername, compliant })) },
+  });
+  const replica: PolicyJson = {
+    ...policy('policies.a', [['c1', 'NonCompliant']]),
+    metadata: {
+      name: 'policies.a',
+      namespace: 'c1',
+      labels: { 'policy.open-cluster-management.io/root-policy': 'policies.a' },
+    },
+  };
+  const policies = [
+    policy('b', [
+      ['c2', 'Compliant'],
+      ['c1', 'Compliant'],
+    ]),
+    policy('a', [
+      ['c1', 'NonCompliant'],
+      ['c3', 'Pending'],
+    ]),
+    replica,
+  ];
+
+  it('lays out root policies against every cluster they are placed on', () => {
+    const m = complianceMatrix(policies);
+    expect(m.clusters).toEqual(['c1', 'c2', 'c3']);
+    expect(m.rows.map(r => r.policy.metadata.name)).toEqual(['a', 'b']);
+    expect(m.rows[0].cells).toEqual({ c1: 'NonCompliant', c3: 'Pending' });
+    expect(m.rows[1].cells.c3).toBeUndefined();
+  });
+
+  it('keeps only the policies and clusters with problems when asked', () => {
+    const m = complianceMatrix(policies, true);
+    expect(m.rows.map(r => r.policy.metadata.name)).toEqual(['a']);
+    expect(m.clusters).toEqual(['c1', 'c3']);
   });
 });

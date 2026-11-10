@@ -3,11 +3,21 @@
  * bindings, policy automations, and the configuration / operator policies evaluated on this
  * cluster (when the hub is itself managed).
  */
+import { Icon } from '@iconify/react';
 import { DateLabel, SectionBox } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
-import { Alert, Box, Button, Chip, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Button,
+  Chip,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+} from '@mui/material';
 import React from 'react';
 import { CodeBlock } from '../../common/CodeBlock';
 import { useText } from '../../common/i18n';
+import { LoadingState } from '../../common/States';
 import { dumpAllYaml, dumpYaml } from '../../common/yaml';
 import { useOcmList } from '../../hooks/useOcmList';
 import { KubeJson } from '../../resources/models/common';
@@ -32,11 +42,13 @@ import {
   toPolicyGenerator,
 } from '../../resources/models/policy';
 import { crd } from '../../resources/registry';
+import { CRDGate } from '../common/CRDGate';
 import { col, RelatedTable } from '../common/Related';
 import { ClusterLink, ResourceRefLink } from '../common/ResourceRefLink';
 import { Bar, HealthLabel, StringArray } from '../common/Shared';
 import { OcmDetailView, OcmListView } from '../common/Views';
 import { PolicyActions } from './Actions';
+import { ComplianceMatrix } from './ComplianceMatrix';
 
 export function ComplianceLabel({ value }: { value?: string }) {
   const { t } = useText();
@@ -75,18 +87,70 @@ function ClustersBar({ policy }: { policy: PolicyJson }) {
   );
 }
 
+function PolicyViewSwitch({
+  view,
+  onChange,
+}: {
+  view: 'table' | 'matrix';
+  onChange: (view: 'table' | 'matrix') => void;
+}) {
+  const { t } = useText();
+  return (
+    <ToggleButtonGroup
+      size="small"
+      exclusive
+      value={view}
+      onChange={(_, v) => v && onChange(v)}
+      sx={{ mb: 1 }}
+    >
+      <ToggleButton value="table">
+        <Icon icon="mdi:table" width={18} style={{ marginRight: 4 }} />
+        {t('Table')}
+      </ToggleButton>
+      <ToggleButton value="matrix">
+        <Icon icon="mdi:grid" width={18} style={{ marginRight: 4 }} />
+        {t('Compliance matrix')}
+      </ToggleButton>
+    </ToggleButtonGroup>
+  );
+}
+
+function PolicyMatrixView({ onSwitch }: { onSwitch: (view: 'table' | 'matrix') => void }) {
+  const { t } = useText();
+  const policies = useOcmList<PolicyJson>('Policy');
+  return (
+    <CRDGate title={t('Policies')} kind="Policy">
+      {() => (
+        <SectionBox title={t('Policies')}>
+          <PolicyViewSwitch view="matrix" onChange={onSwitch} />
+          {policies.items === null ? (
+            <LoadingState title={t('Loading policies…')} />
+          ) : (
+            <ComplianceMatrix policies={policies.items} />
+          )}
+        </SectionBox>
+      )}
+    </CRDGate>
+  );
+}
+
 export function PolicyList() {
   const { t } = useText();
+  const [view, setView] = React.useState<'table' | 'matrix'>('table');
+  if (view === 'matrix') return <PolicyMatrixView onSwitch={setView} />;
   return (
     <OcmListView
       info={crd('Policy')}
       filterFunction={item => !isReplicatedPolicy(item.jsonData)}
       notice={
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          {t(
-            'Root policies only. The copies the propagator creates in each cluster namespace are shown on the policy and cluster pages.'
-          )}
-        </Typography>
+        <>
+          <PolicyViewSwitch view="table" onChange={setView} />
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            {t(
+              'Root policies only. The copies the propagator creates in each cluster namespace are shown on the policy and cluster pages.'
+            )}
+          </Typography>
+        </>
       }
       columns={[
         col<PolicyJson>(

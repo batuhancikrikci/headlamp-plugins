@@ -141,6 +141,41 @@ export function clusterCompliance(p: PolicyJson): ClusterCompliance {
   return out;
 }
 
+export interface ComplianceMatrix {
+  /** Clusters any policy is placed on, sorted by name. */
+  clusters: string[];
+  rows: Array<{ policy: PolicyJson; cells: Record<string, Compliance | undefined> }>;
+}
+
+/**
+ * Compliance of every root policy on every cluster, from the per-cluster status the propagator
+ * writes on the root policy. With `problemsOnly`, only policies and clusters with at least one
+ * NonCompliant or Pending cell are kept.
+ */
+export function complianceMatrix(policies: PolicyJson[], problemsOnly = false): ComplianceMatrix {
+  const problem = (c?: Compliance) => c === 'NonCompliant' || c === 'Pending';
+  let rows = policies
+    .filter(p => !isReplicatedPolicy(p))
+    .map(policy => {
+      const cells: Record<string, Compliance | undefined> = {};
+      for (const s of policy.status?.status || []) {
+        if (s.clustername) cells[s.clustername] = s.compliant;
+      }
+      return { policy, cells };
+    })
+    .sort((a, b) =>
+      `${a.policy.metadata.namespace}/${a.policy.metadata.name}`.localeCompare(
+        `${b.policy.metadata.namespace}/${b.policy.metadata.name}`
+      )
+    );
+  let clusters = Array.from(new Set(rows.flatMap(r => Object.keys(r.cells)))).sort();
+  if (problemsOnly) {
+    rows = rows.filter(r => Object.values(r.cells).some(problem));
+    clusters = clusters.filter(c => rows.some(r => problem(r.cells[c])));
+  }
+  return { clusters, rows };
+}
+
 /** Comma separated annotation values (standards, categories, controls). */
 export function annotationList(p: { metadata: KubeJson['metadata'] }, key: string): string[] {
   return (p.metadata.annotations?.[key] || '')

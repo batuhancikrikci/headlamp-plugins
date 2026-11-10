@@ -58,6 +58,8 @@ are YAML only.
   kinds and standards; detail with compliance and the latest message per cluster, placement →
   bindings → clusters, policy sets, templates (with YAML), automations and an equivalent
   **PolicyGenerator** configuration for Git. Actions: switch inform / enforce, enable / disable.
+- _Compliance matrix_: every root policy against every cluster it is placed on, with a filter
+  for non-compliant and pending cells.
 - Form with builders for **ConfigurationPolicy** (objects, compliance type, severity,
   namespaces, prune) and **OperatorPolicy** (OLM package, channel, catalog, upgrade approval),
   plus raw YAML templates for other engines; standards / categories / controls; dependencies.
@@ -356,6 +358,8 @@ YAML ile düzenlenir.
   politikalar; küme başına uyumluluk ve son mesaj, placement → binding'ler → kümeler, policy set'ler,
   şablonlar (YAML ile), otomasyonlar ve Git için eşdeğer bir **PolicyGenerator** yapılandırması
   içeren detay. Eylemler: inform / enforce geçişi, etkinleştirme / devre dışı bırakma.
+- _Compliance matrix_: her kök politika, yerleştirildiği her kümeye karşı tek tabloda; uyumsuz ve
+  bekleyen hücreleri süzme seçeneğiyle.
 - **ConfigurationPolicy** (nesneler, uyumluluk türü, önem derecesi, namespace'ler, prune) ve
   **OperatorPolicy** (OLM paketi, kanal, katalog, yükseltme onayı) oluşturucuları ile diğer motorlar
   için ham YAML şablonları içeren form; standartlar / kategoriler / kontroller; bağımlılıklar.
