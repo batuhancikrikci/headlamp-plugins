@@ -2,7 +2,13 @@ import { EventJson } from '../../components/detail/EventsPanel';
 import { fromLLMInferenceService } from '../../resources/endpoint';
 import { detectEngines } from '../../resources/engine';
 import { PodJson } from '../../resources/pod';
-import { aiWarnings, healthCounts, platformStatus, trafficByEndpoint } from './overview';
+import {
+  aiWarnings,
+  healthCounts,
+  platformStatus,
+  trafficByEndpoint,
+  warningNamespaces,
+} from './overview';
 
 const qwen = fromLLMInferenceService({
   metadata: { name: 'qwen', namespace: 'ai' },
@@ -93,5 +99,16 @@ describe('overview helpers', () => {
       'pool',
       'qwen-kserve-abc',
     ]);
+  });
+});
+
+describe('warningNamespaces', () => {
+  it('reads the namespaces of the endpoints and the one of cluster-scoped objects', () => {
+    const other = fromLLMInferenceService({
+      metadata: { name: 'llama', namespace: 'team-b' },
+      spec: { model: { uri: 'hf://meta/llama' } },
+    });
+    expect(warningNamespaces([qwen, other, qwen])).toEqual(['ai', 'default', 'team-b']);
+    expect(warningNamespaces([])).toEqual(['default']);
   });
 });

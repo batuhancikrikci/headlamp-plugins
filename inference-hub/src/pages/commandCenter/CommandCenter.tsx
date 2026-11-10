@@ -5,6 +5,8 @@ import { Box, Button, Grid, Typography } from '@mui/material';
 import React from 'react';
 import { useHistory } from 'react-router-dom';
 import { Discovery, isServed } from '../../api/discovery';
+import { isForbidden } from '../../api/liveStore';
+import { coreListPath } from '../../api/paths';
 import { DocsDrawer } from '../../common/docs/DocsDrawer';
 import { t } from '../../common/i18n';
 import { EmptyState } from '../../common/States';
@@ -19,16 +21,23 @@ import { useDiscovery } from '../../hooks/useDiscovery';
 import { useEfficiency } from '../../hooks/useEfficiency';
 import { useEndpoints } from '../../hooks/useEndpoints';
 import { useGpuFleet } from '../../hooks/useGpuFleet';
-import { useCoreList, useResourceList } from '../../hooks/useLive';
+import { useLivePaths, useResourceList } from '../../hooks/useLive';
 import { EngineMetricsState, useEngineMetrics, useVllmEngines } from '../../hooks/useVllmEngines';
 import { ModelEndpoint } from '../../resources/endpoint';
 import { VllmEngine } from '../../resources/engine';
 import { totals } from '../../resources/gpu';
 import { InferencePoolJson, normalizePool } from '../../resources/inference';
+import { KubeList } from '../../resources/types';
 import { deployUrl, PAGES } from '../../routes';
 import { aggregate, formatRate, VllmMetrics } from '../../utils/vllmMetrics';
 import { Header } from './Header';
-import { aiWarnings, healthCounts, platformStatus, trafficByEndpoint } from './overview';
+import {
+  aiWarnings,
+  healthCounts,
+  platformStatus,
+  trafficByEndpoint,
+  warningNamespaces,
+} from './overview';
 import {
   AttentionList,
   COMMAND_CENTER_LINKS,
@@ -151,22 +160,25 @@ function TrafficPanel({
 
 function WarningsPanel() {
   const { endpoints } = useEndpoints();
-  const events = useCoreList<EventJson>(
-    'v1',
-    'events',
-    true,
-    { fieldSelector: 'type=Warning' },
+  const namespaces = warningNamespaces(endpoints);
+  const { snapshots } = useLivePaths<KubeList<EventJson>>(
+    namespaces.map(namespace =>
+      coreListPath('v1', 'events', true, { namespace, fieldSelector: 'type=Warning' })
+    ),
     30000
   );
+  const events = snapshots.flatMap(s => s.data?.items || []);
+  const forbidden = snapshots.length > 0 && snapshots.every(s => isForbidden(s.error));
   const warnings = React.useMemo(
-    () => aiWarnings(events.items, endpoints),
-    [events.items, endpoints]
+    () => aiWarnings(events, endpoints),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [snapshots.map(s => s.updatedAt).join(','), endpoints]
   );
   return (
     <Panel title={t('Recent warnings')} icon="mdi:alert-outline">
-      {events.forbidden ? (
+      {forbidden ? (
         <Typography variant="body2" color="text.secondary">
-          {t('You cannot list events in all namespaces.')}
+          {t('You cannot list the events of the endpoint namespaces.')}
         </Typography>
       ) : (
         <WarningsList events={warnings} />

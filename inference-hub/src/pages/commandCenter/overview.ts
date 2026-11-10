@@ -117,6 +117,16 @@ const AI_KINDS = new Set([
  * Warning events that concern the AI platform: AI kinds anywhere, and objects named after an
  * endpoint (its pods, deployments, services) in the endpoint's namespace.
  */
+/**
+ * Namespaces whose warning events the Command Center reads: those of the endpoints, and
+ * "default", where Kubernetes records the events of cluster-scoped objects (ClusterPolicy,
+ * NVIDIADriver, LocalModelCache, …). Listing events per namespace avoids reading every event
+ * of a large cluster.
+ */
+export function warningNamespaces(endpoints: ModelEndpoint[]): string[] {
+  return Array.from(new Set(['default', ...endpoints.map(e => e.namespace)])).sort();
+}
+
 export function aiWarnings(
   events: EventJson[],
   endpoints: ModelEndpoint[],

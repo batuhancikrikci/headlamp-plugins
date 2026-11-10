@@ -1,6 +1,7 @@
 import {
   buildInventory,
   gpuDraDrivers,
+  gpuNodeNames,
   NodeJson,
   podGpuRequests,
   ResourceSliceJson,
@@ -265,6 +266,31 @@ describe('gpuDraDrivers', () => {
     expect(gpuDraDrivers([slice('gpu.nvidia.com', 0)])).toEqual([]);
     expect(gpuDraDrivers([slice('gpu.nvidia.com', 8), slice('gpu.nvidia.com', 4)])).toEqual([
       'gpu.nvidia.com',
+    ]);
+  });
+});
+
+describe('gpuNodeNames', () => {
+  it('lists nodes with GPU resources, GPU labels or DRA GPU devices, and no others', () => {
+    const cpu: NodeJson = {
+      metadata: { name: 'cpu-1', labels: {} },
+      status: { capacity: { cpu: '32' }, allocatable: { cpu: '32' } },
+    };
+    const labelled: NodeJson = {
+      metadata: { name: 'gfd-1', labels: { 'nvidia.com/gpu.present': 'true' } },
+      status: { capacity: { cpu: '32' } },
+    };
+    const dra: NodeJson = { metadata: { name: 'dra-1', labels: {} }, status: {} };
+    const slices: ResourceSliceJson[] = [
+      {
+        metadata: { name: 's' },
+        spec: { driver: 'gpu.nvidia.com', nodeName: 'dra-1', devices: [{ name: 'gpu-0' }] },
+      },
+    ];
+    expect(gpuNodeNames([node('gpu-1', 8), cpu, labelled, dra], slices)).toEqual([
+      'gpu-1',
+      'gfd-1',
+      'dra-1',
     ]);
   });
 });

@@ -16,6 +16,13 @@ All notable changes to the Inference Hub plugin are documented here. The format 
 - Benchmark no longer keeps the last runs in the browser, and removes the runs stored by 0.3.0.
   Export a run as CSV or JSON to keep it.
 
+### Changed
+
+- Pods are listed per GPU node instead of across the whole cluster, and the warning events of
+  the Command Center per endpoint namespace (plus `default`, where cluster-scoped objects such as
+  ClusterPolicy record theirs), so pages stay light on clusters with thousands of pods. vLLM
+  servers that run on nodes without GPUs are no longer listed.
+
 ### Fixed
 
 - Saving an edit no longer fails when KServe only updated the status of the endpoint since the

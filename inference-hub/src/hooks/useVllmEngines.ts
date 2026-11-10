@@ -1,8 +1,7 @@
 import { ApiProxy } from '@kinvolk/headlamp-plugin/lib';
 import React from 'react';
-import { clusterParams, ListOptions, podProxyPath } from '../api/paths';
+import { clusterParams, podProxyPath } from '../api/paths';
 import { detectEngines, isScrapable, VllmEngine } from '../resources/engine';
-import { PodJson } from '../resources/pod';
 import { featuresOf, refreshMs, useSettings } from '../settings/settings';
 import { parsePromText } from '../utils/promText';
 import {
@@ -14,7 +13,7 @@ import {
   VllmMetrics,
 } from '../utils/vllmMetrics';
 import { useCurrentCluster } from './useCluster';
-import { useCoreList } from './useLive';
+import { useGpuPods } from './useGpuPods';
 import { PrometheusState } from './usePrometheus';
 import { usePromInstant } from './usePromQuery';
 
@@ -152,14 +151,9 @@ export function useEngineMetrics(engines: VllmEngine[]): EngineMetricsState {
   };
 }
 
-/** Same selector as the GPU inventory, so both share one cached pod list. */
-export const ACTIVE_PODS: ListOptions = {
-  fieldSelector: 'status.phase!=Succeeded,status.phase!=Failed',
-};
-
-/** vLLM engines among the pods selected by `opts` (active pods of all namespaces by default). */
-export function useVllmEngines(opts: ListOptions = ACTIVE_PODS) {
-  const pods = useCoreList<PodJson>('v1', 'pods', true, opts, 30000);
+/** vLLM engines among the active pods of the GPU nodes (see useGpuPods). */
+export function useVllmEngines() {
+  const { pods } = useGpuPods();
   const engines = React.useMemo(() => detectEngines(pods.items), [pods.items]);
   return { engines, loading: pods.loading, forbidden: pods.forbidden, error: pods.error };
 }

@@ -242,6 +242,27 @@ export function draDevices(slices: ResourceSliceJson[]): Map<string, DraDevice[]
 }
 
 /** Builds the GPU inventory. Nodes without any GPU resource, GPU label or DRA device are skipped. */
+/** A node with GPU resources, DRA GPU devices or GPU Feature Discovery labels. */
+function isGpuNode(node: NodeJson, draNodes: Map<string, DraDevice[]>): boolean {
+  const labels = node.metadata.labels || {};
+  const names = [
+    ...Object.keys(node.status?.capacity || {}),
+    ...Object.keys(node.status?.allocatable || {}),
+  ];
+  return (
+    names.some(isGpuResource) ||
+    (draNodes.get(node.metadata.name) || []).length > 0 ||
+    label(labels, 'gpu.present') === 'true' ||
+    !!label(labels, 'gpu.product')
+  );
+}
+
+/** Names of the GPU nodes, the nodes whose pods Inference Hub lists. */
+export function gpuNodeNames(nodes: NodeJson[], slices: ResourceSliceJson[] = []): string[] {
+  const dra = draDevices(slices);
+  return nodes.filter(node => isGpuNode(node, dra)).map(node => node.metadata.name);
+}
+
 export function buildInventory(
   nodes: NodeJson[],
   pods: PodJson[],
@@ -261,11 +282,9 @@ export function buildInventory(
       const names = Array.from(
         new Set([...Object.keys(capacity), ...Object.keys(allocatable)])
       ).filter(isGpuResource);
+      if (!isGpuNode(node, dra)) return null;
       const nodeWorkloads = workloads.filter(w => w.node === node.metadata.name);
       const devices = dra.get(node.metadata.name) || [];
-      const hasGpuLabels =
-        label(labels, 'gpu.present') === 'true' || !!label(labels, 'gpu.product');
-      if (names.length === 0 && devices.length === 0 && !hasGpuLabels) return null;
 
       const resources: GpuResource[] = names.map(name => ({
         name,
