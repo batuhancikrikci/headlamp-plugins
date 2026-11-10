@@ -57,6 +57,7 @@ import {
   workloadIssues,
   WorkloadJson,
 } from './clusterHealth';
+import { UsageTrends } from './UsageTrends';
 
 const { Node, Pod, Namespace, Deployment, StatefulSet, DaemonSet } = K8s.ResourceClasses;
 // Event is not part of ResourceClasses; the module is exported as a namespace.
@@ -620,6 +621,12 @@ export function ClusterOverview() {
           />
         </Panel>
       </Box>
+
+      <UsageTrends
+        cpuCapacity={nodes ? capacity.cpu.total : undefined}
+        memoryCapacity={nodes ? capacity.memory.total : undefined}
+        capacityLabel="allocatable"
+      />
 
       <Box sx={twoColumns}>
         <Panel

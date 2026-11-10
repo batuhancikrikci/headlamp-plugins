@@ -1,14 +1,17 @@
 import './common/icons';
 import {
+  DefaultDetailsViewSection,
   registerAppBarAction,
   registerAppTheme,
+  registerDetailsViewSectionsProcessor,
   registerRoute,
 } from '@kinvolk/headlamp-plugin/lib';
-import { withBoundary } from './common/ErrorBoundary';
+import { ErrorBoundary, withBoundary } from './common/ErrorBoundary';
 import { PLUGIN_NAME } from './config';
 import { enforceLanguage } from './language';
 import { completeOidcReturn, installOidcRedirect } from './oidcRedirect';
 import { ClusterOverview } from './overview/ClusterOverview';
+import { NamespaceOverview } from './overview/NamespaceOverview';
 import { WorkloadsOverview } from './overview/WorkloadsOverview';
 import { injectGlobalStyles } from './styles';
 import { hideForeignThemeCards, persistTheme, ThemeLock } from './themeLock';
@@ -32,6 +35,31 @@ registerRoute({
   name: 'Workloads',
   sidebar: 'workloads',
   component: withBoundary(WorkloadsOverview),
+});
+
+// The namespace dashboard goes right below the namespace's own details (name, labels, status),
+// above Headlamp's sections for quotas, limit ranges, pods and events.
+const NAMESPACE_SECTION_ID = 'headlamp-plus.namespace-overview';
+/** Id of a details view section; sections can also be plain React nodes. */
+function sectionId(section: unknown): string | undefined {
+  return (section as { id?: string } | null)?.id;
+}
+
+registerDetailsViewSectionsProcessor(function addNamespaceOverview(resource, sections) {
+  if (resource?.kind !== 'Namespace' || sections.some(s => sectionId(s) === NAMESPACE_SECTION_ID)) {
+    return sections;
+  }
+  const section = {
+    id: NAMESPACE_SECTION_ID,
+    section: (
+      <ErrorBoundary>
+        <NamespaceOverview namespace={resource.metadata.name} />
+      </ErrorBoundary>
+    ),
+  };
+  const after = sections.findIndex(s => sectionId(s) === DefaultDetailsViewSection.METADATA);
+  const at = after >= 0 ? after + 1 : Math.min(1, sections.length);
+  return [...sections.slice(0, at), section, ...sections.slice(at)];
 });
 
 /** DOM checks run at most once per animation frame to stay cheap on large tables. */

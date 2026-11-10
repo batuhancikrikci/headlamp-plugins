@@ -35,7 +35,7 @@ What the plugins have in common:
 | **Cilium**           | Network policies, endpoints and identities, BGP, LB IPAM, egress gateway and Envoy configuration      | [cilium](cilium/README.md)               |
 | **Envoy Gateway**    | Envoy Gateway policies and resources, relationships, wizards                                          | [envoy-gateway](envoy-gateway/README.md) |
 | **Gateway API**      | Overview, topology, review with dry-run and wizards for the Gateway API                               | [gateway](gateway/README.md)             |
-| **Headlamp Plus**    | Headlamp's original themes, cluster and workloads dashboards, same-tab OIDC sign-in                   | [headlamp-plus](headlamp-plus/README.md) |
+| **Headlamp Plus**    | Headlamp's original themes, cluster, workloads and namespace dashboards, same-tab OIDC sign-in        | [headlamp-plus](headlamp-plus/README.md) |
 | **Inference Hub**    | AI/LLM platform console for KServe, llm-d, vLLM and the NVIDIA GPU Operator                           | [inference-hub](inference-hub/README.md) |
 | **Monitoring**       | kube-prometheus-stack / Prometheus Operator: alerts, silences, PromQL, targets                        | [monitoring](monitoring/README.md)       |
 | **Multicluster Hub** | Open Cluster Management hubs: clusters, placements, ManifestWorks, add-ons, GitOps                    | [multi-cluster](multi-cluster/README.md) |
@@ -157,7 +157,7 @@ Eklentilerin ortak özellikleri:
 | **Cilium**           | Ağ politikaları, uç noktalar ve kimlikler, BGP, LB IPAM, egress gateway ve Envoy yapılandırması                    | [cilium](cilium/README.md)               |
 | **Envoy Gateway**    | Envoy Gateway politikaları ve kaynakları, ilişkiler, sihirbazlar                                                   | [envoy-gateway](envoy-gateway/README.md) |
 | **Gateway API**      | Gateway API için genel bakış, topoloji, dry-run ile inceleme, sihirbazlar                                          | [gateway](gateway/README.md)             |
-| **Headlamp Plus**    | Headlamp'in orijinal temaları, küme ve iş yükü panoları, aynı sekmede OIDC girişi                                  | [headlamp-plus](headlamp-plus/README.md) |
+| **Headlamp Plus**    | Headlamp'in orijinal temaları, küme, iş yükü ve namespace panoları, aynı sekmede OIDC girişi                       | [headlamp-plus](headlamp-plus/README.md) |
 | **Inference Hub**    | KServe, llm-d, vLLM ve NVIDIA GPU Operator için AI/LLM platform konsolu                                            | [inference-hub](inference-hub/README.md) |
 | **Monitoring**       | kube-prometheus-stack / Prometheus Operator: alarmlar, silence'lar, PromQL, hedefler                               | [monitoring](monitoring/README.md)       |
 | **Multicluster Hub** | Open Cluster Management hub'ı: kümeler, placement'lar, ManifestWork, eklentiler, GitOps                            | [multi-cluster](multi-cluster/README.md) |

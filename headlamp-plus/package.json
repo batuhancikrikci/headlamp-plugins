@@ -1,7 +1,7 @@
 {
   "name": "headlamp-plus",
-  "version": "0.1.0",
-  "description": "Headlamp Plus: Headlamp's original light and dark themes as the only choices, an English-only UI, cluster and workloads dashboards and same-tab OIDC sign-in",
+  "version": "0.2.0",
+  "description": "Headlamp Plus: Headlamp's original light and dark themes as the only choices, an English-only UI, cluster, workloads and namespace dashboards with usage trends and same-tab OIDC sign-in",
   "keywords": [
     "headlamp",
     "headlamp-plugin",

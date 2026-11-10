@@ -14,15 +14,17 @@ Target: **Headlamp 0.45.0**, `@kinvolk/headlamp-plugin` **0.14.x**.
 
 ### Features
 
-| Feature                               | How                                                                                                                                                                                     |
-| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Headlamp Plus Light / Dark** themes | Headlamp's stock light and dark palettes, registered with `registerAppTheme` (`src/themes.ts`)                                                                                          |
-| Only these two themes                 | Other theme cards are hidden in Settings; any other active theme is switched back through Headlamp's store. On first run the theme follows the OS colour scheme (`src/themeLock.tsx`)   |
-| English-only UI                       | The language is pinned to English (query string, cookie and stored preference) and the language selector is hidden (`src/language.ts`)                                                  |
-| Cluster overview                      | A card-based dashboard replaces the cluster home: health, what needs attention, capacity and usage, nodes and workloads. Headlamp's events table is kept (`src/overview/`)              |
-| Workloads overview                    | The same dashboard layout for the Workloads page; Headlamp's workloads table is kept and the dashboard follows its namespace filter                                                     |
-| Same-tab OIDC sign-in (web only)      | "Sign In" goes to the identity provider in the same tab instead of a popup and returns to the page the user wanted (`src/oidcRedirect.ts`)                                              |
-| Style refinements                     | Neutral scrollbars, selection colour and keyboard focus ring from the active theme, native controls following light/dark, "Custom Resources" kept last in the sidebar (`src/styles.ts`) |
+| Feature                               | How                                                                                                                                                                                                                                                                     |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Headlamp Plus Light / Dark** themes | Headlamp's stock light and dark palettes, registered with `registerAppTheme` (`src/themes.ts`)                                                                                                                                                                          |
+| Only these two themes                 | Other theme cards are hidden in Settings; any other active theme is switched back through Headlamp's store. On first run the theme follows the OS colour scheme (`src/themeLock.tsx`)                                                                                   |
+| English-only UI                       | The language is pinned to English (query string, cookie and stored preference) and the language selector is hidden (`src/language.ts`)                                                                                                                                  |
+| Cluster overview                      | A card-based dashboard replaces the cluster home: health, what needs attention, capacity and usage, the usage trend, nodes and workloads. Headlamp's events table is kept (`src/overview/`)                                                                             |
+| Workloads overview                    | The same dashboard layout for the Workloads page; Headlamp's workloads table is kept and the dashboard follows its namespace filter                                                                                                                                     |
+| Namespace overview                    | A dashboard at the top of each namespace page: pods, workloads, jobs and volume claims, what needs attention (also unbound claims and quotas at 90 %), quota use or requests against usage, the busiest pods and the usage trend. Headlamp's own sections stay below it |
+| Usage trend                           | CPU and memory used over the last hour, 6 hours, day or week, for the cluster (against the allocatable capacity) and for a namespace (against its quota), from Prometheus. The service is found automatically or entered by hand                                        |
+| Same-tab OIDC sign-in (web only)      | "Sign In" goes to the identity provider in the same tab instead of a popup and returns to the page the user wanted (`src/oidcRedirect.ts`)                                                                                                                              |
+| Style refinements                     | Neutral scrollbars, selection colour and keyboard focus ring from the active theme, native controls following light/dark, "Custom Resources" kept last in the sidebar (`src/styles.ts`)                                                                                 |
 
 The plugin can be disabled or removed from Settings > Plugins like any other plugin; Headlamp then
 returns to its stock themes and language selector.
@@ -41,6 +43,7 @@ returns to its stock themes and language selector.
 
 - Headlamp **0.45.0** (`@kinvolk/headlamp-plugin` 0.14). The selectors rely on this version's DOM structure; check them after upgrading Headlamp.
 - Do not install it together with another plugin that registers themes; two theme locks would fight over the active theme.
+- Optional: metrics-server for CPU and memory usage, and Prometheus (or Thanos, Mimir, VictoriaMetrics) scraping the kubelet's cAdvisor metrics for the usage trend. Prometheus is reached through the Kubernetes service proxy (`list` on `services`, `get` on `services/proxy` in its namespace); pod usage needs `list` on `pods.metrics.k8s.io`.
 
 ### Installation
 
@@ -146,6 +149,10 @@ API versions are discovered at runtime; the table lists the versions used during
   `/auth?cluster=…`; test it in-cluster after upgrading Headlamp.
 - **Dashboards:** registered on Headlamp's `/` and `/workloads` routes so they replace the stock
   pages (plugin routes match first). Charts added with `registerOverviewChartsProcessor` are not shown.
+  The namespace dashboard is added to Headlamp's namespace page as a details section.
+- **Usage trend:** container usage from cAdvisor (`container_cpu_usage_seconds_total`,
+  `container_memory_working_set_bytes`). The allocatable capacity line uses today's nodes, so it
+  does not show past changes of the node pool.
 
 ### Development
 
@@ -219,15 +226,17 @@ Hedef: **Headlamp 0.45.0**, `@kinvolk/headlamp-plugin` **0.14.x**.
 
 ### Özellikler
 
-| Özellik                                 | Nasıl                                                                                                                                                                                              |
-| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Headlamp Plus Light / Dark** temaları | `registerAppTheme` ile kaydedilen, Headlamp'in standart açık ve koyu paletleri (`src/themes.ts`)                                                                                                   |
-| Yalnızca bu iki tema                    | Ayarlar'daki diğer tema kartları gizlenir; başka bir tema aktif olursa Headlamp'in store'u üzerinden geri çevrilir. İlk açılışta tema işletim sisteminin renk şemasını izler (`src/themeLock.tsx`) |
-| Yalnızca İngilizce arayüz               | Dil İngilizceye sabitlenir (sorgu dizesi, çerez ve kayıtlı tercih) ve dil seçici gizlenir (`src/language.ts`)                                                                                      |
-| Küme genel bakışı                       | Küme ana sayfasının yerine kartlardan oluşan bir pano: sağlık, dikkat gerektirenler, kapasite ve kullanım, node'lar ve iş yükleri. Headlamp'in olay tablosu korunur (`src/overview/`)              |
-| İş yükleri genel bakışı                 | Workloads sayfası için aynı pano düzeni; Headlamp'in iş yükü tablosu korunur ve pano onun namespace filtresini izler                                                                               |
-| Aynı sekmede OIDC girişi (yalnızca web) | Giriş ("Sign In") işlemi kullanıcıyı açılır pencere yerine doğrudan aynı sekmede kimlik sağlayıcıya yönlendirir ve doğrulama tamamlandığında istenen sayfaya geri aktarır (`src/oidcRedirect.ts`)  |
-| Stil iyileştirmeleri                    | Aktif temadan nötr kaydırma çubukları, seçim rengi ve klavye odak halkası; açık/koyu temayı izleyen yerel kontroller; kenar çubuğunda en sonda tutulan "Custom Resources" (`src/styles.ts`)        |
+| Özellik                                 | Nasıl                                                                                                                                                                                                                                                                                                             |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Headlamp Plus Light / Dark** temaları | `registerAppTheme` ile kaydedilen, Headlamp'in standart açık ve koyu paletleri (`src/themes.ts`)                                                                                                                                                                                                                  |
+| Yalnızca bu iki tema                    | Ayarlar'daki diğer tema kartları gizlenir; başka bir tema aktif olursa Headlamp'in store'u üzerinden geri çevrilir. İlk açılışta tema işletim sisteminin renk şemasını izler (`src/themeLock.tsx`)                                                                                                                |
+| Yalnızca İngilizce arayüz               | Dil İngilizceye sabitlenir (sorgu dizesi, çerez ve kayıtlı tercih) ve dil seçici gizlenir (`src/language.ts`)                                                                                                                                                                                                     |
+| Küme genel bakışı                       | Küme ana sayfasının yerine kartlardan oluşan bir pano: sağlık, dikkat gerektirenler, kapasite ve kullanım, kullanım trendi, node'lar ve iş yükleri. Headlamp'in olay tablosu korunur (`src/overview/`)                                                                                                            |
+| İş yükleri genel bakışı                 | Workloads sayfası için aynı pano düzeni; Headlamp'in iş yükü tablosu korunur ve pano onun namespace filtresini izler                                                                                                                                                                                              |
+| Namespace genel bakışı                  | Her namespace sayfasının üstünde bir pano: pod'lar, iş yükleri, job'lar ve volume claim'ler, dikkat gerektirenler (bağlanmamış claim'ler ve %90'a ulaşan kotalar dahil), kota kullanımı ya da istekler ile kullanım, en çok kaynak kullanan pod'lar ve kullanım trendi. Headlamp'in kendi bölümleri altında kalır |
+| Kullanım trendi                         | Son 1 saat, 6 saat, gün ya da haftada kullanılan CPU ve bellek; küme için ayrılabilir kapasiteye, namespace için kotasına karşı, Prometheus'tan. Servis otomatik bulunur ya da elle girilir                                                                                                                       |
+| Aynı sekmede OIDC girişi (yalnızca web) | Giriş ("Sign In") işlemi kullanıcıyı açılır pencere yerine doğrudan aynı sekmede kimlik sağlayıcıya yönlendirir ve doğrulama tamamlandığında istenen sayfaya geri aktarır (`src/oidcRedirect.ts`)                                                                                                                 |
+| Stil iyileştirmeleri                    | Aktif temadan nötr kaydırma çubukları, seçim rengi ve klavye odak halkası; açık/koyu temayı izleyen yerel kontroller; kenar çubuğunda en sonda tutulan "Custom Resources" (`src/styles.ts`)                                                                                                                       |
 
 Eklenti diğer eklentiler gibi Settings > Plugins üzerinden kapatılabilir veya kaldırılabilir; Headlamp
 bu durumda standart temalarına ve dil seçicisine döner.
@@ -246,6 +255,7 @@ bu durumda standart temalarına ve dil seçicisine döner.
 
 - Headlamp **0.45.0** (`@kinvolk/headlamp-plugin` 0.14). Seçiciler bu sürümün DOM yapısına dayanır; Headlamp sürüm yükseltmelerinden sonra kontrol edilmelidir.
 - Tema kaydeden başka bir eklentiyle birlikte kurmayın; iki tema kilidi aktif tema için çakışır.
+- İsteğe bağlı: CPU ve bellek kullanımı için metrics-server; kullanım trendi için kubelet'in cAdvisor metriklerini toplayan Prometheus (ya da Thanos, Mimir, VictoriaMetrics). Prometheus'a Kubernetes service proxy üzerinden erişilir (`services` üzerinde `list`, onun namespace'inde `services/proxy` üzerinde `get`); pod kullanımı için `pods.metrics.k8s.io` üzerinde `list` gerekir.
 
 ### Kurulum
 
@@ -350,7 +360,10 @@ API sürümleri çalışma zamanında keşfedilir; tabloda geliştirme ve test s
   `/auth?cluster=…` adresine dönmesi varsayımına dayanır; Headlamp sürümü yükseltildiğinde küme içinde test edilmelidir.
 - **Panolar:** stok sayfaların yerine geçmeleri için Headlamp'in `/` ve `/workloads` rotalarına
   kaydedilir (eklenti rotaları önce eşleşir). `registerOverviewChartsProcessor` ile eklenen grafikler
-  gösterilmez.
+  gösterilmez. Namespace panosu Headlamp'in namespace sayfasına bir detay bölümü olarak eklenir.
+- **Kullanım trendi:** cAdvisor'dan gelen container kullanımı (`container_cpu_usage_seconds_total`,
+  `container_memory_working_set_bytes`). Ayrılabilir kapasite çizgisi bugünkü node'ları kullanır;
+  node havuzunun geçmişteki değişimlerini göstermez.
 
 ### Geliştirme
 
