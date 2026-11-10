@@ -13,6 +13,12 @@ All notable changes to the Inference Hub plugin are documented here. The format 
   requests run the gateway's routing, llm-d scheduler and policies. The Envoy Gateway
   SecurityPolicy of the gateway or route is explained, and request headers such as an API key
   can be added for the session.
+- Benchmark concurrency sweep: the test at 1, 2, 4, … concurrent requests up to the chosen
+  maximum, stopping at the first level that misses a TTFT p95 goal. The highest level within
+  the goal gives the load one replica handles and the replicas for an expected peak, with the
+  autoscaling YAML (a KEDA trigger on the running and waiting requests of an
+  LLMInferenceService, the concurrency target of an InferenceService) and a link to the edit
+  form with those replicas.
 - The edit form and the edit wizard warn when someone changes or deletes the endpoint while it
   is being edited; Reload starts again from the current version.
 
@@ -23,6 +29,9 @@ All notable changes to the Inference Hub plugin are documented here. The format 
 
 ### Changed
 
+- The scaling step explains that LLMInferenceService autoscaling needs KEDA triggers in
+  spec.scaling.keda on KServe 0.21 and later (the workload variant autoscaler on earlier
+  releases).
 - Pods are listed per GPU node instead of across the whole cluster, and the warning events of
   the Command Center per endpoint namespace (plus `default`, where cluster-scoped objects such as
   ClusterPolicy record theirs), so pages stay light on clusters with thousands of pods. vLLM

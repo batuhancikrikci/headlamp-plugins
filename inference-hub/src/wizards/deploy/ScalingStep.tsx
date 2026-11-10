@@ -55,7 +55,7 @@ export function ScalingStep({ form, update, errors }: StepProps) {
           <Alert severity="info">
             {form.mode === 'llm'
               ? t(
-                  'LLMInferenceService autoscaling (spec.scaling) is driven by the llm-d workload variant autoscaler with HPA or KEDA; install it before relying on scaling.'
+                  'LLMInferenceService autoscaling (spec.scaling) needs an actuator: KEDA triggers in spec.scaling.keda (KServe 0.21 and later; a Benchmark sweep suggests one), or the llm-d workload variant autoscaler on earlier releases.'
                 )
               : form.isvcDeploymentMode === 'Knative'
               ? t('Knative scales on concurrency and can scale to zero when the minimum is 0.')

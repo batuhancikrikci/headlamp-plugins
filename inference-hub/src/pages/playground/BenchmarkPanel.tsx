@@ -37,7 +37,9 @@ import {
   summarize,
   toCsv,
 } from '../../utils/benchmark';
+import { meetsGoal, SweepLevel, sweepLevels } from '../../utils/sweep';
 import { podMatcher } from '../../utils/vllmMetrics';
+import { SweepResults } from './SweepResults';
 
 /** Earlier versions kept the last runs in the browser; the stored runs are removed. */
 const OLD_HISTORY_KEY = 'inference-hub.benchmarks';
@@ -134,6 +136,14 @@ export function BenchmarkPanel({
     [initialTargetId || ready[0]?.id || ''].filter(Boolean)
   );
   const [compare, setCompare] = React.useState(false);
+  // Sweep mode: the same test at concurrency 1, 2, 4, … up to the configured concurrency.
+  const [sweep, setSweep] = React.useState(false);
+  const [goalMs, setGoalMs] = React.useState(2000);
+  const [expectedPeak, setExpectedPeak] = React.useState('');
+  const [levels, setLevels] = React.useState<SweepLevel[]>([]);
+  const [sweepTarget, setSweepTarget] = React.useState<PlaygroundTarget | null>(null);
+  const [sweepStopped, setSweepStopped] = React.useState(false);
+  const goal = { ttftP95Ms: Math.max(1, goalMs || 0), maxErrorRate: 0.01 };
   // The endpoint list may arrive after the first render: preselect the first ready one.
   React.useEffect(() => {
     if (targetIds.length === 0 && ready.length > 0) setTargetIds([ready[0].id]);
@@ -168,19 +178,26 @@ export function BenchmarkPanel({
     .filter((x): x is PlaygroundTarget => !!x);
   const effective = clampConfig(config);
 
-  const runOne = async (target: PlaygroundTarget, signal: AbortSignal): Promise<RunRecord> => {
+  const runOne = async (
+    target: PlaygroundTarget,
+    signal: AbortSignal,
+    concurrency = effective.concurrency
+  ): Promise<RunRecord> => {
+    const config = { ...effective, concurrency };
     const resolved = await resolveTarget(cluster, target);
     const model = resolved.models.includes(target.defaultModel)
       ? target.defaultModel
       : resolved.models[0] || target.defaultModel;
     const label = `${target.namespace}/${target.label}`;
     let done = 0;
-    setProgress({ done: 0, total: effective.requests, target: label });
+    const progressLabel =
+      concurrency !== effective.concurrency || sweep ? `${label} · ${concurrency}×` : label;
+    setProgress({ done: 0, total: effective.requests, target: progressLabel });
     const startedAt = new Date().toISOString();
     const start = performance.now();
     const results = await runPool<RequestResult>(
-      effective.requests,
-      effective.concurrency,
+      config.requests,
+      config.concurrency,
       async () => {
         const t0 = performance.now();
         try {
@@ -214,7 +231,7 @@ export function BenchmarkPanel({
         }
       },
       signal,
-      () => setProgress({ done: ++done, total: effective.requests, target: label })
+      () => setProgress({ done: ++done, total: config.requests, target: progressLabel })
     );
     const wallMs = performance.now() - start;
     let server: ServerPeak | undefined;
@@ -247,7 +264,7 @@ export function BenchmarkPanel({
       id: `${startedAt}-${target.id}`,
       target: label,
       model,
-      config: effective,
+      config,
       startedAt,
       summary: summarize(results, wallMs),
       stopped: signal.aborted,
@@ -261,8 +278,27 @@ export function BenchmarkPanel({
     abortRef.current = controller;
     setError(null);
     setRuns([]);
+    setLevels([]);
     const done: RunRecord[] = [];
     try {
+      if (sweep && selected[0]) {
+        const target = selected[0];
+        setSweepTarget(target);
+        setSweepStopped(false);
+        const measured: SweepLevel[] = [];
+        for (const concurrency of sweepLevels(effective.concurrency)) {
+          if (controller.signal.aborted) break;
+          const run = await runOne(target, controller.signal, concurrency);
+          if (run.stopped) break;
+          const level = { concurrency, summary: run.summary };
+          measured.push(level);
+          setLevels([...measured]);
+          // Past the goal more load only hurts the endpoint; stop there.
+          if (!meetsGoal(level, goal)) break;
+        }
+        setSweepStopped(controller.signal.aborted);
+        return;
+      }
       // One target after the other, so they do not compete for the same GPUs or connections.
       for (const target of selected) {
         if (controller.signal.aborted) break;
@@ -343,12 +379,60 @@ export function BenchmarkPanel({
                 <Checkbox
                   checked={compare}
                   disabled={running}
-                  onChange={e => setCompare(e.target.checked)}
+                  onChange={e => {
+                    setCompare(e.target.checked);
+                    if (e.target.checked) setSweep(false);
+                  }}
                 />
               }
               label={t('Compare two endpoints (run one after the other)')}
             />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={sweep}
+                  disabled={running}
+                  onChange={e => {
+                    setSweep(e.target.checked);
+                    if (e.target.checked) setCompare(false);
+                  }}
+                />
+              }
+              label={t(
+                'Sweep the concurrency (1, 2, 4, … up to the highest) and suggest autoscaling'
+              )}
+            />
           </Grid>
+          {sweep && (
+            <>
+              <Grid item xs={6} md={4}>
+                <TextField
+                  type="number"
+                  fullWidth
+                  size="small"
+                  label={t('Goal: TTFT p95 (ms)')}
+                  value={goalMs}
+                  disabled={running}
+                  inputProps={{ min: 1 }}
+                  onChange={e => setGoalMs(Number(e.target.value))}
+                  helperText={t('and at most 1% failed requests')}
+                />
+              </Grid>
+              <Grid item xs={6} md={4}>
+                <TextField
+                  type="number"
+                  fullWidth
+                  size="small"
+                  label={t('Expected peak concurrent requests')}
+                  value={expectedPeak}
+                  disabled={running}
+                  inputProps={{ min: 1 }}
+                  onChange={e => setExpectedPeak(e.target.value)}
+                  helperText={t('optional, to size the replicas')}
+                />
+              </Grid>
+            </>
+          )}
           <Grid item xs={12} md={4}>
             <TextField
               select
@@ -373,8 +457,12 @@ export function BenchmarkPanel({
           </Grid>
           {(
             [
-              ['concurrency', 'Concurrent requests', MAX_CONCURRENCY],
-              ['requests', 'Requests in total', MAX_REQUESTS],
+              [
+                'concurrency',
+                sweep ? 'Highest concurrency' : 'Concurrent requests',
+                MAX_CONCURRENCY,
+              ],
+              ['requests', sweep ? 'Requests per level' : 'Requests in total', MAX_REQUESTS],
               ['maxTokens', 'Max tokens per answer', 32768],
             ] as const
           ).map(([key, label, max]) => (
@@ -431,10 +519,17 @@ export function BenchmarkPanel({
                 onChange={e => setConfirmed(e.target.checked)}
               />
             }
-            label={t('Send {{n}} requests to {{targets}}', {
-              n: effective.requests * selected.length,
-              targets: selected.map(s => `${s.namespace}/${s.label}`).join(t(' and ')) || '—',
-            })}
+            label={t(
+              sweep
+                ? 'Send up to {{n}} requests to {{targets}}'
+                : 'Send {{n}} requests to {{targets}}',
+              {
+                n: sweep
+                  ? effective.requests * sweepLevels(effective.concurrency).length
+                  : effective.requests * selected.length,
+                targets: selected.map(s => `${s.namespace}/${s.label}`).join(t(' and ')) || '—',
+              }
+            )}
           />
           <Box sx={{ flexGrow: 1 }} />
           {running ? (
@@ -471,6 +566,18 @@ export function BenchmarkPanel({
           </Alert>
         )}
       </Paper>
+
+      {levels.length > 0 && sweepTarget && (
+        <SweepResults
+          target={sweepTarget}
+          levels={levels}
+          goal={goal}
+          replicas={enginesOf(sweepTarget, engines).length}
+          expectedPeak={Number(expectedPeak) || undefined}
+          prometheus={prometheus.status === 'ready' ? prometheus.endpoint : undefined}
+          stopped={sweepStopped}
+        />
+      )}
 
       {runs.length > 0 && (
         <Paper variant="outlined" sx={{ p: 2 }}>

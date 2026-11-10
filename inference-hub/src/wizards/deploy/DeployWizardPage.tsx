@@ -484,6 +484,15 @@ function EditWizard({
     new URLSearchParams(routerLocation.search).get('view') === 'wizard' ? 'wizard' : 'form'
   );
   const [draft, setDraft] = React.useState<DeployForm | null>(null);
+  // ?scaleMin=&scaleMax= (from the benchmark sweep) start the edit with autoscaling between them.
+  const [scale] = React.useState(() => {
+    const params = new URLSearchParams(routerLocation.search);
+    const min = Number(params.get('scaleMin'));
+    const max = Number(params.get('scaleMax'));
+    return params.has('scaleMax') && Number.isInteger(min) && Number.isInteger(max) && max >= 1
+      ? { minReplicas: Math.max(0, min), maxReplicas: max }
+      : undefined;
+  });
   const switchTo = (next: 'form' | 'wizard') => (form: DeployForm) => {
     setDraft(form);
     setView(next);
@@ -576,7 +585,8 @@ function EditWizard({
       </SectionBox>
     );
   }
-  const initial = draft || state.original;
+  const initial =
+    draft || (scale ? { ...state.original, autoscale: true, ...scale } : state.original);
   const banner = deleted ? (
     <Alert severity="error" sx={{ mb: 2 }}>
       {t('The endpoint was deleted while you were editing it. It can no longer be saved.')}
