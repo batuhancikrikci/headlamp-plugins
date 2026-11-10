@@ -18,8 +18,9 @@ All notable changes to the Cilium plugin are documented here. The format follows
   affinity and EndpointSlice sync settings; a dialog edits them (merge patch of the annotations)
   and makes other services global. Global services also show the settings in the Cilium section
   of Headlamp's Service page.
-- **Connect a cluster** wizard: reads another cluster configured in Headlamp, or takes its name,
-  ID, routing mode, version, pod CIDRs and API server address entered by hand, checks the
+- **Connect clusters** wizard: takes the Cilium values of two clusters (name, ID, maximum of
+  connected clusters, routing mode, version, pod CIDRs, API server address) as entered, the first
+  one optionally filled in from the cluster on the page, checks the
   documented prerequisites (unique names and IDs, the same maximum of connected clusters, the
   same datapath mode, non-overlapping pod CIDRs, Cilium versions, API servers) and gives the
   `cilium clustermesh` commands or the Helm values for both sides. It applies nothing.

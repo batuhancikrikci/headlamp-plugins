@@ -10,6 +10,7 @@ import {
   hostAliasClusters,
   invalidCidrs,
   manualFacts,
+  manualFromFacts,
   meshChecks,
   meshIdentity,
   overlappingCidrs,
@@ -332,5 +333,38 @@ describe('a cluster entered by hand', () => {
 
   it('reports entries that are not CIDRs', () => {
     expect(invalidCidrs('10.0.0.0/16, 10.1.0.0, fd00::/64')).toEqual(['10.1.0.0']);
+  });
+});
+
+describe('manualFromFacts', () => {
+  it('takes the entry values from a read cluster', () => {
+    expect(
+      manualFromFacts({
+        cluster: 'east',
+        config: { 'cluster-name': 'east', 'cluster-id': '3', tunnel: 'vxlan' },
+        version: 'v1.20.4',
+        podCidrs: ['10.0.0.0/24', '10.0.1.0/24'],
+        apiserver: { type: 'LoadBalancer', address: '192.0.2.1', port: 2379 },
+      })
+    ).toEqual({
+      name: 'east',
+      id: '3',
+      maxConnected: '255',
+      routing: 'tunnel',
+      version: 'v1.20.4',
+      podCidrs: '10.0.0.0/24\n10.0.1.0/24',
+      address: '192.0.2.1',
+      port: '2379',
+    });
+  });
+
+  it('leaves out a ClusterIP address other clusters cannot use', () => {
+    const entry = manualFromFacts({
+      cluster: 'east',
+      config: {},
+      podCidrs: [],
+      apiserver: { type: 'ClusterIP', address: '10.96.0.5', port: 2379 },
+    });
+    expect(entry.address).toBe('');
   });
 });

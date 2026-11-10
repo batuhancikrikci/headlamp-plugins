@@ -399,7 +399,7 @@ export function ClusterMeshPage() {
               startIcon={<Icon icon="mdi:transit-connection-variant" />}
               onClick={() => setWizard(true)}
             >
-              {t('Connect a cluster')}
+              {t('Connect clusters')}
             </Button>,
           ],
         }}

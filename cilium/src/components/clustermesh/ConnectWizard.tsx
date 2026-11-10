@@ -1,18 +1,13 @@
 import { Icon } from '@iconify/react';
-import { K8s } from '@kinvolk/headlamp-plugin/lib';
 import {
   Alert,
   Box,
   Button,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel,
   MenuItem,
-  Radio,
-  RadioGroup,
   Stack,
   Step,
   StepLabel,
@@ -29,10 +24,11 @@ import {
   invalidCidrs,
   ManualCluster,
   manualFacts,
+  manualFromFacts,
   meshChecks,
   meshIdentity,
 } from '../../api/clustermesh';
-import { factsOf, loadMeshState, MeshState } from '../../api/clustermeshData';
+import { factsOf, loadMeshState } from '../../api/clustermeshData';
 import { CodeBlock } from '../../common/CodeBlock';
 import { useText } from '../../common/i18n';
 
@@ -43,37 +39,17 @@ const STATUS_ICON: Record<CheckStatus, { icon: string; color: string }> = {
   unknown: { icon: 'mdi:help-circle-outline', color: 'text.secondary' },
 };
 
-type Loaded =
-  | { status: 'loading' }
-  | { status: 'ready'; state: MeshState }
-  | { status: 'error'; message: string };
-
-function useMeshState(cluster: string | undefined): Loaded | undefined {
-  const [loaded, setLoaded] = React.useState<Loaded>();
-  React.useEffect(() => {
-    if (!cluster) {
-      setLoaded(undefined);
-      return;
-    }
-    let cancelled = false;
-    setLoaded({ status: 'loading' });
-    loadMeshState(cluster)
-      .then(state => !cancelled && setLoaded({ status: 'ready', state }))
-      .catch(err => !cancelled && setLoaded({ status: 'error', message: (err as Error).message }));
-    return () => {
-      cancelled = true;
-    };
-  }, [cluster]);
-  return loaded;
-}
-
-/** Fields of a cluster Headlamp does not know. */
-function ManualClusterForm({
+/** The Cilium values of one cluster, as found in its cilium-config ConfigMap. */
+function ClusterForm({
+  title,
   value,
   onChange,
+  action,
 }: {
+  title: string;
   value: ManualCluster;
   onChange: (value: ManualCluster) => void;
+  action?: React.ReactNode;
 }) {
   const { t } = useText();
   const set = (patch: Partial<ManualCluster>) => onChange({ ...value, ...patch });
@@ -81,11 +57,12 @@ function ManualClusterForm({
   const row = { display: 'flex', gap: 2, flexWrap: 'wrap' } as const;
   return (
     <Stack spacing={2}>
-      <Typography variant="body2" color="text.secondary">
-        {t(
-          'Take the values from the cilium-config ConfigMap of the other cluster (cluster-name, cluster-id, max-connected-clusters, routing-mode). Only the name is required; what is left empty is not checked.'
-        )}
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+        <Typography variant="subtitle1" sx={{ flexGrow: 1 }}>
+          {title}
+        </Typography>
+        {action}
+      </Box>
       <Box sx={row}>
         <TextField
           size="small"
@@ -171,48 +148,53 @@ function ManualClusterForm({
 }
 
 /**
- * Checks the prerequisites of connecting this cluster with another one, read from Headlamp's
- * clusters or entered by hand, and gives the cilium CLI commands or Helm values for it. Nothing is applied: the clustermesh
+ * Checks the prerequisites of connecting two clusters from their Cilium values and gives the
+ * cilium CLI commands or Helm values for it. The values are entered, so any two clusters can be
+ * planned; the cluster on this page can fill in the first one. Nothing is applied: the clustermesh
  * certificates and the Cilium installation itself are managed by the CLI or Helm.
  */
-export function ConnectWizard({ cluster, onClose }: { cluster: string; onClose: () => void }) {
+export function ConnectWizard({ cluster, onClose }: { cluster?: string; onClose: () => void }) {
   const { t } = useText();
-  const clusters = Object.keys(K8s.useClustersConf() || {}).filter(name => name !== cluster);
-  const [source, setSource] = React.useState<'headlamp' | 'manual'>(
-    clusters.length > 0 ? 'headlamp' : 'manual'
-  );
-  const [remote, setRemote] = React.useState(clusters[0] || '');
-  const [manual, setManual] = React.useState<ManualCluster>(EMPTY_MANUAL_CLUSTER);
+  const [first, setFirst] = React.useState<ManualCluster>(EMPTY_MANUAL_CLUSTER);
+  const [second, setSecond] = React.useState<ManualCluster>(EMPTY_MANUAL_CLUSTER);
   const [step, setStep] = React.useState(0);
-  const isManual = source === 'manual';
-  const remoteName = isManual ? manual.name.trim() : remote;
-  const [localContext, setLocalContext] = React.useState(cluster);
-  const [remoteContext, setRemoteContext] = React.useState(remoteName);
+  const [filling, setFilling] = React.useState(false);
+  const [fillError, setFillError] = React.useState<string | null>(null);
+  const firstName = first.name.trim();
+  const secondName = second.name.trim();
+  const [firstContext, setFirstContext] = React.useState('');
+  const [secondContext, setSecondContext] = React.useState('');
   const [serviceType, setServiceType] = React.useState<'LoadBalancer' | 'NodePort'>('LoadBalancer');
-  const local = useMeshState(cluster);
-  const other = useMeshState(step > 0 && !isManual ? remote : undefined);
 
-  React.useEffect(() => setRemoteContext(remoteName), [remoteName]);
+  React.useEffect(() => setFirstContext(firstName), [firstName]);
+  React.useEffect(() => setSecondContext(secondName), [secondName]);
 
-  const ready = local?.status === 'ready' && (isManual || other?.status === 'ready');
-  const localFacts = local?.status === 'ready' ? factsOf(cluster, local.state) : undefined;
-  const remoteFacts = isManual
-    ? manualFacts(manual)
-    : other?.status === 'ready'
-    ? factsOf(remote, other.state)
-    : undefined;
-  const canContinue = isManual
-    ? remoteName !== '' && invalidCidrs(manual.podCidrs).length === 0
-    : remote !== '';
-  const checks = localFacts && remoteFacts ? meshChecks(localFacts, remoteFacts) : [];
+  const firstFacts = manualFacts(first, 'first cluster');
+  const secondFacts = manualFacts(second, 'second cluster');
+  const checks = meshChecks(firstFacts, secondFacts);
   const blocking = checks.filter(c => c.status === 'error').length;
-  const namespace = (local?.status === 'ready' && local.state.namespace) || 'kube-system';
+  const valid = (c: ManualCluster) => c.name.trim() !== '' && invalidCidrs(c.podCidrs).length === 0;
+  const canContinue = valid(first) && valid(second);
 
-  const steps = [t('Cluster'), t('Checks'), t('Commands')];
+  const fillFromPage = async () => {
+    setFilling(true);
+    setFillError(null);
+    try {
+      const state = await loadMeshState(cluster || undefined);
+      if (!state.config) throw new Error(t('cilium-config could not be read.'));
+      setFirst(manualFromFacts(factsOf(cluster || '', state)));
+    } catch (err) {
+      setFillError((err as Error).message || String(err));
+    } finally {
+      setFilling(false);
+    }
+  };
+
+  const steps = [t('Clusters'), t('Checks'), t('Commands')];
 
   return (
     <Dialog open onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>{t('Connect a cluster with Cluster Mesh')}</DialogTitle>
+      <DialogTitle>{t('Connect two clusters with Cluster Mesh')}</DialogTitle>
       <DialogContent>
         <Stepper activeStep={step} sx={{ mb: 3 }}>
           {steps.map(label => (
@@ -223,119 +205,76 @@ export function ConnectWizard({ cluster, onClose }: { cluster: string; onClose: 
         </Stepper>
 
         {step === 0 && (
-          <Stack spacing={2}>
-            <RadioGroup
-              row
-              value={source}
-              onChange={e => setSource(e.target.value as 'headlamp' | 'manual')}
-            >
-              <FormControlLabel
-                value="headlamp"
-                control={<Radio />}
-                disabled={clusters.length === 0}
-                label={t('A cluster configured in Headlamp')}
-              />
-              <FormControlLabel value="manual" control={<Radio />} label={t('Enter it by hand')} />
-            </RadioGroup>
-            {isManual ? (
-              <ManualClusterForm value={manual} onChange={setManual} />
-            ) : (
-              <>
-                <Typography variant="body2" color="text.secondary">
-                  {t(
-                    'Both clusters are read with your permissions (cilium-config, the Cilium pods, CiliumNodes and the clustermesh-apiserver Service); Secrets are not read.'
-                  )}
-                </Typography>
-                <TextField
-                  select
+          <Stack spacing={3}>
+            <Typography variant="body2" color="text.secondary">
+              {t(
+                'Enter the Cilium values of both clusters, from the cilium-config ConfigMap of each (cluster-name, cluster-id, max-connected-clusters, routing-mode). Only the names are required; what is left empty is not checked.'
+              )}
+            </Typography>
+            <ClusterForm
+              title={t('First cluster')}
+              value={first}
+              onChange={setFirst}
+              action={
+                <Button
                   size="small"
-                  label={t('Other cluster')}
-                  value={remote}
-                  onChange={e => setRemote(e.target.value)}
+                  disabled={filling}
+                  startIcon={<Icon icon="mdi:download" />}
+                  onClick={fillFromPage}
                 >
-                  {clusters.map(name => (
-                    <MenuItem key={name} value={name}>
-                      {name}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </>
-            )}
+                  {t('Fill in from the cluster on this page')}
+                </Button>
+              }
+            />
+            {fillError && <Alert severity="error">{fillError}</Alert>}
+            <ClusterForm title={t('Second cluster')} value={second} onChange={setSecond} />
           </Stack>
         )}
 
         {step === 1 && (
           <Stack spacing={1.5}>
-            {!ready ? (
-              local?.status === 'error' || other?.status === 'error' ? (
-                <Alert severity="error">
-                  {local?.status === 'error' ? `${cluster}: ${local.message}` : ''}
-                  {other?.status === 'error' && !isManual ? ` ${remote}: ${other.message}` : ''}
-                </Alert>
-              ) : (
-                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                  <CircularProgress size={16} />
-                  <Typography variant="body2">
-                    {isManual ? t('Reading this cluster…') : t('Reading both clusters…')}
+            {checks.map(check => (
+              <Box key={check.id} sx={{ display: 'flex', gap: 1.5 }}>
+                <Box sx={{ color: STATUS_ICON[check.status].color, display: 'flex', mt: '2px' }}>
+                  <Icon icon={STATUS_ICON[check.status].icon} width={20} />
+                </Box>
+                <Box>
+                  <Typography variant="subtitle2">{check.label}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {check.detail}
                   </Typography>
                 </Box>
-              )
-            ) : (
-              <>
-                {checks.map(check => (
-                  <Box key={check.id} sx={{ display: 'flex', gap: 1.5 }}>
-                    <Box
-                      sx={{ color: STATUS_ICON[check.status].color, display: 'flex', mt: '2px' }}
-                    >
-                      <Icon icon={STATUS_ICON[check.status].icon} width={20} />
-                    </Box>
-                    <Box>
-                      <Typography variant="subtitle2">{check.label}</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {check.detail}
-                      </Typography>
-                    </Box>
-                  </Box>
-                ))}
-                <Alert severity="info">
-                  {t(
-                    'Not checked here: nodes (and with native routing, pods) of both clusters need IP connectivity to each other, and the firewall must let the clusters reach the Cluster Mesh API server.'
-                  )}
-                </Alert>
-                {isManual && (
-                  <Alert severity="info">
-                    {t(
-                      '{{c}} was entered by hand: its values are compared as entered, and its own state (pods, API server) is not checked.',
-                      { c: remoteName }
-                    )}
-                  </Alert>
-                )}
-                {blocking > 0 && (
-                  <Alert severity="error">
-                    {t('{{n}} check(s) failed: fix them before connecting the clusters.', {
-                      n: blocking,
-                    })}
-                  </Alert>
-                )}
-              </>
+              </Box>
+            ))}
+            <Alert severity="info">
+              {t(
+                'Checked from the entered values only. Not checked: the state of the clusters (Cilium and API server pods), and whether nodes (and with native routing, pods) of both clusters have IP connectivity to each other and can reach the Cluster Mesh API servers.'
+              )}
+            </Alert>
+            {blocking > 0 && (
+              <Alert severity="error">
+                {t('{{n}} check(s) failed: fix them before connecting the clusters.', {
+                  n: blocking,
+                })}
+              </Alert>
             )}
           </Stack>
         )}
 
-        {step === 2 && localFacts && remoteFacts && (
+        {step === 2 && (
           <Stack spacing={2}>
             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
               <TextField
                 size="small"
-                label={t('kubectl context of {{c}}', { c: cluster })}
-                value={localContext}
-                onChange={e => setLocalContext(e.target.value)}
+                label={t('kubectl context of {{c}}', { c: firstFacts.cluster })}
+                value={firstContext}
+                onChange={e => setFirstContext(e.target.value)}
               />
               <TextField
                 size="small"
-                label={t('kubectl context of {{c}}', { c: remote })}
-                value={remoteContext}
-                onChange={e => setRemoteContext(e.target.value)}
+                label={t('kubectl context of {{c}}', { c: secondFacts.cluster })}
+                value={secondContext}
+                onChange={e => setSecondContext(e.target.value)}
               />
               <TextField
                 select
@@ -350,17 +289,12 @@ export function ConnectWizard({ cluster, onClose }: { cluster: string; onClose: 
               </TextField>
             </Box>
             <Typography variant="subtitle2">{t('With the cilium CLI')}</Typography>
-            {isManual && (
-              <Typography variant="body2" color="text.secondary">
-                {t(
-                  'The cilium CLI needs a kubectl context for both clusters. Without access to {{c}} from one machine, use the Helm values.',
-                  { c: remoteName }
-                )}
-              </Typography>
-            )}
-            <CodeBlock
-              value={connectCommands(localContext, remoteContext, serviceType, namespace)}
-            />
+            <Typography variant="body2" color="text.secondary">
+              {t(
+                'Run them where kubectl has a context for both clusters. Without such a machine, use the Helm values.'
+              )}
+            </Typography>
+            <CodeBlock value={connectCommands(firstContext, secondContext, serviceType)} />
             <Typography variant="subtitle2">{t('Or with Helm values')}</Typography>
             <Typography variant="body2" color="text.secondary">
               {t(
@@ -368,8 +302,8 @@ export function ConnectWizard({ cluster, onClose }: { cluster: string; onClose: 
               )}
             </Typography>
             {[
-              { self: localFacts, peer: remoteFacts },
-              { self: remoteFacts, peer: localFacts },
+              { self: firstFacts, peer: secondFacts },
+              { self: secondFacts, peer: firstFacts },
             ].map(({ self, peer }) => {
               const id = meshIdentity(self.config);
               const peerId = meshIdentity(peer.config);
@@ -383,10 +317,7 @@ export function ConnectWizard({ cluster, onClose }: { cluster: string; onClose: 
                       { name: id.name, id: id.id },
                       {
                         name: peerId.name,
-                        address:
-                          peer.manual || peer.apiserver?.type === 'LoadBalancer'
-                            ? peer.apiserver?.address
-                            : undefined,
+                        address: peer.apiserver?.address,
                         port: peer.apiserver?.port,
                       },
                       serviceType
@@ -404,7 +335,7 @@ export function ConnectWizard({ cluster, onClose }: { cluster: string; onClose: 
         {step < 2 && (
           <Button
             variant="contained"
-            disabled={(step === 0 && !canContinue) || (step === 1 && !ready)}
+            disabled={step === 0 && !canContinue}
             onClick={() => setStep(s => s + 1)}
           >
             {step === 1 && blocking > 0 ? t('Show the commands anyway') : t('Next')}

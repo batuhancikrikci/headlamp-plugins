@@ -360,7 +360,7 @@ export interface ClusterFacts {
   apiserver?: ApiserverAddress;
   /** The clustermesh-apiserver pods are ready. */
   apiserverReady?: boolean;
-  /** Entered by hand for a cluster Headlamp does not know, so nothing of it was verified. */
+  /** Entered by hand, so nothing of its state was verified. */
   manual?: boolean;
 }
 
@@ -388,6 +388,23 @@ export const EMPTY_MANUAL_CLUSTER: ManualCluster = {
   port: String(APISERVER_PORT),
 };
 
+/** Entry values taken from what a cluster's own resources tell. */
+export function manualFromFacts(facts: ClusterFacts): ManualCluster {
+  const config = facts.config || {};
+  const api = facts.apiserver;
+  const reachable = api && api.type !== 'ClusterIP';
+  return {
+    name: config['cluster-name'] || '',
+    id: config['cluster-id'] || '',
+    maxConnected: config['max-connected-clusters'] || '255',
+    routing: routingMode(config) || '',
+    version: facts.version || '',
+    podCidrs: facts.podCidrs.join('\n'),
+    address: (reachable && api?.address) || '',
+    port: String((reachable && api?.port) || APISERVER_PORT),
+  };
+}
+
 /** The entries that are not valid CIDRs. */
 export function invalidCidrs(text: string): string[] {
   return splitList(text).filter(cidr => !isCidr(cidr));
@@ -403,7 +420,7 @@ function splitList(text: string): string[] {
 }
 
 /** Facts of a cluster entered by hand, in the shape the checks read from cilium-config. */
-export function manualFacts(input: ManualCluster): ClusterFacts {
+export function manualFacts(input: ManualCluster, fallbackName = 'other cluster'): ClusterFacts {
   const config: Record<string, string> = {
     'cluster-name': input.name.trim(),
     'cluster-id': input.id.trim(),
@@ -412,7 +429,7 @@ export function manualFacts(input: ManualCluster): ClusterFacts {
   if (input.routing) config['routing-mode'] = input.routing;
   const port = Number(input.port);
   return {
-    cluster: input.name.trim() || 'other cluster',
+    cluster: input.name.trim() || fallbackName,
     config,
     version: input.version.trim() || undefined,
     podCidrs: splitList(input.podCidrs).filter(isCidr),
@@ -554,8 +571,8 @@ export function meshChecks(local: ClusterFacts, remote: ClusterFacts): MeshCheck
         `Cluster Mesh API server in ${facts.cluster}`,
         'unknown',
         api
-          ? `Entered: ${api.address}:${api.port}. Not verified: Headlamp cannot reach this cluster.`
-          : `Not entered: the Helm values of ${local.cluster} need the address of its clustermesh-apiserver.`
+          ? `Entered: ${api.address}:${api.port}. Not verified from here.`
+          : 'No address entered: the Helm values of the other cluster need the address of its clustermesh-apiserver ("cilium clustermesh enable" deploys it).'
       );
       continue;
     }

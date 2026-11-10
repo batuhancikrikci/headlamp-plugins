@@ -19,7 +19,6 @@ vi.mock('@kinvolk/headlamp-plugin/lib', () => ({
       api.patches.push({ path, body });
     },
   },
-  K8s: { useClustersConf: () => ({ east: {}, west: {} }) },
 }));
 vi.mock('@kinvolk/headlamp-plugin/lib/Utils', () => ({ getCluster: () => 'east' }));
 vi.mock('@kinvolk/headlamp-plugin/lib/CommonComponents', () => ({
@@ -131,7 +130,6 @@ beforeEach(() => {
   api.patches = [];
   api.clusters = {
     east: cluster('east', '1', '10.1.0.0/16', true),
-    west: cluster('west', '1', '10.1.128.0/24', false),
   };
 });
 
@@ -167,9 +165,18 @@ describe('ClusterMeshPage', () => {
     });
   });
 
-  it('checks the other cluster before giving the commands', async () => {
+  it('checks two entered clusters before giving the commands', async () => {
     render(<ClusterMeshPage />);
-    fireEvent.click(await screen.findByText('Connect a cluster'));
+    fireEvent.click(await screen.findByText('Connect clusters'));
+    const names = () => screen.getAllByLabelText(/Cilium cluster name/) as HTMLInputElement[];
+    expect(screen.getByText('Next').hasAttribute('disabled')).toBe(true);
+    fireEvent.click(screen.getByText('Fill in from the cluster on this page'));
+    await waitFor(() => expect(names()[0].value).toBe('east'));
+    const type = (label: RegExp, value: string) =>
+      fireEvent.change(screen.getAllByLabelText(label)[1], { target: { value } });
+    type(/Cilium cluster name/, 'west');
+    type(/Cluster ID/, '1');
+    type(/Pod CIDRs/, '10.1.128.0/24');
     fireEvent.click(screen.getByText('Next'));
     expect(await screen.findByText('Both clusters use the ID 1.')).toBeTruthy();
     expect(screen.getByText(/Overlapping: 10.1.0.0\/16 ↔ 10.1.128.0\/24/)).toBeTruthy();
