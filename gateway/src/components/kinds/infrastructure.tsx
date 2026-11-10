@@ -42,6 +42,7 @@ import { Dash, HealthChip } from '../common/Status';
 import { ControllerName } from '../common/StatusSections';
 import { KindDetailView, KindListView } from '../common/Views';
 import { CreateMenu } from '../editor/EditActions';
+import { RequestTester } from './RequestTester';
 
 const GATEWAY_RELATED: KindName[] = [
   'GatewayClass',
@@ -547,6 +548,16 @@ export function GatewayDetail() {
           {
             id: 'gwapi-gateway-listenersets',
             section: <ListenerSetsSection gateway={json} data={data} />,
+          },
+          {
+            id: 'gwapi-gateway-request-tester',
+            section: (
+              <RequestTester
+                gateway={json}
+                routes={data.routes}
+                namespaceLabels={data.namespaceLabels}
+              />
+            ),
           },
           {
             id: 'gwapi-gateway-extras',
