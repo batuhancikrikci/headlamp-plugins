@@ -4,7 +4,7 @@ All notable changes to the Headlamp Plus plugin are documented here. The format 
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the plugin uses
 [semantic versioning](https://semver.org/).
 
-## [0.2.0] — unreleased
+## [0.2.0] — 2026-11-10
 
 ### Added
 
