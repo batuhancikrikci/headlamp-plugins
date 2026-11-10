@@ -289,7 +289,12 @@ function GlobalServices() {
   const { items } = useServices();
   const [editing, setEditing] = React.useState<ServiceLike | null>(null);
   const [adding, setAdding] = React.useState('');
-  const all = items || [];
+  const [namespace, setNamespace] = React.useState('');
+  const everything = items || [];
+  const namespaces = Array.from(new Set(everything.map(s => s.metadata.namespace || ''))).sort();
+  const all = namespace
+    ? everything.filter(s => (s.metadata.namespace || '') === namespace)
+    : everything;
   const global = all.filter(s => globalServiceSettings(s.metadata.annotations).global);
   const others = all.filter(s => !global.includes(s));
   const key = (s: ServiceLike) => `${s.metadata.namespace}/${s.metadata.name}`;
@@ -297,6 +302,24 @@ function GlobalServices() {
   return (
     <SectionBox title={t('Global services')}>
       <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+        <TextField
+          select
+          size="small"
+          label={t('Namespace')}
+          value={namespace}
+          onChange={e => {
+            setNamespace(e.target.value);
+            setAdding('');
+          }}
+          sx={{ minWidth: 200 }}
+        >
+          <MenuItem value="">{t('All namespaces')}</MenuItem>
+          {namespaces.map(ns => (
+            <MenuItem key={ns} value={ns}>
+              {ns}
+            </MenuItem>
+          ))}
+        </TextField>
         <TextField
           select
           size="small"
@@ -318,7 +341,11 @@ function GlobalServices() {
       </Box>
       {global.length === 0 ? (
         <Typography variant="body2" color="text.secondary">
-          {t('No service is global (annotation service.cilium.io/global).')}
+          {namespace
+            ? t('No service in {{ns}} is global (annotation service.cilium.io/global).', {
+                ns: namespace,
+              })
+            : t('No service is global (annotation service.cilium.io/global).')}
         </Typography>
       ) : (
         <SimpleTable

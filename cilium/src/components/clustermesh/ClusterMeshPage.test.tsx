@@ -73,6 +73,7 @@ vi.mock('../../hooks/useClusterData', () => ({
         },
       },
       { metadata: { name: 'cart', namespace: 'shop', annotations: {} } },
+      { metadata: { name: 'report', namespace: 'other', annotations: {} } },
     ],
   }),
 }));
@@ -163,6 +164,20 @@ describe('ClusterMeshPage', () => {
         },
       },
     });
+  });
+
+  it('filters the global services by namespace', async () => {
+    render(<ClusterMeshPage />);
+    const services = await screen.findByRole('region', { name: 'Global services' });
+    expect(within(services).getByText('shop/checkout')).toBeTruthy();
+    fireEvent.mouseDown(within(services).getByLabelText('Namespace'));
+    fireEvent.click(await screen.findByRole('option', { name: 'other' }));
+    expect(within(services).queryByText('shop/checkout')).toBeNull();
+    expect(
+      within(services).getByText(
+        'No service in other is global (annotation service.cilium.io/global).'
+      )
+    ).toBeTruthy();
   });
 
   it('checks two entered clusters before giving the commands', async () => {

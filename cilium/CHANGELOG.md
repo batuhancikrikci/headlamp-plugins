@@ -15,7 +15,7 @@ All notable changes to the Cilium plugin are documented here. The format follows
   `cilium_clustermesh_remote_cluster_*` metrics (ready agents, failures in the last hour, last
   failure). The `cilium-clustermesh` Secret is not read.
 - **Global services**: the services marked `service.cilium.io/global` with their shared,
-  affinity and EndpointSlice sync settings; a dialog edits them (merge patch of the annotations)
+  affinity and EndpointSlice sync settings, filtered by namespace; a dialog edits them (merge patch of the annotations)
   and makes other services global. Global services also show the settings in the Cilium section
   of Headlamp's Service page.
 - **Connect clusters** wizard: takes the Cilium values of two clusters (name, ID, maximum of
