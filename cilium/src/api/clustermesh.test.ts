@@ -3,10 +3,13 @@ import {
   apiserverAddress,
   ClusterFacts,
   connectCommands,
+  EMPTY_MANUAL_CLUSTER,
   globalServicePatch,
   globalServiceSettings,
   helmValues,
   hostAliasClusters,
+  invalidCidrs,
+  manualFacts,
   meshChecks,
   meshIdentity,
   overlappingCidrs,
@@ -281,5 +284,53 @@ describe('connect output', () => {
         '        port: 2379',
       ].join('\n')
     );
+  });
+});
+
+describe('a cluster entered by hand', () => {
+  const local: ClusterFacts = {
+    cluster: 'east',
+    config: { 'cluster-name': 'east', 'cluster-id': '1', 'routing-mode': 'tunnel' },
+    version: 'v1.20.4',
+    podCidrs: ['10.0.0.0/16'],
+    apiserver: { type: 'LoadBalancer', address: '192.0.2.1', port: 2379 },
+    apiserverReady: true,
+  };
+
+  it('is checked like a read cluster', () => {
+    const remote = manualFacts({
+      ...EMPTY_MANUAL_CLUSTER,
+      name: 'west',
+      id: '2',
+      routing: 'tunnel',
+      version: 'v1.20.2',
+      podCidrs: '10.1.0.0/16,\n10.2.0.0/16',
+      address: '198.51.100.7',
+    });
+    expect(remote.podCidrs).toEqual(['10.1.0.0/16', '10.2.0.0/16']);
+    expect(remote.apiserver).toMatchObject({ address: '198.51.100.7', port: 2379 });
+    const status = Object.fromEntries(meshChecks(local, remote).map(c => [c.id, c.status]));
+    expect(status).toMatchObject({
+      identity: 'ok',
+      unique: 'ok',
+      maxConnected: 'ok',
+      routing: 'ok',
+      podCidrs: 'ok',
+      version: 'ok',
+      'apiserver-east': 'ok',
+      'apiserver-west': 'unknown',
+    });
+  });
+
+  it('leaves what was not entered unchecked and still finds conflicts', () => {
+    const remote = manualFacts({ ...EMPTY_MANUAL_CLUSTER, name: 'east', id: '1' });
+    const checks = meshChecks(local, remote);
+    const status = Object.fromEntries(checks.map(c => [c.id, c.status]));
+    expect(status).toMatchObject({ unique: 'error', routing: 'unknown', podCidrs: 'unknown' });
+    expect(checks.find(c => c.id === 'routing')?.detail).toContain('east');
+  });
+
+  it('reports entries that are not CIDRs', () => {
+    expect(invalidCidrs('10.0.0.0/16, 10.1.0.0, fd00::/64')).toEqual(['10.1.0.0']);
   });
 });

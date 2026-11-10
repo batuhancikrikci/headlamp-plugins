@@ -360,6 +360,71 @@ export interface ClusterFacts {
   apiserver?: ApiserverAddress;
   /** The clustermesh-apiserver pods are ready. */
   apiserverReady?: boolean;
+  /** Entered by hand for a cluster Headlamp does not know, so nothing of it was verified. */
+  manual?: boolean;
+}
+
+/** What the user enters for a cluster that is not configured in Headlamp. */
+export interface ManualCluster {
+  name: string;
+  id: string;
+  maxConnected: string;
+  routing: '' | 'native' | 'tunnel';
+  version: string;
+  /** Pod CIDRs separated by commas, spaces or new lines. */
+  podCidrs: string;
+  address: string;
+  port: string;
+}
+
+export const EMPTY_MANUAL_CLUSTER: ManualCluster = {
+  name: '',
+  id: '',
+  maxConnected: '255',
+  routing: '',
+  version: '',
+  podCidrs: '',
+  address: '',
+  port: String(APISERVER_PORT),
+};
+
+/** The entries that are not valid CIDRs. */
+export function invalidCidrs(text: string): string[] {
+  return splitList(text).filter(cidr => !isCidr(cidr));
+}
+
+/** An entered CIDR needs its prefix; a bare address is not accepted. */
+function isCidr(text: string): boolean {
+  return text.includes('/') && parseCidr(text) !== undefined;
+}
+
+function splitList(text: string): string[] {
+  return text.split(/[\s,]+/).filter(Boolean);
+}
+
+/** Facts of a cluster entered by hand, in the shape the checks read from cilium-config. */
+export function manualFacts(input: ManualCluster): ClusterFacts {
+  const config: Record<string, string> = {
+    'cluster-name': input.name.trim(),
+    'cluster-id': input.id.trim(),
+    'max-connected-clusters': input.maxConnected.trim() || '255',
+  };
+  if (input.routing) config['routing-mode'] = input.routing;
+  const port = Number(input.port);
+  return {
+    cluster: input.name.trim() || 'other cluster',
+    config,
+    version: input.version.trim() || undefined,
+    podCidrs: splitList(input.podCidrs).filter(isCidr),
+    apiserver: input.address.trim()
+      ? {
+          type: 'entered',
+          address: input.address.trim(),
+          port: Number.isInteger(port) && port > 0 ? port : APISERVER_PORT,
+        }
+      : undefined,
+    manual: true,
+  };
 }
 
 export type CheckStatus = 'ok' | 'warning' | 'error' | 'unknown';
@@ -433,7 +498,7 @@ export function meshChecks(local: ClusterFacts, remote: ClusterFacts): MeshCheck
     'Same datapath mode',
     !ra || !rb ? 'unknown' : ra === rb ? 'ok' : 'error',
     !ra || !rb
-      ? 'The routing mode could not be read from cilium-config.'
+      ? `The routing mode of ${!ra ? local.cluster : remote.cluster} is unknown.`
       : ra === rb
       ? ra === 'native'
         ? 'Both route natively: the native routing CIDR of each cluster must cover the pod CIDRs of all clusters, and pods need IP connectivity between the clusters.'
@@ -451,7 +516,9 @@ export function meshChecks(local: ClusterFacts, remote: ClusterFacts): MeshCheck
       ? 'error'
       : 'ok',
     local.podCidrs.length === 0 || remote.podCidrs.length === 0
-      ? 'The pod CIDRs could not be read (CiliumNode spec.ipam.podCIDRs).'
+      ? `The pod CIDRs of ${
+          local.podCidrs.length === 0 ? local.cluster : remote.cluster
+        } are unknown (read from CiliumNode spec.ipam.podCIDRs, or entered).`
       : overlaps.length
       ? `Overlapping: ${overlaps.map(([x, y]) => `${x} ↔ ${y}`).join(', ')}.`
       : `${local.podCidrs.length} and ${remote.podCidrs.length} pod CIDRs, all distinct.`
@@ -481,6 +548,17 @@ export function meshChecks(local: ClusterFacts, remote: ClusterFacts): MeshCheck
 
   for (const facts of [local, remote]) {
     const api = facts.apiserver;
+    if (facts.manual) {
+      add(
+        `apiserver-${facts.cluster}`,
+        `Cluster Mesh API server in ${facts.cluster}`,
+        'unknown',
+        api
+          ? `Entered: ${api.address}:${api.port}. Not verified: Headlamp cannot reach this cluster.`
+          : `Not entered: the Helm values of ${local.cluster} need the address of its clustermesh-apiserver.`
+      );
+      continue;
+    }
     add(
       `apiserver-${facts.cluster}`,
       `Cluster Mesh API server in ${facts.cluster}`,
