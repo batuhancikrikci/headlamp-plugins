@@ -1,10 +1,10 @@
 # Artifact Hub metadata of the Gateway API plugin. The release workflow updates version, createdAt,
 # archive-url and archive-checksum when a tag named gateway-v<version> is pushed.
-version: 0.1.1
+version: 0.2.0
 name: gateway
 displayName: Gateway API
-createdAt: "2026-11-02T22:14:34Z"
-digest: "b5e0b2ed149da8aec7566a3b6ab4a391e364d36541daa3abe0153b1c735cc667"
+createdAt: "2026-11-10T22:09:18Z"
+digest: "fde1e2dc507985b7c426f29a3dd1e9d4c1cee2b204604a3a89a2c31d8195b3bb"
 description: 'Headlamp plugin for the Kubernetes Gateway API: overview, topology, guided forms, wizards and relationship-aware detail views'
 logoPath: docs/logo.png
 license: Apache-2.0
@@ -39,7 +39,7 @@ install: |
   ## Headlamp desktop
 
   Open the plugin catalog in Headlamp, search for "Gateway API" and install it. Alternatively,
-  download `gateway-0.1.1.tar.gz` from the GitHub release and extract it into the Headlamp plugins
+  download `gateway-0.2.0.tar.gz` from the GitHub release and extract it into the Headlamp plugins
   directory (for example `~/.config/Headlamp/plugins/` on Linux), then reload Headlamp.
 
   ## Headlamp in-cluster
@@ -53,15 +53,13 @@ install: |
       plugins:
         - name: gateway
           source: https://artifacthub.io/packages/headlamp/batuhancikrikci-headlamp-plugins/gateway
-          version: 0.1.1
+          version: 0.2.0
   ```
 changes:
-  - kind: fixed
-    description: "A route whose parent was changed no longer stays Pending because of the status entry the controller left behind for the removed parent; the Overview condition count ignores it too."
-  - kind: fixed
-    description: "A BackendTLSPolicy no longer stays Pending because of ancestors the controller stopped maintaining (for example after a target was removed)."
+  - kind: added
+    description: "**GRPCRoute wizard**: parents → hostnames → methods (fully qualified service and optional method, with header matches) → filters → backends → summary, like the HTTPRoute wizard. The Create button of GRPCRoutes opens it; the form and YAML stay available."
 annotations:
-  headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/gateway-v0.1.1/gateway-0.1.1.tar.gz
-  headlamp/plugin/archive-checksum: sha256:f145213a7d3039335a4859cd9635af9d135e660f741ad6e673ec023ae8e461d4
+  headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/gateway-v0.2.0/gateway-0.2.0.tar.gz
+  headlamp/plugin/archive-checksum: sha256:093ff815a32206c5c45cb5d0fa90085739823a99a86114b05f607649dc3670e1
   headlamp/plugin/version-compat: '>=0.45.0'
   headlamp/plugin/distro-compat: in-cluster,web,desktop
