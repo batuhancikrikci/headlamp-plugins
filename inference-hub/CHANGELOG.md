@@ -4,6 +4,18 @@ All notable changes to the Inference Hub plugin are documented here. The format 
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the plugin uses
 [semantic versioning](https://semver.org/).
 
+## [0.5.0] — unreleased
+
+### Added
+
+- Namespace quota check in the resources and scaling steps of the deploy wizard and the edit
+  form: the model server pods (at the minimum and at the autoscaling maximum) against every
+  ResourceQuota of the namespace for GPUs, CPU, memory and pods. A quota on CPU limits is
+  flagged, since the pods set no CPU limit, unless a LimitRange gives a default. When an
+  endpoint is edited, its current pods count as released. Scoped quotas are not checked.
+- The GPU quota and usage of the namespace's Kueue queues (LocalQueue → ClusterQueue) are shown
+  next to it, and Kueue appears as an optional stack in the platform readiness check.
+
 ## [0.4.0] — 2026-11-10
 
 ### Added

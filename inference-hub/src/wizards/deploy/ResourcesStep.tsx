@@ -17,6 +17,7 @@ import {
 import { parseModelUri } from '../../utils/modelInfo';
 import { formatBytes } from '../../utils/quantity';
 import { DeployForm } from './deployModel';
+import { QuotaCheck } from './QuotaCheck';
 import { EditingEndpoint, fieldError, StepProps } from './stepTypes';
 
 const PRODUCT_LABEL = 'nvidia.com/gpu.product';
@@ -265,6 +266,8 @@ export function ResourcesStep({ form, update, errors, editing }: StepProps) {
           />
         )}
       </Box>
+
+      <QuotaCheck form={form} editing={editing} />
     </Box>
   );
 }

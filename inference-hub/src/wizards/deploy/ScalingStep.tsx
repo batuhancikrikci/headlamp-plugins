@@ -11,9 +11,10 @@ import {
 import React from 'react';
 import { t } from '../../common/i18n';
 import { totalGpus } from './deployModel';
+import { QuotaCheck } from './QuotaCheck';
 import { fieldError, StepProps } from './stepTypes';
 
-export function ScalingStep({ form, update, errors }: StepProps) {
+export function ScalingStep({ form, update, errors, editing }: StepProps) {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <RadioGroup
@@ -78,6 +79,8 @@ export function ScalingStep({ form, update, errors }: StepProps) {
           n: totalGpus(form),
         })}
       </Typography>
+
+      <QuotaCheck form={form} editing={editing} />
     </Box>
   );
 }

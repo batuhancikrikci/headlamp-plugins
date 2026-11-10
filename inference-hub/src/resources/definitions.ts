@@ -14,7 +14,8 @@ export type StackId =
   | 'agentRouter'
   | 'nvidia'
   | 'dra'
-  | 'lws';
+  | 'lws'
+  | 'kueue';
 
 export type ResourceId =
   | 'inferenceservices'
@@ -37,7 +38,9 @@ export type ResourceId =
   | 'clusterpolicies'
   | 'nvidiadrivers'
   | 'leaderworkersets'
-  | 'resourceslices';
+  | 'resourceslices'
+  | 'localqueues'
+  | 'clusterqueues';
 
 export interface ResourceDefinition {
   id: ResourceId;
@@ -222,6 +225,22 @@ export const RESOURCES: Record<ResourceId, ResourceDefinition> = {
     namespaced: false,
     stack: 'dra',
   },
+  localqueues: {
+    id: 'localqueues',
+    kind: 'LocalQueue',
+    plural: 'localqueues',
+    groups: ['kueue.x-k8s.io'],
+    namespaced: true,
+    stack: 'kueue',
+  },
+  clusterqueues: {
+    id: 'clusterqueues',
+    kind: 'ClusterQueue',
+    plural: 'clusterqueues',
+    groups: ['kueue.x-k8s.io'],
+    namespaced: false,
+    stack: 'kueue',
+  },
 };
 
 export const RESOURCE_LIST: ResourceDefinition[] = Object.values(RESOURCES);
@@ -331,6 +350,20 @@ export const STACKS: StackInfo[] = [
     installCommand:
       'kubectl apply --server-side -f https://github.com/kubernetes-sigs/lws/releases/latest/download/manifests.yaml',
     docsUrl: 'https://lws.sigs.k8s.io/docs/installation/',
+    optional: true,
+  },
+  {
+    id: 'kueue',
+    name: 'Kueue',
+    description:
+      'GPU quotas and queueing per team: the deploy wizard shows the GPU quota of the queues of a namespace.',
+    anyOf: ['localqueues', 'clusterqueues'],
+    installHint: 'Install Kueue if teams share GPUs through quotas and queues.',
+    installCommand: [
+      'helm install kueue oci://registry.k8s.io/kueue/charts/kueue --version=0.20.5 \\',
+      '  --namespace kueue-system --create-namespace --wait --timeout 300s',
+    ].join('\n'),
+    docsUrl: 'https://kueue.sigs.k8s.io/docs/getting-started/installation/',
     optional: true,
   },
 ];
