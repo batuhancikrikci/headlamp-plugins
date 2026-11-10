@@ -1,10 +1,10 @@
 # Artifact Hub metadata of the Monitoring plugin. The release workflow updates version, createdAt,
 # archive-url and archive-checksum when a tag named monitoring-v<version> is pushed.
-version: 0.3.0
+version: 0.4.0
 name: monitoring
 displayName: Monitoring
-createdAt: "2026-10-20T13:28:08Z"
-digest: "5fc2e0e39921c3dbf5da89640f434161dbcc6c81090aaf84081a001d3521acbe"
+createdAt: "2026-11-10T16:45:10Z"
+digest: "0b6d6019cb9042e56b3d78e703ba8bb97cecb070092836644978eb8793fec1ec"
 description: 'Headlamp plugin for managing kube-prometheus-stack (Prometheus Operator) resources'
 logoPath: docs/logo.png
 license: Apache-2.0
@@ -37,7 +37,7 @@ install: |
   ## Headlamp desktop
 
   Open the plugin catalog in Headlamp, search for "Monitoring" and install it. Alternatively,
-  download `monitoring-0.3.0.tar.gz` from the GitHub release and extract it into the Headlamp plugins
+  download `monitoring-0.4.0.tar.gz` from the GitHub release and extract it into the Headlamp plugins
   directory (for example `~/.config/Headlamp/plugins/` on Linux), then reload Headlamp.
 
   ## Headlamp in-cluster
@@ -51,13 +51,13 @@ install: |
       plugins:
         - name: monitoring
           source: https://artifacthub.io/packages/headlamp/batuhancikrikci-headlamp-plugins/monitoring
-          version: 0.3.0
+          version: 0.4.0
   ```
 changes:
   - kind: added
-    description: "First public release."
+    description: "Backtest for alerting rules in the PrometheusRule form: the expression is run as a range query over the last 1 hour to 7 days at the evaluation interval of its group, and the form shows how often, when and on which series the alert would have fired, taking `for` and `keep_firing_for` into account. Nothing is saved or sent to Alertmanager."
 annotations:
-  headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/monitoring-v0.3.0/monitoring-0.3.0.tar.gz
-  headlamp/plugin/archive-checksum: sha256:46f3b13b84cf9e6a2a739dbee916f1b0da96c054848bc3a98b91e3f729e7dabd
+  headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/monitoring-v0.4.0/monitoring-0.4.0.tar.gz
+  headlamp/plugin/archive-checksum: sha256:8c42240e18b7250ec51a6a600eeaa6889ff506f10e4cd085c483b0fa6f894657
   headlamp/plugin/version-compat: '>=0.45.0'
   headlamp/plugin/distro-compat: in-cluster,web,desktop
