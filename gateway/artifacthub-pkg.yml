@@ -4,7 +4,7 @@ version: 0.1.1
 name: gateway
 displayName: Gateway API
 createdAt: "2026-11-02T22:14:34Z"
-digest: "43f3c2ca481d74c07a1630c9a58a0c2e53bae63add7d9b390f766904f4e8b267"
+digest: "766729133a6cb772eaba2c849525215badc25c4687043b85194843d5a737feaa"
 description: 'Headlamp plugin for the Kubernetes Gateway API: overview, topology, guided forms, wizards and relationship-aware detail views'
 logoPath: docs/logo.png
 license: Apache-2.0
