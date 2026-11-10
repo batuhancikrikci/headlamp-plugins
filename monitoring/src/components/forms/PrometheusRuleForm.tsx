@@ -27,6 +27,7 @@ import { SeverityChip } from '../common/StatusChip';
 import { MetadataSection, SelectionCheck, validateMetadata } from './common';
 import { DurationField, FieldRow, FormSection, KeyValueEditor, PROM_LABEL_RE } from './fields';
 import { FormIssue, issue, Obj, ResourceFormProps } from './ResourceEditorDialog';
+import { RuleBacktest } from './RuleBacktest';
 import { FormTabs, SummaryList, Wizard } from './Wizard';
 
 export function newPrometheusRule(namespace = ''): Obj {
@@ -170,12 +171,15 @@ function RuleEditor({
   onRemove,
   showErrors,
   baseUrl,
+  interval,
 }: {
   rule: Rule;
   onChange: (r: Rule) => void;
   onRemove?: () => void;
   showErrors: boolean;
   baseUrl: string;
+  /** Evaluation interval of the group, for the backtest. */
+  interval?: string;
 }) {
   const { t } = useText();
   const type = rule.record !== undefined ? 'record' : 'alert';
@@ -288,6 +292,15 @@ function RuleEditor({
           inputProps={{ style: { fontFamily: 'monospace' } }}
         />
         <QueryTester expr={String(rule.expr ?? '')} baseUrl={baseUrl} />
+        {type === 'alert' && (
+          <RuleBacktest
+            expr={String(rule.expr ?? '')}
+            forDuration={rule.for}
+            keepFiringFor={rule.keep_firing_for}
+            interval={interval}
+            baseUrl={baseUrl}
+          />
+        )}
         <Box>
           <Typography variant="caption" color="text.secondary">
             {t('Labels')}
@@ -390,6 +403,7 @@ export function PrometheusRuleForm({
               key={ri}
               rule={r}
               baseUrl={prom.baseUrl}
+              interval={g.interval}
               showErrors={showErrors}
               onChange={nr =>
                 setGroup(gi, { ...g, rules: g.rules.map((x, idx) => (idx === ri ? nr : x)) })

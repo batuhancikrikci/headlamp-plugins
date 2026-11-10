@@ -1,6 +1,6 @@
 {
   "name": "monitoring",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Headlamp plugin for managing kube-prometheus-stack (Prometheus Operator) resources",
   "keywords": [
     "headlamp",
