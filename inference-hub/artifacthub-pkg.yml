@@ -1,10 +1,10 @@
 # Artifact Hub metadata of the Inference Hub plugin. The release workflow updates version, createdAt,
 # archive-url and archive-checksum when a tag named inference-hub-v<version> is pushed.
-version: 0.3.0
+version: 0.4.0
 name: inference-hub
 displayName: Inference Hub
-createdAt: "2026-11-02T22:14:53Z"
-digest: "af6f78d115ffdbb4004650a0f56df592b609f53d8950906eed7b31fdf2da160a"
+createdAt: "2026-11-10T16:44:37Z"
+digest: "849891ef12256a6cbd889e35e93952ff15967a477352ce915204c15835cf2670"
 description: 'Inference Hub: an AI/LLM platform experience for Headlamp covering KServe, llm-d, the Gateway API Inference Extension, vLLM and the NVIDIA GPU Operator'
 logoPath: docs/logo.png
 license: Apache-2.0
@@ -39,7 +39,7 @@ install: |
   ## Headlamp desktop
 
   Open the plugin catalog in Headlamp, search for "Inference Hub" and install it. Alternatively,
-  download `inference-hub-0.3.0.tar.gz` from the GitHub release and extract it into the Headlamp plugins
+  download `inference-hub-0.4.0.tar.gz` from the GitHub release and extract it into the Headlamp plugins
   directory (for example `~/.config/Headlamp/plugins/` on Linux), then reload Headlamp.
 
   ## Headlamp in-cluster
@@ -53,29 +53,27 @@ install: |
       plugins:
         - name: inference-hub
           source: https://artifacthub.io/packages/headlamp/batuhancikrikci-headlamp-plugins/inference-hub
-          version: 0.3.0
+          version: 0.4.0
   ```
 changes:
   - kind: added
-    description: "Edit endpoints with a form or the deploy wizard: \"Edit\" opens one page with the settings of the live endpoint and the review below them; \"Switch to the wizard\" opens the same edit as the steps of the deploy wizard, keeping what was entered. Both change only the settings you touch, keep everything the form does not show, and review the change as a YAML diff before saving with the live resourceVersion. The placement check counts the GPUs of the edited endpoint as free. The model and the served model name of an endpoint cannot change in any edit, Edit YAML included."
+    description: "Playground, Benchmark and Ask a model can reach an endpoint through a gateway: through the route KServe manages for an LLMInferenceService or through an Agent Router route, so the requests run the gateway's routing, llm-d scheduler and policies. The Envoy Gateway SecurityPolicy of the gateway or route is explained, and request headers such as an API key can be added for the session."
   - kind: added
-    description: "Diagnose tab on the endpoint page: checks the conditions, the model cache, scheduling, image pulls, crashes and OOM kills, the model download, readiness and the llm-d scheduler, and on request scans the logs for known failures, each with evidence and a fix. The Command Center links endpoints that need attention to it."
+    description: "Benchmark concurrency sweep: the test at 1, 2, 4, … concurrent requests up to the chosen maximum, stopping at the first level that misses a TTFT p95 goal. The highest level within the goal gives the load one replica handles and the replicas for an expected peak, with the autoscaling YAML (a KEDA trigger on the running and waiting requests of an LLMInferenceService, the concurrency target of an InferenceService) and a link to the edit form with those replicas."
   - kind: added
-    description: "Ask a model: sends the diagnosis (secrets masked, reviewed before sending) to another model running in the cluster through the Kubernetes API proxy and shows its answer and reasoning. Follow-up questions continue the conversation; each request sends the whole conversation, and New conversation starts over. The token limit is set in the panel (16384 by default), Thinking can be turned off for models whose chat template reads enable_thinking (Qwen3 and others), an answer cut off by the limit, stopped or interrupted by an error can be continued, and a request that does not fit in the model's context length says so. It has a switch in Settings."
-  - kind: added
-    description: "Publish to Agent Router: the endpoint page lists the AI routes that use the endpoint and adds a rule for its model names to an existing or new AIGatewayRoute, through its InferencePool or through a Backend and AIServiceBackend owned by the endpoint, with a ReferenceGrant for other namespaces. Agent Router appears as an optional stack in Platform Readiness."
-  - kind: added
-    description: "GPU Efficiency page: GPU utilization, requests and tokens per GPU-hour of every endpoint and GPU pod over 1 hour, 24 hours or 7 days, idle and underused workloads with a stop action, and the idle GPUs of the last hour in the Command Center."
-  - kind: added
-    description: "Benchmark mode in the Playground: latency and throughput of one or two endpoints under a fixed concurrency, with the peak queue and KV cache use of the servers, CSV and JSON export and the last runs kept in the browser."
+    description: "The edit form and the edit wizard warn when someone changes or deletes the endpoint while it is being edited; Reload starts again from the current version."
+  - kind: removed
+    description: "Benchmark no longer keeps the last runs in the browser, and removes the runs stored by 0.3.0. Export a run as CSV or JSON to keep it."
+  - kind: changed
+    description: "The scaling step explains that LLMInferenceService autoscaling needs KEDA triggers in spec.scaling.keda on KServe 0.21 and later (the workload variant autoscaler on earlier releases)."
+  - kind: changed
+    description: "Pods are listed per GPU node instead of across the whole cluster, and the warning events of the Command Center per endpoint namespace (plus `default`, where cluster-scoped objects such as ClusterPolicy record theirs), so pages stay light on clusters with thousands of pods. vLLM servers that run on nodes without GPUs are no longer listed."
   - kind: fixed
-    description: "InferencePools and routes no longer look failed because of old status entries of Gateways that no longer route to them."
-  - kind: changed
-    description: "The deploy wizard suggests served model names without the organization, in lowercase and without dots, e.g. `qwen35-122b-a10b-fp8` for `hf://Qwen/Qwen3.5-122B-A10B-FP8`."
-  - kind: changed
-    description: "Updated the bundled Simple Icons set."
+    description: "Saving an edit no longer fails when KServe only updated the status of the endpoint since the edit was opened."
+  - kind: fixed
+    description: "Lists and objects no page uses any more are dropped from memory after five minutes, so a long session no longer keeps every list it ever opened."
 annotations:
-  headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/inference-hub-v0.3.0/inference-hub-0.3.0.tar.gz
-  headlamp/plugin/archive-checksum: sha256:42b4a706da07d1867a889808c94559e64c4e5b5e68efd62f05db5dbaeddc9169
+  headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/inference-hub-v0.4.0/inference-hub-0.4.0.tar.gz
+  headlamp/plugin/archive-checksum: sha256:8499313fc39c484416313c639964eed66f92413db4906c832249644fbc2e94eb
   headlamp/plugin/version-compat: '>=0.45.0'
   headlamp/plugin/distro-compat: in-cluster,web,desktop
