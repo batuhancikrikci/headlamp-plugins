@@ -4,13 +4,14 @@
  * other plugins of this repository use for their overview pages.
  */
 import { Icon } from '@iconify/react';
+import { Router } from '@kinvolk/headlamp-plugin/lib';
 import { Link } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
 import { KubeObject } from '@kinvolk/headlamp-plugin/lib/K8s/cluster';
-import { Box, ButtonBase, Chip, Paper, Tooltip, Typography } from '@mui/material';
+import { Box, ButtonBase, Chip, Link as MuiLink, Paper, Tooltip, Typography } from '@mui/material';
 import { alpha, Theme } from '@mui/material/styles';
 import React from 'react';
-import { useHistory } from 'react-router-dom';
-import { Issue } from './clusterHealth';
+import { Link as RouterLink, useHistory } from 'react-router-dom';
+import { Issue, RouteRef } from './clusterHealth';
 
 export type Tone = 'primary' | 'success' | 'warning' | 'error' | 'info';
 
@@ -184,6 +185,15 @@ export const pageSx = {
   pt: 2,
   pb: 8,
 };
+
+/** Link to a Headlamp page by route name, e.g. { route: 'Pod', params: { namespace, name } }. */
+export function RouteLink({ to, children }: React.PropsWithChildren<{ to: RouteRef }>) {
+  return (
+    <MuiLink component={RouterLink} to={Router.createRouteURL(to.route, to.params)}>
+      {children}
+    </MuiLink>
+  );
+}
 
 export function plural(count: number, noun: string): string {
   return `${count} ${noun}${count === 1 ? '' : 's'}`;
@@ -399,6 +409,10 @@ export function IssueList({
                 </Typography>
                 {object ? (
                   <Link kubeObject={object} />
+                ) : issue.link ? (
+                  <Typography variant="body2" component="span">
+                    <RouteLink to={issue.link}>{issue.name}</RouteLink>
+                  </Typography>
                 ) : (
                   <Typography variant="body2">{issue.name}</Typography>
                 )}

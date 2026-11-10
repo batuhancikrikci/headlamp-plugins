@@ -29,16 +29,16 @@ What the plugins have in common:
 
 ### Plugins
 
-| Plugin               | Description                                                                                           | Directory                                |
-| -------------------- | ----------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| **Agent Router**     | Envoy AI Gateway / Agent Router: AI routes, service backends, security and quota policies, MCP routes | [agentrouter](agentrouter/README.md)     |
-| **Cilium**           | Network policies, endpoints and identities, BGP, LB IPAM, egress gateway and Envoy configuration      | [cilium](cilium/README.md)               |
-| **Envoy Gateway**    | Envoy Gateway policies and resources, relationships, wizards                                          | [envoy-gateway](envoy-gateway/README.md) |
-| **Gateway API**      | Overview, topology, review with dry-run and wizards for the Gateway API                               | [gateway](gateway/README.md)             |
-| **Headlamp Plus**    | Headlamp's original themes, cluster, workloads and namespace dashboards, same-tab OIDC sign-in        | [headlamp-plus](headlamp-plus/README.md) |
-| **Inference Hub**    | AI/LLM platform console for KServe, llm-d, vLLM and the NVIDIA GPU Operator                           | [inference-hub](inference-hub/README.md) |
-| **Monitoring**       | kube-prometheus-stack / Prometheus Operator: alerts, silences, PromQL, targets                        | [monitoring](monitoring/README.md)       |
-| **Multicluster Hub** | Open Cluster Management hubs: clusters, placements, ManifestWorks, add-ons, GitOps                    | [multi-cluster](multi-cluster/README.md) |
+| Plugin               | Description                                                                                                                                                 | Directory                                |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| **Agent Router**     | Envoy AI Gateway / Agent Router: AI routes, service backends, security and quota policies, MCP routes                                                       | [agentrouter](agentrouter/README.md)     |
+| **Cilium**           | Network policies, endpoints and identities, BGP, LB IPAM, egress gateway and Envoy configuration                                                            | [cilium](cilium/README.md)               |
+| **Envoy Gateway**    | Envoy Gateway policies and resources, relationships, wizards                                                                                                | [envoy-gateway](envoy-gateway/README.md) |
+| **Gateway API**      | Overview, topology, review with dry-run and wizards for the Gateway API                                                                                     | [gateway](gateway/README.md)             |
+| **Headlamp Plus**    | Headlamp's original themes, cluster, workloads, namespace, node, storage, security, network, jobs, upgrade and efficiency dashboards, same-tab OIDC sign-in | [headlamp-plus](headlamp-plus/README.md) |
+| **Inference Hub**    | AI/LLM platform console for KServe, llm-d, vLLM and the NVIDIA GPU Operator                                                                                 | [inference-hub](inference-hub/README.md) |
+| **Monitoring**       | kube-prometheus-stack / Prometheus Operator: alerts, silences, PromQL, targets                                                                              | [monitoring](monitoring/README.md)       |
+| **Multicluster Hub** | Open Cluster Management hubs: clusters, placements, ManifestWorks, add-ons, GitOps                                                                          | [multi-cluster](multi-cluster/README.md) |
 
 ### Repository layout
 
@@ -151,16 +151,16 @@ Eklentilerin ortak özellikleri:
 
 ### Eklentiler
 
-| Eklenti              | Açıklama                                                                                                           | Dizin                                    |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------- |
-| **Agent Router**     | Envoy AI Gateway / Agent Router: AI route'ları, servis backend'leri, güvenlik ve kota politikaları, MCP route'ları | [agentrouter](agentrouter/README.md)     |
-| **Cilium**           | Ağ politikaları, uç noktalar ve kimlikler, BGP, LB IPAM, egress gateway ve Envoy yapılandırması                    | [cilium](cilium/README.md)               |
-| **Envoy Gateway**    | Envoy Gateway politikaları ve kaynakları, ilişkiler, sihirbazlar                                                   | [envoy-gateway](envoy-gateway/README.md) |
-| **Gateway API**      | Gateway API için genel bakış, topoloji, dry-run ile inceleme, sihirbazlar                                          | [gateway](gateway/README.md)             |
-| **Headlamp Plus**    | Headlamp'in orijinal temaları, küme, iş yükü ve namespace panoları, aynı sekmede OIDC girişi                       | [headlamp-plus](headlamp-plus/README.md) |
-| **Inference Hub**    | KServe, llm-d, vLLM ve NVIDIA GPU Operator için AI/LLM platform konsolu                                            | [inference-hub](inference-hub/README.md) |
-| **Monitoring**       | kube-prometheus-stack / Prometheus Operator: alarmlar, silence'lar, PromQL, hedefler                               | [monitoring](monitoring/README.md)       |
-| **Multicluster Hub** | Open Cluster Management hub'ı: kümeler, placement'lar, ManifestWork, eklentiler, GitOps                            | [multi-cluster](multi-cluster/README.md) |
+| Eklenti              | Açıklama                                                                                                                                               | Dizin                                    |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------- |
+| **Agent Router**     | Envoy AI Gateway / Agent Router: AI route'ları, servis backend'leri, güvenlik ve kota politikaları, MCP route'ları                                     | [agentrouter](agentrouter/README.md)     |
+| **Cilium**           | Ağ politikaları, uç noktalar ve kimlikler, BGP, LB IPAM, egress gateway ve Envoy yapılandırması                                                        | [cilium](cilium/README.md)               |
+| **Envoy Gateway**    | Envoy Gateway politikaları ve kaynakları, ilişkiler, sihirbazlar                                                                                       | [envoy-gateway](envoy-gateway/README.md) |
+| **Gateway API**      | Gateway API için genel bakış, topoloji, dry-run ile inceleme, sihirbazlar                                                                              | [gateway](gateway/README.md)             |
+| **Headlamp Plus**    | Headlamp'in orijinal temaları, küme, iş yükü, namespace, node, depolama, güvenlik, ağ, job, yükseltme ve verimlilik panoları, aynı sekmede OIDC girişi | [headlamp-plus](headlamp-plus/README.md) |
+| **Inference Hub**    | KServe, llm-d, vLLM ve NVIDIA GPU Operator için AI/LLM platform konsolu                                                                                | [inference-hub](inference-hub/README.md) |
+| **Monitoring**       | kube-prometheus-stack / Prometheus Operator: alarmlar, silence'lar, PromQL, hedefler                                                                   | [monitoring](monitoring/README.md)       |
+| **Multicluster Hub** | Open Cluster Management hub'ı: kümeler, placement'lar, ManifestWork, eklentiler, GitOps                                                                | [multi-cluster](multi-cluster/README.md) |
 
 ### Depo yapısı
 

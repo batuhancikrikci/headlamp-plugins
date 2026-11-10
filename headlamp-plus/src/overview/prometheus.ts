@@ -107,6 +107,20 @@ export function promRange(
   );
 }
 
+export interface InstantSample {
+  metric: Record<string, string>;
+  value: [number, string];
+}
+
+/** Instant query at the current time. */
+export function promQuery(
+  endpoint: PrometheusEndpoint,
+  promql: string,
+  cluster: string
+): Promise<InstantSample[]> {
+  return query<InstantSample[]>(endpoint, `query?query=${encodeURIComponent(promql)}`, cluster);
+}
+
 const found = new Map<string, Promise<PrometheusEndpoint | null>>();
 
 /** Finds a Prometheus service that answers PromQL (cached per cluster). */

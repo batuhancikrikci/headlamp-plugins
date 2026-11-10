@@ -4,8 +4,8 @@ version: 0.1.0
 name: headlamp-plus
 displayName: Headlamp Plus
 createdAt: "2026-10-20T13:26:26Z"
-digest: "1b8bc61c48b0e7ea26c5a18c0517b2dc9354770c553ac1a154e1c925fec3a19f"
-description: "Headlamp Plus: Headlamp's original light and dark themes as the only choices, an English-only UI, cluster, workloads and namespace dashboards with usage trends and same-tab OIDC sign-in"
+digest: "4ad6abdf2e9d0c41ff755a4ad93fd3739ca92978cd3b7a6df91ed172d6693e2f"
+description: "Headlamp Plus: Headlamp's original light and dark themes as the only choices, an English-only UI, cluster, workloads, namespace and node dashboards with usage trends, storage, security, network, jobs, upgrade readiness and resource efficiency dashboards and same-tab OIDC sign-in"
 logoPath: docs/logo.png
 license: Apache-2.0
 category: monitoring-logging
