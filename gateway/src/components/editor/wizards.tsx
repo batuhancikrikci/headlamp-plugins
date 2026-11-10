@@ -1,5 +1,5 @@
 /**
- * Step-by-step wizards for the kinds that benefit from guidance: Gateway and HTTPRoute.
+ * Step-by-step wizards for the kinds that benefit from guidance: Gateway, HTTPRoute and GRPCRoute.
  *
  * A wizard is the form of the kind cut into steps. It edits the same resource object through the
  * form context, so the YAML tab stays in sync and the result goes through the same review step.
@@ -20,6 +20,7 @@ import { useGatewayApiData } from '../../data/GatewayApiData';
 import { KindName } from '../../resources/registry';
 import {
   BackendRef,
+  GRPCRouteMatch,
   HTTPRouteFilter,
   HTTPRouteMatch,
   HTTPRouteRule,
@@ -31,14 +32,15 @@ import {
   allowedRouteKinds,
   describeAllowedNamespaces,
   describeFilter,
+  describeGRPCMatch,
   describeHTTPMatch,
   describeListener,
 } from '../../utils/describe';
-import { newHTTPRule, newListener } from '../../utils/drafts';
+import { newGRPCRule, newHTTPRule, newListener } from '../../utils/drafts';
 import { asArray, asRecord, asString, isPlainObject } from '../../utils/objects';
 import { formatRef, resolveBackendRef, routeParentRefs } from '../../utils/refs';
 import { controllerLabel } from '../../utils/templates';
-import { HTTP_FILTER_TYPES } from '../../utils/validation';
+import { GRPC_FILTER_TYPES, HTTP_FILTER_TYPES } from '../../utils/validation';
 import { HealthChip } from '../common/Status';
 import { ArrayInput, FieldGrid, FormSection, TextInput } from './form/Fields';
 import { useFieldIssue, useForm } from './form/FormContext';
@@ -54,7 +56,13 @@ import {
   MetadataSection,
   ParentRefsSection,
 } from './form/sections';
-import { GatewayAdvancedFields, HTTPRuleAdvancedFields, httpRuleTitle } from './forms';
+import {
+  GatewayAdvancedFields,
+  GRPCMatchesEditor,
+  grpcRuleTitle,
+  HTTPRuleAdvancedFields,
+  httpRuleTitle,
+} from './forms';
 import type { WizardProps } from './ResourceEditor';
 import { ItemCards, SummaryList, WizardShell, WizardStep } from './WizardShell';
 
@@ -338,7 +346,14 @@ function ListenerHostnameHint() {
   );
 }
 
-function HTTPRouteSummary() {
+/** Summary of an HTTPRoute or GRPCRoute: parents, hostnames and rules. */
+function RouteSummary({
+  describeMatch,
+  allLabel,
+}: {
+  describeMatch: (match: unknown) => string;
+  allLabel: string;
+}) {
   const { value } = useForm();
   const namespace = value.metadata?.namespace;
   const spec = asRecord(value.spec);
@@ -387,10 +402,7 @@ function HTTPRouteSummary() {
                     </strong>
                     <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
                       <li>
-                        Match:{' '}
-                        {matches.length
-                          ? matches.map(describeHTTPMatch).join(' | ')
-                          : 'all requests'}
+                        Match: {matches.length ? matches.map(describeMatch).join(' | ') : allLabel}
                       </li>
                       {filters.map((filter, filterIndex) => (
                         <li key={filterIndex}>{describeFilter(filter)}</li>
@@ -527,7 +539,135 @@ function HTTPRouteWizard({ onReview, onRevealErrors }: WizardProps) {
   return (
     <WizardShell
       steps={steps}
-      summary={<HTTPRouteSummary />}
+      summary={
+        <RouteSummary
+          describeMatch={match => describeHTTPMatch(match as HTTPRouteMatch)}
+          allLabel="all requests"
+        />
+      }
+      onReview={onReview}
+      onRevealErrors={onRevealErrors}
+      reviewLabel="Review and create"
+    />
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
+// GRPCRoute
+// ---------------------------------------------------------------------------------------------
+
+function GRPCRouteWizard({ onReview, onRevealErrors }: WizardProps) {
+  const { value } = useForm();
+  const namespace = value.metadata?.namespace;
+
+  const steps: WizardStep[] = [
+    {
+      id: 'parents',
+      label: 'Parents',
+      description:
+        'Name the route and choose the Gateway that should serve it. gRPC runs over HTTP/2, so the route attaches to HTTP or HTTPS listeners; the preview shows whether they accept a GRPCRoute from this namespace.',
+      owns: path => ownsMetadata(path) || path.startsWith('spec.parentRefs'),
+      content: (
+        <>
+          <MetadataSection namespaced />
+          <ParentRefsSection />
+        </>
+      ),
+    },
+    {
+      id: 'hostnames',
+      label: 'Hostnames',
+      optional: true,
+      owns: path => path.startsWith('spec.hostnames'),
+      content: (
+        <>
+          <ListenerHostnameHint />
+          <HostnamesSection />
+        </>
+      ),
+    },
+    {
+      id: 'methods',
+      label: 'Methods',
+      description:
+        'Each rule handles the gRPC calls that satisfy any of its matches. A match names the fully qualified service (for example "shop.v1.Cart") and optionally one method; leave the method empty to match every method of the service. Without matches a rule takes every call.',
+      owns: path => /^spec\.rules(\.\d+(\.(name|matches.*))?)?$/.test(path),
+      content: (
+        <ArrayInput<HTTPRouteRule>
+          path="spec.rules"
+          itemLabel="rule"
+          keepEmpty
+          min={1}
+          max={16}
+          itemTitle={grpcRuleTitle}
+          newItem={newGRPCRule}
+          renderItem={rulePath => (
+            <Stack spacing={2}>
+              <FieldGrid>
+                <TextInput path={`${rulePath}.name`} label="Rule name" help="Optional" />
+              </FieldGrid>
+              <GRPCMatchesEditor path={`${rulePath}.matches`} />
+            </Stack>
+          )}
+        />
+      ),
+    },
+    {
+      id: 'filters',
+      label: 'Filters',
+      optional: true,
+      description:
+        'Filters change the call on its way: add, set or remove request and response headers, or mirror the calls to another backend.',
+      owns: path => /^spec\.rules\.\d+\.filters/.test(path),
+      content: (
+        <ItemCards<HTTPRouteRule>
+          path="spec.rules"
+          title={grpcRuleTitle}
+          empty={<Alert severity="info">Add a rule first.</Alert>}
+        >
+          {rulePath => (
+            <FiltersEditor
+              path={`${rulePath}.filters`}
+              types={GRPC_FILTER_TYPES}
+              namespace={namespace}
+            />
+          )}
+        </ItemCards>
+      ),
+    },
+    {
+      id: 'backends',
+      label: 'Backends',
+      description:
+        'Choose the Services that serve the matching calls. The gateway talks HTTP/2 to them; with several backends, calls are split by weight.',
+      owns: path => /^spec\.rules\.\d+\.(backendRefs|sessionPersistence)/.test(path),
+      content: (
+        <ItemCards<HTTPRouteRule>
+          path="spec.rules"
+          title={grpcRuleTitle}
+          empty={<Alert severity="info">Add a rule first.</Alert>}
+        >
+          {rulePath => (
+            <BackendRefsEditor
+              path={`${rulePath}.backendRefs`}
+              namespace={namespace}
+              defaultPort={50051}
+            />
+          )}
+        </ItemCards>
+      ),
+    },
+  ];
+
+  return (
+    <WizardShell
+      steps={steps}
+      summary={
+        <RouteSummary
+          describeMatch={match => describeGRPCMatch(match as GRPCRouteMatch)}
+          allLabel="all calls"
+        />
+      }
       onReview={onReview}
       onRevealErrors={onRevealErrors}
       reviewLabel="Review and create"
@@ -539,4 +679,5 @@ function HTTPRouteWizard({ onReview, onRevealErrors }: WizardProps) {
 export const WIZARDS: Partial<Record<KindName, React.ComponentType<WizardProps>>> = {
   Gateway: GatewayWizard,
   HTTPRoute: HTTPRouteWizard,
+  GRPCRoute: GRPCRouteWizard,
 };

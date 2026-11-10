@@ -85,6 +85,7 @@ Events are shown on every detail page.
 - **Wizards**:
   - Gateway: class → listeners → TLS → allowed routes → summary.
   - HTTPRoute: parents → hostnames → matches → filters → backends → summary.
+  - GRPCRoute: parents → hostnames → methods (service and method) → filters → backends → summary.
   - **Expose a Service**: Service → existing or new Gateway → route. Creates the HTTPRoute, the
     Gateway when needed, and the ReferenceGrants required when namespaces differ.
 - **Review before apply**: client-side validation, a **server-side dry-run** (with strict field
@@ -392,6 +393,7 @@ Her detay sayfasında olaylar gösterilir.
 - **Sihirbazlar**:
   - Gateway: sınıf → dinleyiciler → TLS → izin verilen route'lar → özet.
   - HTTPRoute: üstler → hostname'ler → eşleşmeler → filtreler → backend'ler → özet.
+  - GRPCRoute: üstler → hostname'ler → metotlar (servis ve metot) → filtreler → backend'ler → özet.
   - **Expose a Service**: Service → var olan ya da yeni Gateway → route. HTTPRoute'u, gerekirse
     Gateway'i ve namespace'ler farklıysa gereken ReferenceGrant'leri oluşturur.
 - **Uygulamadan önce inceleme**: istemci tarafı doğrulama, **sunucu tarafı dry-run** (sıkı alan

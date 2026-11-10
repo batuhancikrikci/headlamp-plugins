@@ -257,6 +257,10 @@ export function httpRuleTitle(rule: HTTPRouteRule, index: number): string {
   return ruleTitle(rule, index, match => describeHTTPMatch(match as never));
 }
 
+export function grpcRuleTitle(rule: HTTPRouteRule, index: number): string {
+  return ruleTitle(rule, index, match => describeGRPCMatch(match as never));
+}
+
 function HTTPRouteForm() {
   const namespace = useNamespace();
   return (
@@ -317,7 +321,7 @@ function HTTPRouteForm() {
   );
 }
 
-function GRPCMatchesEditor({ path }: { path: string }) {
+export function GRPCMatchesEditor({ path }: { path: string }) {
   return (
     <ArrayInput<GRPCRouteMatch>
       path={path}
@@ -375,9 +379,7 @@ function GRPCRouteForm() {
           min={1}
           max={16}
           collapsible
-          itemTitle={(rule, index) =>
-            ruleTitle(rule, index, match => describeGRPCMatch(match as never))
-          }
+          itemTitle={grpcRuleTitle}
           newItem={newGRPCRule}
           renderItem={rulePath => (
             <Stack spacing={2.5}>
