@@ -1,6 +1,6 @@
 import { Icon } from '@iconify/react';
 import { NameValueTable, SectionBox } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
-import { Box, Button, Grid, Step, StepButton, Stepper, Typography } from '@mui/material';
+import { Alert, Box, Button, Grid, Step, StepButton, Stepper, Typography } from '@mui/material';
 import React from 'react';
 import { useHistory, useLocation, useParams } from 'react-router-dom';
 import { Discovery, isServed, locationsOf } from '../../api/discovery';
@@ -30,7 +30,7 @@ import {
   totalGpus,
   validateStep,
 } from './deployModel';
-import { formFromEndpoint } from './editModel';
+import { editableContentChanged, formFromEndpoint } from './editModel';
 import { EditReview } from './EditReview';
 import { ResourcesStep } from './ResourcesStep';
 import { ScalingStep } from './ScalingStep';
@@ -521,6 +521,23 @@ function EditWizard({
     });
   }, [state, item.data, catalogReady, caches.items, slug]);
 
+  // The endpoint keeps being watched while it is edited. A newer version that only differs in
+  // status (KServe updates it all the time) replaces the live object silently, so saving uses its
+  // resourceVersion; a change to what the edit writes, or a deletion, is shown instead.
+  const latest = item.data;
+  const deleted = !!state && isNotFound(item.error);
+  const changed = !!state && !!latest && editableContentChanged(state.live, latest);
+  React.useEffect(() => {
+    if (!state || !latest || changed || deleted) return;
+    if (latest.metadata.resourceVersion !== state.live.metadata.resourceVersion) {
+      setState(s => s && { ...s, live: latest });
+    }
+  }, [state, latest, changed, deleted]);
+  const reload = () => {
+    setDraft(null);
+    setState(null);
+  };
+
   const back = () => history.push(endpointUrl(slug, namespace, name));
   if (!state) {
     if (isNotFound(item.error)) {
@@ -560,22 +577,48 @@ function EditWizard({
     );
   }
   const initial = draft || state.original;
-  return view === 'wizard' ? (
-    <Wizard
-      key="wizard"
-      discovery={discovery}
-      initial={initial}
-      edit={state}
-      onSwitch={switchTo('form')}
-    />
-  ) : (
-    <EditForm
-      key="form"
-      discovery={discovery}
-      initial={initial}
-      edit={state}
-      onSwitch={switchTo('wizard')}
-    />
+  const banner = deleted ? (
+    <Alert severity="error" sx={{ mb: 2 }}>
+      {t('The endpoint was deleted while you were editing it. It can no longer be saved.')}
+    </Alert>
+  ) : changed ? (
+    <Alert
+      severity="warning"
+      sx={{ mb: 2 }}
+      action={
+        <Button color="inherit" size="small" onClick={reload}>
+          {t('Reload')}
+        </Button>
+      }
+    >
+      {t(
+        'Someone changed this endpoint while you were editing it, so saving will fail. Reload starts again from the current version; the changes you entered here are lost.'
+      )}
+    </Alert>
+  ) : null;
+  const editor =
+    view === 'wizard' ? (
+      <Wizard
+        key="wizard"
+        discovery={discovery}
+        initial={initial}
+        edit={state}
+        onSwitch={switchTo('form')}
+      />
+    ) : (
+      <EditForm
+        key="form"
+        discovery={discovery}
+        initial={initial}
+        edit={state}
+        onSwitch={switchTo('wizard')}
+      />
+    );
+  return (
+    <>
+      {banner}
+      {editor}
+    </>
   );
 }
 

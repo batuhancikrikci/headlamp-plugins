@@ -12,6 +12,7 @@ import {
 import {
   applyFormToEndpoint,
   diffHunks,
+  editableContentChanged,
   formChanges,
   formFromEndpoint,
   lineDiff,
@@ -400,5 +401,25 @@ describe('withoutEndpoint', () => {
     expect(
       withoutEndpoint([node], { kind: 'LLMInferenceService', name: 'qwen', namespace: 'other' })[0]
     ).toBe(node);
+  });
+});
+
+describe('editableContentChanged', () => {
+  it('ignores status updates and bookkeeping fields', () => {
+    const before = liveLlm();
+    const after = JSON.parse(JSON.stringify(before));
+    after.metadata.resourceVersion = '999';
+    after.metadata.managedFields = [{ manager: 'kserve' }];
+    after.status = { conditions: [{ type: 'Ready', status: 'False' }] };
+    expect(editableContentChanged(before, after)).toBe(false);
+  });
+
+  it('notices changes to the spec, labels and annotations', () => {
+    const spec = JSON.parse(JSON.stringify(liveLlm()));
+    spec.spec.replicas = 7;
+    expect(editableContentChanged(liveLlm(), spec)).toBe(true);
+    const labels = JSON.parse(JSON.stringify(liveLlm()));
+    labels.metadata.labels = { ...(labels.metadata.labels || {}), team: 'b' };
+    expect(editableContentChanged(liveLlm(), labels)).toBe(true);
   });
 });

@@ -250,6 +250,24 @@ export function writableCopy(obj: KubeJson): KubeJson {
   return copy;
 }
 
+/**
+ * Whether the content an edit writes (spec, labels, annotations, …) differs between two versions
+ * of an endpoint. Status updates and the bookkeeping fields of metadata are ignored: KServe
+ * updates the status all the time, and those changes neither conflict with an edit nor need the
+ * user's attention.
+ */
+export function editableContentChanged(before: KubeJson, after: KubeJson): boolean {
+  const content = (obj: KubeJson) => {
+    const copy = writableCopy(obj);
+    const meta = copy.metadata as Json;
+    for (const key of ['resourceVersion', 'generation', 'creationTimestamp', 'uid']) {
+      delete meta[key];
+    }
+    return copy;
+  };
+  return !same(content(before), content(after));
+}
+
 type FormKey = keyof DeployForm;
 
 function changed(original: DeployForm, form: DeployForm, ...keys: FormKey[]): boolean {

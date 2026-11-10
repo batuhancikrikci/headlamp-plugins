@@ -6,6 +6,11 @@ All notable changes to the Inference Hub plugin are documented here. The format 
 
 ## [0.4.0] — unreleased
 
+### Added
+
+- The edit form and the edit wizard warn when someone changes or deletes the endpoint while it
+  is being edited; Reload starts again from the current version.
+
 ### Removed
 
 - Benchmark no longer keeps the last runs in the browser, and removes the runs stored by 0.3.0.
@@ -13,6 +18,8 @@ All notable changes to the Inference Hub plugin are documented here. The format 
 
 ### Fixed
 
+- Saving an edit no longer fails when KServe only updated the status of the endpoint since the
+  edit was opened.
 - Lists and objects no page uses any more are dropped from memory after five minutes, so a long
   session no longer keeps every list it ever opened.
 
