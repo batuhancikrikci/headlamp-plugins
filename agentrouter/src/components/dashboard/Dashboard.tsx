@@ -32,6 +32,7 @@ import {
 } from '../../utils/versionDiscovery';
 import { formatRelativeTime, PluginResourceLink, SchemaChip } from '../common/SharedComponents';
 import { collectIssues, HealthCounts, healthCounts, Issue, providerMix } from './overview';
+import { QuotaUsagePanel, TokenUsagePanel } from './TokenUsage';
 
 // ─── Types & building blocks ────────────────────────────────────────────────
 
@@ -855,6 +856,15 @@ function DashboardContent() {
         </Panel>
         <Panel title="Provider mix" icon="mdi:cloud-outline">
           <ProviderMix backends={backends} />
+        </Panel>
+      </Box>
+
+      <Box sx={twoColumns}>
+        <Panel title="Token usage" icon="mdi:counter">
+          <TokenUsagePanel />
+        </Panel>
+        <Panel title="Quota usage (estimated)" icon="mdi:gauge">
+          <QuotaUsagePanel policies={(quotas || []).map(q => q.jsonData)} />
         </Panel>
       </Box>
     </Box>

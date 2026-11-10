@@ -25,6 +25,13 @@ and MCP traffic on Kubernetes.
 - **Overview** — resource counts and health, a "needs attention" list (rejected resources, routes
   pointing at missing backends, duplicate security policies, quotas no route can match, …), model
   catalog, provider mix and shortcuts to the setup wizards.
+- **Token usage** — input and output tokens and requests per model over the last hour, day or
+  week, from the `gen_ai_client_token_usage` metrics Agent Router exports, and the estimated
+  fill of every `QuotaPolicy` default bucket and service quota (also on the policy page). The
+  quota service does not export its counters, so the fill is the total tokens of the backend and
+  model over the quota window; quotas with a custom cost expression or a one-second window are
+  not estimated. Prometheus (or Thanos, Mimir, VictoriaMetrics) is found automatically through
+  the Kubernetes service proxy, or entered as `namespace/service:port`.
 - **List and detail views** for every kind, with cross-references between routes, backends,
   policies and gateways.
 - **Wizards and forms** to create and edit every kind (for example "Connect a provider" creates
@@ -156,6 +163,7 @@ Sections a user cannot access show an error or stay empty.
 | InferencePools (optional)   | `inference.networking.k8s.io` | `inferencepools`                                                                                                  | `list`, `watch`                                               |
 | Discovery in the wizards    | core (`""`)                   | `namespaces`, `services`, `configmaps`                                                                            | `list`, `watch`                                               |
 | Provider credentials        | core (`""`)                   | `secrets`                                                                                                         | `get`, `list`, `watch`, `create`, `update`, `patch`, `delete` |
+| Token usage (Prometheus)    | core (`""`)                   | `services` (all namespaces, to find Prometheus); `services/proxy` in the Prometheus namespace                     | `list`; `get`                                                 |
 
 Read-only users only need the first row (plus `customresourcedefinitions` `get` for the
 documentation tab). For the objects the wizards generate, `get` checks that a name is free, `patch`
@@ -259,6 +267,13 @@ Kubernetes üzerinde LLM ve MCP trafiğini yönetmek için bir **Agent Router** 
 - **Genel bakış** — kaynak sayıları ve sağlık durumu; "dikkat edilmesi gerekenler" listesi (reddedilen
   kaynaklar, eksik backend'lere işaret eden route'lar, yinelenen güvenlik politikaları, hiçbir route'un
   eşleşemediği kotalar, …), model kataloğu, sağlayıcı dağılımı ve kurulum sihirbazlarına kısayollar.
+- **Token kullanımı** — Agent Router'ın yayınladığı `gen_ai_client_token_usage` metriklerinden son bir
+  saat, gün ya da haftada model başına girdi ve çıktı token'ları ile istek sayısı; ayrıca her
+  `QuotaPolicy` varsayılan kovası ve servis kotası için tahmini doluluk (politika sayfasında da).
+  Kota servisi sayaçlarını yayınlamadığı için doluluk, backend ve modelin kota penceresindeki toplam
+  token'ıdır; özel maliyet ifadeli ya da bir saniyelik pencereli kotalar tahmin edilmez. Prometheus
+  (veya Thanos, Mimir, VictoriaMetrics) Kubernetes service proxy'si üzerinden otomatik bulunur ya da
+  `namespace/service:port` olarak girilir.
 - Her tür için **liste ve detay görünümleri**; route, backend, politika ve gateway'ler arasında
   çapraz referanslar.
 - Her türü oluşturmak ve düzenlemek için **sihirbazlar ve formlar** (örneğin "Connect a provider"
@@ -389,6 +404,7 @@ yoktur. Kullanıcının erişemediği bölümler hata gösterir ya da boş kalı
 | InferencePool'lar (isteğe bağlı)      | `inference.networking.k8s.io` | `inferencepools`                                                                                                  | `list`, `watch`                                               |
 | Sihirbazlarda keşif                   | core (`""`)                   | `namespaces`, `services`, `configmaps`                                                                            | `list`, `watch`                                               |
 | Sağlayıcı kimlik bilgileri            | core (`""`)                   | `secrets`                                                                                                         | `get`, `list`, `watch`, `create`, `update`, `patch`, `delete` |
+| Token kullanımı (Prometheus)          | core (`""`)                   | `services` (Prometheus'u bulmak için tüm namespace'ler); Prometheus namespace'inde `services/proxy`               | `list`; `get`                                                 |
 
 Salt okunur kullanıcılara yalnızca ilk satır yeterlidir (dokümantasyon sekmesi için ayrıca
 `customresourcedefinitions` üzerinde `get` yetkisi gerekir). Sihirbazların ürettiği nesnelerde `get` ad

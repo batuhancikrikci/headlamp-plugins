@@ -18,6 +18,7 @@ import {
   SchemaChip,
   TargetRefChip,
 } from '../common/SharedComponents';
+import { QuotaUsagePanel } from '../dashboard/TokenUsage';
 import { modelSuggestions } from './quotaForm';
 
 function ruleSelectorSummary(rule: QuotaRule): React.ReactNode {
@@ -154,6 +155,14 @@ export function QuotaPolicyDetail() {
             {
               id: 'limitedBackends',
               section: <LimitedBackendsSection policy={item} />,
+            },
+            {
+              id: 'quota-usage',
+              section: (
+                <SectionBox title="Quota usage (estimated)">
+                  <QuotaUsagePanel policies={[item.jsonData]} />
+                </SectionBox>
+              ),
             },
             {
               id: 'conditions',

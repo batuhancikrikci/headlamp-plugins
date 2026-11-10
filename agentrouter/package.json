@@ -1,6 +1,6 @@
 {
   "name": "agentrouter",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Headlamp plugin for Envoy AI Gateway (Agent Router) — manage AIGatewayRoute, AIServiceBackend, BackendSecurityPolicy, MCPRoute, QuotaPolicy, and GatewayConfig CRDs",
   "keywords": [
     "headlamp",
