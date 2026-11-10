@@ -1,10 +1,10 @@
 # Artifact Hub metadata of the Agent Router plugin. The release workflow updates version, createdAt,
 # archive-url and archive-checksum when a tag named agentrouter-v<version> is pushed.
-version: 0.2.0
+version: 0.3.0
 name: agentrouter
 displayName: Agent Router
-createdAt: "2026-10-20T13:26:50Z"
-digest: "6b68e5093cbb526223562e461dbb875e16ca26d1e1ebf6b2005af87cd4bcff83"
+createdAt: "2026-11-10T16:45:06Z"
+digest: "77dd79cbde043305698e97260dbd07b16e0fa60240aad28487e9736e1dc2f2fd"
 description: 'Headlamp plugin for Envoy AI Gateway (Agent Router) — manage AIGatewayRoute, AIServiceBackend, BackendSecurityPolicy, MCPRoute, QuotaPolicy, and GatewayConfig CRDs'
 logoPath: docs/logo.png
 license: Apache-2.0
@@ -36,7 +36,7 @@ install: |
   ## Headlamp desktop
 
   Open the plugin catalog in Headlamp, search for "Agent Router" and install it. Alternatively,
-  download `agentrouter-0.2.0.tar.gz` from the GitHub release and extract it into the Headlamp plugins
+  download `agentrouter-0.3.0.tar.gz` from the GitHub release and extract it into the Headlamp plugins
   directory (for example `~/.config/Headlamp/plugins/` on Linux), then reload Headlamp.
 
   ## Headlamp in-cluster
@@ -50,13 +50,17 @@ install: |
       plugins:
         - name: agentrouter
           source: https://artifacthub.io/packages/headlamp/batuhancikrikci-headlamp-plugins/agentrouter
-          version: 0.2.0
+          version: 0.3.0
   ```
 changes:
   - kind: added
-    description: "First public release."
+    description: "Token usage on the overview: input and output tokens and requests per model over the last hour, day or week, from the `gen_ai_client_token_usage` metrics Agent Router exports."
+  - kind: added
+    description: "Estimated quota fill on the overview and the QuotaPolicy page, for default buckets and service quotas: the total tokens of the backend and model over the quota window, since the quota service does not export its counters. Quotas with a custom cost expression or a one-second window are shown without an estimate."
+  - kind: added
+    description: "Prometheus (or Thanos, Mimir, VictoriaMetrics) is found automatically through the Kubernetes service proxy; another service can be entered as `namespace/service:port` for the session."
 annotations:
-  headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/agentrouter-v0.2.0/agentrouter-0.2.0.tar.gz
-  headlamp/plugin/archive-checksum: sha256:f880ef4f47f795dcca08c8d66dee9145c4b2cd23283323acd1b4d1c59b085523
+  headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/agentrouter-v0.3.0/agentrouter-0.3.0.tar.gz
+  headlamp/plugin/archive-checksum: sha256:20c1079fbd5061c55f33b4deaac30853cd803f002c4c0ea5c0fac366a35f2445
   headlamp/plugin/version-compat: '>=0.45.0'
   headlamp/plugin/distro-compat: in-cluster,web,desktop
