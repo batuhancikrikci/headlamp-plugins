@@ -416,7 +416,8 @@ export function NamespaceOverview({ namespace }: { namespace: string }) {
   ];
 
   return (
-    <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 2, mb: 2 }}>
+    // px: 2 lines the dashboard up with the inset of Headlamp's own detail sections.
+    <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 2, mb: 2, px: 2 }}>
       <DashboardHeader
         icon="mdi:folder-outline"
         title={namespace}
