@@ -246,10 +246,40 @@ export async function resolveTarget(cluster: string, target: ChatTarget): Promis
   throw new ChatError(`No OpenAI-compatible API found (${errors.join('; ')})`);
 }
 
-export interface ChatMessage {
+/** Part of a multimodal user message (OpenAI format). */
+export type ContentPart =
+  | { type: 'text'; text: string }
+  | { type: 'image_url'; image_url: { url: string } };
+
+/** A function call the model asked for. */
+export interface ToolCall {
+  id: string;
+  name: string;
+  /** JSON text as the model produced it; it may be invalid. */
+  arguments: string;
+}
+
+/** A plain text message. */
+export interface TextMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
 }
+
+export type ChatMessage =
+  | TextMessage
+  | { role: 'user'; content: string | ContentPart[] }
+  | {
+      role: 'assistant';
+      content: string;
+      tool_calls: Array<{
+        id: string;
+        type: 'function';
+        function: { name: string; arguments: string };
+      }>;
+    }
+  | { role: 'tool'; tool_call_id: string; content: string };
+
+export type ToolChoice = 'auto' | 'none' | 'required';
 
 export interface ChatParams {
   /**
@@ -266,6 +296,9 @@ export interface ChatParams {
    * whose template reads it), so the model answers without thinking first.
    */
   thinking?: boolean;
+  /** Function definitions (OpenAI `tools`); sent only when not empty. */
+  tools?: unknown[];
+  toolChoice?: ToolChoice;
 }
 
 export interface Usage {
@@ -276,6 +309,7 @@ export interface Usage {
 export interface ChatResult {
   content: string;
   reasoning: string;
+  toolCalls: ToolCall[];
   usage: Usage;
   finishReason?: string;
   /** ms from send to the first content token (streaming only). */
@@ -303,9 +337,18 @@ export function requestBody(
     ...(params.modelDefaults ? {} : { temperature: params.temperature, top_p: params.topP }),
     max_tokens: params.maxTokens,
     ...(params.thinking === false ? { chat_template_kwargs: { enable_thinking: false } } : {}),
+    ...(params.tools?.length
+      ? { tools: params.tools, tool_choice: params.toolChoice || 'auto' }
+      : {}),
     stream,
     ...(stream && streamUsage ? { stream_options: { include_usage: true } } : {}),
   };
+}
+
+interface ToolCallJson {
+  index?: number;
+  id?: string | null;
+  function?: { name?: string | null; arguments?: string | null } | null;
 }
 
 interface ChunkJson {
@@ -314,11 +357,13 @@ interface ChunkJson {
       content?: string | null;
       reasoning_content?: string | null;
       reasoning?: string | null;
+      tool_calls?: ToolCallJson[] | null;
     };
     message?: {
       content?: string | null;
       reasoning_content?: string | null;
       reasoning?: string | null;
+      tool_calls?: ToolCallJson[] | null;
     };
     finish_reason?: string | null;
   }>;
@@ -363,7 +408,13 @@ export class SseParser {
 
 /** Applies a streamed or complete chunk to the accumulated result. */
 export function applyChunk(
-  acc: { content: string; reasoning: string; usage: Usage; finishReason?: string },
+  acc: {
+    content: string;
+    reasoning: string;
+    usage: Usage;
+    finishReason?: string;
+    toolCalls?: ToolCall[];
+  },
   json: ChunkJson
 ) {
   if (json.error) {
@@ -376,6 +427,15 @@ export function applyChunk(
     if (part.content) acc.content += part.content;
     const reasoning = part.reasoning_content || part.reasoning;
     if (reasoning) acc.reasoning += reasoning;
+    // Streamed calls arrive in pieces keyed by index: the id and name first, then the arguments.
+    (part.tool_calls || []).forEach((call, position) => {
+      const calls = (acc.toolCalls = acc.toolCalls || []);
+      const index = call.index ?? position;
+      const current = (calls[index] = calls[index] || { id: '', name: '', arguments: '' });
+      if (call.id) current.id = call.id;
+      if (call.function?.name) current.name += call.function.name;
+      if (call.function?.arguments) current.arguments += call.function.arguments;
+    });
     if (choice.finish_reason) acc.finishReason = choice.finish_reason;
   }
   if (json.usage) {
@@ -434,6 +494,7 @@ export async function chatCompletion(
     reasoning: '',
     usage: {} as Usage,
     finishReason: undefined as string | undefined,
+    toolCalls: [] as ToolCall[],
   };
 
   let response: Response;
@@ -480,6 +541,7 @@ export async function chatCompletion(
     callbacks.onDelta?.(acc.content, acc.reasoning);
     return {
       ...acc,
+      toolCalls: acc.toolCalls.filter(Boolean),
       totalMs: performance.now() - started,
       buffered: params.stream,
       streamed: false,
@@ -515,11 +577,177 @@ export async function chatCompletion(
     firstChunkAt !== undefined &&
     totalMs - (firstChunkAt - started) < 50 &&
     totalMs > 500;
-  return { ...acc, ttftMs: buffered ? undefined : ttftMs, totalMs, buffered, streamed: true };
+  return {
+    ...acc,
+    toolCalls: acc.toolCalls.filter(Boolean),
+    ttftMs: buffered ? undefined : ttftMs,
+    totalMs,
+    buffered,
+    streamed: true,
+  };
 }
 
 function shellQuote(value: string): string {
   return `'${value.replace(/'/g, `'\\''`)}'`;
+}
+
+interface PoolingJson {
+  data?: Array<{ index?: number; embedding?: number[] | string }>;
+  results?: Array<{ index?: number; relevance_score?: number }>;
+  usage?: { prompt_tokens?: number } | null;
+  error?: { message?: string } | string;
+}
+
+function poolingError(json: PoolingJson): ChatError | undefined {
+  if (!json.error) return undefined;
+  return new ChatError(
+    typeof json.error === 'string' ? json.error : json.error.message || 'Model error'
+  );
+}
+
+export interface EmbeddingsResult {
+  /** One vector per input, in input order. */
+  vectors: number[][];
+  promptTokens?: number;
+  totalMs: number;
+}
+
+/** Reads an /embeddings response (OpenAI format, float encoding). */
+export function parseEmbeddings(json: PoolingJson, totalMs = 0): EmbeddingsResult {
+  const error = poolingError(json);
+  if (error) throw error;
+  const data = [...(json.data || [])].sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
+  if (data.length === 0 || data.some(d => !Array.isArray(d.embedding))) {
+    throw new ChatError('The response contains no embeddings.');
+  }
+  return {
+    vectors: data.map(d => d.embedding as number[]),
+    promptTokens: json.usage?.prompt_tokens ?? undefined,
+    totalMs,
+  };
+}
+
+export interface RerankResult {
+  /** Documents by relevance, best first. */
+  results: Array<{ index: number; score: number }>;
+  promptTokens?: number;
+  totalMs: number;
+}
+
+/** Reads a /rerank response (Jina and Cohere compatible format that vLLM serves). */
+export function parseRerank(json: PoolingJson, totalMs = 0): RerankResult {
+  const error = poolingError(json);
+  if (error) throw error;
+  if (!Array.isArray(json.results)) throw new ChatError('The response contains no results.');
+  return {
+    results: json.results
+      .map(r => ({ index: r.index ?? 0, score: Number(r.relevance_score) }))
+      .sort((a, b) => b.score - a.score),
+    promptTokens: json.usage?.prompt_tokens ?? undefined,
+    totalMs,
+  };
+}
+
+async function pooling(
+  cluster: string,
+  resolved: ResolvedTarget,
+  endpoint: 'embeddings' | 'rerank',
+  body: unknown,
+  signal: AbortSignal
+): Promise<{ json: PoolingJson; totalMs: number }> {
+  const started = performance.now();
+  const response = await post(
+    cluster,
+    `${resolved.proxyBase}${resolved.apiPrefix}/${endpoint}`,
+    body,
+    signal,
+    false,
+    resolved.headersKey
+  );
+  const json = (await response.json()) as PoolingJson;
+  return { json, totalMs: performance.now() - started };
+}
+
+/** Embeds the texts with an embedding model (`/v1/embeddings`). */
+export async function createEmbeddings(
+  cluster: string,
+  resolved: ResolvedTarget,
+  model: string,
+  inputs: string[],
+  signal: AbortSignal
+): Promise<EmbeddingsResult> {
+  const { json, totalMs } = await pooling(
+    cluster,
+    resolved,
+    'embeddings',
+    { model, input: inputs, encoding_format: 'float' },
+    signal
+  );
+  return parseEmbeddings(json, totalMs);
+}
+
+/** Orders the documents by relevance to the query with a reranker model (`/v1/rerank`). */
+export async function rerankDocuments(
+  cluster: string,
+  resolved: ResolvedTarget,
+  model: string,
+  query: string,
+  documents: string[],
+  signal: AbortSignal
+): Promise<RerankResult> {
+  const { json, totalMs } = await pooling(
+    cluster,
+    resolved,
+    'rerank',
+    { model, query, documents },
+    signal
+  );
+  return parseRerank(json, totalMs);
+}
+
+/** The model does not serve the pooling API asked for (a chat model, or the wrong task). */
+export function isPoolingTaskError(message: string): boolean {
+  return /does not support|not supported|404|not found|task|runner|pooling/i.test(message);
+}
+
+/** Messages with inline images replaced by a short placeholder, for display and copying. */
+export function withoutImageData(messages: ChatMessage[]): ChatMessage[] {
+  return messages.map(
+    (m): ChatMessage =>
+      m.role === 'user' && Array.isArray(m.content)
+        ? {
+            role: 'user',
+            content: m.content.map(part =>
+              part.type === 'image_url' && part.image_url.url.startsWith('data:')
+                ? { type: 'image_url' as const, image_url: { url: '<base64 image data URL>' } }
+                : part
+            ),
+          }
+        : m
+  );
+}
+
+/** Messages for the model: the tool calls of the assistant in the OpenAI request format. */
+export function toolCallMessage(content: string, calls: ToolCall[]): ChatMessage {
+  return {
+    role: 'assistant',
+    content,
+    tool_calls: calls.map(c => ({
+      id: c.id,
+      type: 'function' as const,
+      function: { name: c.name, arguments: c.arguments },
+    })),
+  };
+}
+
+/** The server rejected tools because tool calling is not set up (vLLM needs a parser). */
+export function isToolSetupError(message: string): boolean {
+  return /tool.?choice|tool.?call.?parser|auto.?tool|tools? (is|are) not supported/i.test(message);
+}
+
+/** Error of a model that does not accept images. */
+export function isImageInputError(message: string): boolean {
+  return /multi.?modal|image|vision|image_url/i.test(message);
 }
 
 /** curl command for the same request. */
@@ -532,7 +760,11 @@ export function buildCurl(
   /** Extra header names; their values are left as placeholders. */
   headers: string[] = []
 ): string {
-  const body = JSON.stringify(requestBody(model, messages, params, params.stream), null, 2);
+  const body = JSON.stringify(
+    requestBody(model, withoutImageData(messages), params, params.stream),
+    null,
+    2
+  );
   const url = `${baseUrl.replace(/\/$/, '')}${apiPrefix}/chat/completions`;
   return [
     `curl ${params.stream ? '-N ' : ''}${url.startsWith('https') ? '-k ' : ''}${shellQuote(

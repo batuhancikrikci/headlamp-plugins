@@ -21,8 +21,12 @@ import {
   ChatMessage,
   ChatParams,
   ChatResult,
+  isImageInputError,
+  isToolSetupError,
   ResolvedTarget,
   resolveTarget,
+  ToolCall,
+  toolCallMessage,
 } from '../../api/openai';
 import { t } from '../../common/i18n';
 import { Markdown } from '../../components/common/Markdown';
@@ -37,16 +41,23 @@ import { CurlDialog } from './CurlDialog';
 
 export interface PaneMessage {
   id: number;
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'tool';
   content: string;
+  /** User: attached images as data URLs. */
+  images?: string[];
   reasoning?: string;
+  /** Assistant: functions the model asked to call. */
+  toolCalls?: ToolCall[];
+  /** Tool: the call this result answers. */
+  toolCallId?: string;
+  toolName?: string;
   pending?: boolean;
   error?: string;
-  result?: Omit<ChatResult, 'content' | 'reasoning'>;
+  result?: Omit<ChatResult, 'content' | 'reasoning' | 'toolCalls'>;
 }
 
 export interface ChatPaneHandle {
-  send: (text: string) => void;
+  send: (text: string, images?: string[]) => void;
   reset: () => void;
   stop: () => void;
 }
@@ -152,7 +163,129 @@ export function reasoningCutoffNotice(
       );
 }
 
-function MessageBubble({ message }: { message: PaneMessage }) {
+/** The conversation in the OpenAI request format: images as parts, tool calls and results. */
+export function paneHistory(systemPrompt: string, list: PaneMessage[]): ChatMessage[] {
+  const out: ChatMessage[] = systemPrompt.trim()
+    ? [{ role: 'system', content: systemPrompt.trim() }]
+    : [];
+  for (const m of list) {
+    if (m.error || m.pending) continue;
+    if (m.role === 'tool') {
+      out.push({ role: 'tool', tool_call_id: m.toolCallId || '', content: m.content });
+    } else if (m.role === 'assistant' && m.toolCalls?.length) {
+      out.push(toolCallMessage(splitThinking(m.content).answer, m.toolCalls));
+    } else if (m.role === 'user' && m.images?.length) {
+      out.push({
+        role: 'user',
+        content: [
+          ...(m.content ? [{ type: 'text' as const, text: m.content }] : []),
+          ...m.images.map(url => ({ type: 'image_url' as const, image_url: { url } })),
+        ],
+      });
+    } else if (m.content) {
+      out.push({ role: m.role, content: splitThinking(m.content).answer || m.content });
+    }
+  }
+  return out;
+}
+
+function prettyArguments(text: string): { text: string; valid: boolean } {
+  try {
+    return { text: JSON.stringify(JSON.parse(text || '{}'), null, 2), valid: true };
+  } catch {
+    return { text, valid: false };
+  }
+}
+
+/** The function calls of an answer, with inputs for their results while they are open. */
+function ToolCalls({
+  calls,
+  onResults,
+}: {
+  calls: ToolCall[];
+  onResults?: (results: string[]) => void;
+}) {
+  const [results, setResults] = React.useState<string[]>(() => calls.map(() => ''));
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 0.5 }}>
+      {calls.map((call, i) => {
+        const args = prettyArguments(call.arguments);
+        return (
+          <Paper key={call.id || i} variant="outlined" sx={{ p: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+              <Icon icon="mdi:function-variant" width={18} />
+              <Typography variant="body2" sx={{ fontFamily: 'monospace', fontWeight: 600 }}>
+                {call.name || t('(no name)')}
+              </Typography>
+              {!args.valid && (
+                <Chip size="small" color="warning" label={t('arguments are not valid JSON')} />
+              )}
+            </Box>
+            <Box
+              component="pre"
+              sx={{ m: 0, fontSize: '0.8rem', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
+            >
+              {args.text}
+            </Box>
+            {onResults && (
+              <TextField
+                fullWidth
+                multiline
+                size="small"
+                maxRows={6}
+                sx={{ mt: 1 }}
+                label={t('Result')}
+                placeholder={t('What the function returned, e.g. {"temperature": 21}')}
+                value={results[i]}
+                onChange={e =>
+                  setResults(list => list.map((r, j) => (j === i ? e.target.value : r)))
+                }
+              />
+            )}
+          </Paper>
+        );
+      })}
+      {onResults && (
+        <Box>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<Icon icon="mdi:keyboard-return" />}
+            disabled={results.some(r => !r.trim())}
+            onClick={() => onResults(results.map(r => r.trim()))}
+          >
+            {t('Send results to the model')}
+          </Button>
+        </Box>
+      )}
+    </Box>
+  );
+}
+
+function MessageBubble({
+  message,
+  onToolResults,
+}: {
+  message: PaneMessage;
+  onToolResults?: (results: string[]) => void;
+}) {
+  if (message.role === 'tool') {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1.5 }}>
+        <Paper variant="outlined" sx={{ px: 1.5, py: 1, maxWidth: '88%', minWidth: 0 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+            {t('Result of {{name}}', { name: message.toolName || t('the function') })}
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'monospace' }}
+          >
+            {message.content}
+          </Typography>
+        </Paper>
+      </Box>
+    );
+  }
   const isUser = message.role === 'user';
   const split = splitThinking(message.content);
   const reasoning = [message.reasoning, split.reasoning].filter(Boolean).join('\n');
@@ -171,9 +304,26 @@ function MessageBubble({ message }: { message: PaneMessage }) {
         }}
       >
         {isUser ? (
-          <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-            {message.content}
-          </Typography>
+          <>
+            {message.images && message.images.length > 0 && (
+              <Box
+                sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mb: message.content ? 1 : 0 }}
+              >
+                {message.images.map((url, i) => (
+                  <Box
+                    key={i}
+                    component="img"
+                    src={url}
+                    alt={t('Attached image {{n}}', { n: i + 1 })}
+                    sx={{ maxHeight: 120, maxWidth: 200, borderRadius: 1, objectFit: 'cover' }}
+                  />
+                ))}
+              </Box>
+            )}
+            <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+              {message.content}
+            </Typography>
+          </>
         ) : (
           <>
             {reasoning && <Reasoning text={reasoning} pending={message.pending && !split.answer} />}
@@ -185,6 +335,9 @@ function MessageBubble({ message }: { message: PaneMessage }) {
                 <Typography variant="body2">{t('Waiting for the first token…')}</Typography>
               </Box>
             ) : null}
+            {message.toolCalls && message.toolCalls.length > 0 && (
+              <ToolCalls calls={message.toolCalls} onResults={onToolResults} />
+            )}
             {cutoff && <Alert severity="warning">{cutoff}</Alert>}
             {message.error && (
               <Alert severity="error" sx={{ mt: split.answer ? 1 : 0 }}>
@@ -264,54 +417,91 @@ export const ChatPane = React.forwardRef<ChatPaneHandle, ChatPaneProps>(function
   }, [messages]);
 
   const history = React.useCallback(
-    (list: PaneMessage[]): ChatMessage[] => [
-      ...(systemPrompt.trim() ? [{ role: 'system' as const, content: systemPrompt.trim() }] : []),
-      ...list
-        .filter(m => !m.error && !m.pending && m.content)
-        .map(m => ({ role: m.role, content: splitThinking(m.content).answer || m.content })),
-    ],
+    (list: PaneMessage[]): ChatMessage[] => paneHistory(systemPrompt, list),
     [systemPrompt]
   );
+
+  /** Adds messages to the conversation and asks the model for the next answer. */
+  const run = (added: PaneMessage[]) => {
+    if (resolveState.status !== 'ready' || busy) return;
+    const resolved = resolveState.resolved;
+    const assistant: PaneMessage = {
+      id: nextId++,
+      role: 'assistant',
+      content: '',
+      pending: true,
+    };
+    const conversation = history([...messages, ...added]);
+    const withImages = added.some(m => m.images?.length);
+    setMessages(list => [...list, ...added, assistant]);
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const update = (patch: Partial<PaneMessage>) =>
+      setMessages(list => list.map(m => (m.id === assistant.id ? { ...m, ...patch } : m)));
+    const explain = (message: string) => {
+      if (params.tools?.length && isToolSetupError(message)) {
+        return `${message} ${t(
+          'Tool calling needs vLLM started with --enable-auto-tool-choice and a --tool-call-parser that matches the model (for example hermes for Qwen).'
+        )}`;
+      }
+      if (withImages && isImageInputError(message)) {
+        return `${message} ${t(
+          'The model may not accept images: use a vision-language model (for example Qwen2.5-VL).'
+        )}`;
+      }
+      return message;
+    };
+    chatCompletion(cluster, resolved, model, conversation, params, controller.signal, {
+      onDelta: (content, reasoning) => update({ content, reasoning }),
+    })
+      .then(({ content, reasoning, toolCalls, ...result }) =>
+        update({
+          content,
+          reasoning,
+          toolCalls: toolCalls.length ? toolCalls : undefined,
+          result,
+          pending: false,
+        })
+      )
+      .catch((err: Error) =>
+        // Headlamp reports an aborted fetch as a 408, so check the signal itself.
+        update({
+          pending: false,
+          error: controller.signal.aborted ? t('Stopped.') : explain(err.message),
+        })
+      );
+  };
+
+  const sendToolResults = (calls: ToolCall[], results: string[]) =>
+    run(
+      calls.map((call, i) => ({
+        id: nextId++,
+        role: 'tool' as const,
+        content: results[i],
+        toolCallId: call.id,
+        toolName: call.name,
+      }))
+    );
 
   React.useImperativeHandle(
     ref,
     () => ({
-      send: (text: string) => {
-        if (resolveState.status !== 'ready' || busy) return;
-        const resolved = resolveState.resolved;
-        const user: PaneMessage = { id: nextId++, role: 'user', content: text };
-        const assistant: PaneMessage = {
-          id: nextId++,
-          role: 'assistant',
-          content: '',
-          pending: true,
-        };
-        const conversation = history([...messages, user]);
-        setMessages(list => [...list, user, assistant]);
-        const controller = new AbortController();
-        abortRef.current = controller;
-        const update = (patch: Partial<PaneMessage>) =>
-          setMessages(list => list.map(m => (m.id === assistant.id ? { ...m, ...patch } : m)));
-        chatCompletion(cluster, resolved, model, conversation, params, controller.signal, {
-          onDelta: (content, reasoning) => update({ content, reasoning }),
-        })
-          .then(({ content, reasoning, ...result }) =>
-            update({ content, reasoning, result, pending: false })
-          )
-          .catch((err: Error) =>
-            // Headlamp reports an aborted fetch as a 408, so check the signal itself.
-            update({
-              pending: false,
-              error: controller.signal.aborted ? t('Stopped.') : err.message,
-            })
-          );
-      },
+      send: (text: string, images?: string[]) =>
+        run([
+          {
+            id: nextId++,
+            role: 'user',
+            content: text,
+            ...(images?.length ? { images } : {}),
+          },
+        ]),
       reset: () => {
         abortRef.current?.abort();
         setMessages([]);
       },
       stop: () => abortRef.current?.abort(),
     }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [resolveState, busy, messages, history, cluster, model, params]
   );
 
@@ -467,8 +657,17 @@ export const ChatPane = React.forwardRef<ChatPaneHandle, ChatPaneProps>(function
             </Typography>
           </Box>
         )}
-        {messages.map(m => (
-          <MessageBubble key={m.id} message={m} />
+        {messages.map((m, i) => (
+          <MessageBubble
+            key={m.id}
+            message={m}
+            onToolResults={
+              // Results are asked for the open calls of the last answer only.
+              i === messages.length - 1 && !busy && m.toolCalls?.length
+                ? results => sendToolResults(m.toolCalls!, results)
+                : undefined
+            }
+          />
         ))}
       </Box>
 

@@ -15,6 +15,16 @@ All notable changes to the Inference Hub plugin are documented here. The format 
   endpoint is edited, its current pods count as released. Scoped quotas are not checked.
 - The GPU quota and usage of the namespace's Kueue queues (LocalQueue → ClusterQueue) are shown
   next to it, and Kueue appears as an optional stack in the platform readiness check.
+- Playground tool calling: function definitions in the OpenAI format (with an example) and the
+  tool choice are sent with each message. The calls the model makes are shown with their
+  arguments (invalid JSON is flagged); the results entered for them go back to the model, which
+  continues the answer. A server without tool calling set up gets a hint about vLLM's
+  `--enable-auto-tool-choice` and `--tool-call-parser`.
+- Playground image input for vision-language models: up to four PNG, JPEG, WebP or GIF images
+  per message, scaled down to 1536 px; "Copy as curl" leaves the image data out.
+- Playground **Embed & rerank** mode for pooling models: embeds texts with `/v1/embeddings` and
+  shows their cosine similarity, or orders documents by relevance to a query with
+  `/v1/rerank`, with tokens and latency.
 
 ## [0.4.0] — 2026-11-10
 

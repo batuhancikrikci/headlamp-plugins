@@ -6,7 +6,7 @@
  * secret-like names and token-looking strings in logs. The user sees and can edit the text
  * before it is sent.
  */
-import type { ChatMessage } from '../api/openai';
+import type { TextMessage } from '../api/openai';
 import type { Diagnosis, DiagnosisInput, LogSample } from './diagnose';
 
 /** Upper bound of the prompt, to fit small context windows. */
@@ -105,7 +105,7 @@ export const CONTINUE_PROMPT =
   'Continue your answer exactly where it stopped. Do not repeat what you already wrote.';
 
 /** Chat messages for the question about a report. */
-export function askMessages(report: string, question?: string): ChatMessage[] {
+export function askMessages(report: string, question?: string): TextMessage[] {
   const ask = question?.trim() || DEFAULT_QUESTION;
   return [
     { role: 'system', content: ASK_SYSTEM_PROMPT },
@@ -130,7 +130,7 @@ export function conversationMessages(
   report: string,
   turns: AskTurn[],
   continueLast = false
-): ChatMessage[] {
+): TextMessage[] {
   const messages = askMessages(report, turns[0]?.question);
   const add = (role: 'user' | 'assistant', content: string) => {
     const previous = messages[messages.length - 1];
