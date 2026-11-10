@@ -160,7 +160,7 @@ npm start             # rebuilds on every change and copies the result into the 
 | ----------------------------------- | --------------------------------------------------------- |
 | `npm start`                         | Watch mode; every build is copied into the local Headlamp |
 | `npm run build`                     | Production bundle in `dist/`                              |
-| `npm run check`                     | Type-check, lint and unit tests                           |
+| `npm run check`                     | Formatting, type-check, lint and unit tests               |
 | `npm run tsc`                       | Type-check (strict)                                       |
 | `npm run lint` / `npm run lint-fix` | ESLint, zero warnings allowed                             |
 | `npm run format`                    | Prettier                                                  |
@@ -226,7 +226,7 @@ Hedef: **Headlamp 0.45.0**, `@kinvolk/headlamp-plugin` **0.14.x**.
 | Yalnızca İngilizce arayüz               | Dil İngilizceye sabitlenir (sorgu dizesi, çerez ve kayıtlı tercih) ve dil seçici gizlenir (`src/language.ts`)                                                                                      |
 | Küme genel bakışı                       | Küme ana sayfasının yerine kartlardan oluşan bir pano: sağlık, dikkat gerektirenler, kapasite ve kullanım, node'lar ve iş yükleri. Headlamp'in olay tablosu korunur (`src/overview/`)              |
 | İş yükleri genel bakışı                 | Workloads sayfası için aynı pano düzeni; Headlamp'in iş yükü tablosu korunur ve pano onun namespace filtresini izler                                                                               |
-| Aynı sekmede OIDC girişi (yalnızca web) | Giriş ("Sign In") işlemi kullanıcıyı açılır pencere yerine doğrudan aynı sekmede kimlik sağlayıcıya yönlendirir ve doğrulama tamamlandığında istenen sayfaya geri aktarır (`src/oidcRedirect.ts`)                                                             |
+| Aynı sekmede OIDC girişi (yalnızca web) | Giriş ("Sign In") işlemi kullanıcıyı açılır pencere yerine doğrudan aynı sekmede kimlik sağlayıcıya yönlendirir ve doğrulama tamamlandığında istenen sayfaya geri aktarır (`src/oidcRedirect.ts`)  |
 | Stil iyileştirmeleri                    | Aktif temadan nötr kaydırma çubukları, seçim rengi ve klavye odak halkası; açık/koyu temayı izleyen yerel kontroller; kenar çubuğunda en sonda tutulan "Custom Resources" (`src/styles.ts`)        |
 
 Eklenti diğer eklentiler gibi Settings > Plugins üzerinden kapatılabilir veya kaldırılabilir; Headlamp
@@ -365,7 +365,7 @@ npm start             # her değişiklikte derler ve sonucu yerel Headlamp'e kop
 | ----------------------------------- | ---------------------------------------------------- |
 | `npm start`                         | İzleme modu; her derleme yerel Headlamp'e kopyalanır |
 | `npm run build`                     | `dist/` altında üretim paketi                        |
-| `npm run check`                     | Tip denetimi, lint ve birim testleri                 |
+| `npm run check`                     | Biçim denetimi, tip denetimi, lint ve birim testleri |
 | `npm run tsc`                       | Tip denetimi (strict)                                |
 | `npm run lint` / `npm run lint-fix` | ESLint, sıfır uyarı                                  |
 | `npm run format`                    | Prettier                                             |

@@ -188,7 +188,7 @@ npm start             # rebuilds on every change and copies the result into the 
 | ----------------------------------- | --------------------------------------------------------- |
 | `npm start`                         | Watch mode; every build is copied into the local Headlamp |
 | `npm run build`                     | Production bundle in `dist/`                              |
-| `npm run check`                     | Type-check, lint and unit tests                           |
+| `npm run check`                     | Formatting, type-check, lint and unit tests               |
 | `npm run tsc`                       | Type-check (strict)                                       |
 | `npm run lint` / `npm run lint-fix` | ESLint, zero warnings allowed                             |
 | `npm run format`                    | Prettier                                                  |
@@ -423,7 +423,7 @@ npm start             # her değişiklikte derler ve sonucu yerel Headlamp'e kop
 | ----------------------------------- | ---------------------------------------------------- |
 | `npm start`                         | İzleme modu; her derleme yerel Headlamp'e kopyalanır |
 | `npm run build`                     | `dist/` altında üretim paketi                        |
-| `npm run check`                     | Tip denetimi, lint ve birim testleri                 |
+| `npm run check`                     | Biçim denetimi, tip denetimi, lint ve birim testleri |
 | `npm run tsc`                       | Tip denetimi (strict)                                |
 | `npm run lint` / `npm run lint-fix` | ESLint, sıfır uyarı                                  |
 | `npm run format`                    | Prettier                                             |

@@ -2,7 +2,7 @@
 //
 // Builds the plugin and installs it into the local Headlamp desktop app (Linux, macOS, Windows).
 //
-//   npm run deploy                        # icons, type-check, lint, test, build, install
+//   npm run deploy                        # icons, format, type-check, lint, test, build, install
 //   npm run deploy:fast                   # icons, build, install
 //   npm run deploy -- --strict            # fail instead of warn on conflicting plugins
 //   HEADLAMP_PLUGINS_DIR=/path npm run deploy
@@ -137,6 +137,8 @@ step('Bundling icons');
 run('node scripts/build-icons.mjs');
 
 if (!skipChecks) {
+  step('Checking formatting');
+  run('npx prettier --check src scripts README.md CHANGELOG.md');
   step('Type-checking');
   run('npx headlamp-plugin tsc');
   step('Linting');

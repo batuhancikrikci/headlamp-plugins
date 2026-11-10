@@ -69,7 +69,7 @@ one is built, tested and released on its own.
 | ----------------------------------- | --------------------------------------------------------- |
 | `npm start`                         | Watch mode; every build is copied into the local Headlamp |
 | `npm run build`                     | Production bundle in `dist/`                              |
-| `npm run check`                     | Type-check, lint and unit tests (run before every commit) |
+| `npm run check`                     | Formatting, type-check, lint and unit tests (run before every commit) |
 | `npm run tsc`                       | Strict type-check                                         |
 | `npm run lint` / `npm run lint-fix` | ESLint, zero warnings allowed                             |
 | `npm run format`                    | Prettier                                                  |

@@ -330,7 +330,7 @@ npm start             # rebuilds on every change and copies the result into the 
 | ----------------------------------- | --------------------------------------------------------- |
 | `npm start`                         | Watch mode; every build is copied into the local Headlamp |
 | `npm run build`                     | Production bundle in `dist/`                              |
-| `npm run check`                     | Type-check, lint and unit tests                           |
+| `npm run check`                     | Formatting, type-check, lint and unit tests               |
 | `npm run tsc`                       | Type-check (strict)                                       |
 | `npm run lint` / `npm run lint-fix` | ESLint, zero warnings allowed                             |
 | `npm run format`                    | Prettier                                                  |
@@ -418,7 +418,7 @@ grubunu sunan diğer Cilium sürümleri de çalışır.
 | **İlişkiler**               | Politikalar ↔ seçilen endpoint'ler, kimlikler ↔ endpoint'ler, CIDR grupları ↔ politikalar, BGP cluster config ↔ peer config ↔ advertisement ↔ node'lar, IP havuzları / L2 politikaları ↔ service'ler, egress politikaları ↔ pod'lar ve gateway node'ları                                          |
 | **Yerel sayfalar**          | Headlamp'in Pod, Namespace, Node ve Service sayfalarında bir "Cilium" bölümü                                                                                                                                                                                                                      |
 | **Resource map**            | Ağ politikaları, BGP, yük dengeleme ve egress gateway'ler için harita kaynakları                                                                                                                                                                                                                  |
-| **Dayanıklılık**            | Çalışma zamanında API keşfi, eksik CRD'ler için gizlenen veya devre dışı görünümler, kullanımdan kaldırılma (deprecation) uyarıları, yükleniyor / boş / hata / yetki yok durumları, her görünümün etrafında hata yakalama                                                                        |
+| **Dayanıklılık**            | Çalışma zamanında API keşfi, eksik CRD'ler için gizlenen veya devre dışı görünümler, kullanımdan kaldırılma (deprecation) uyarıları, yükleniyor / boş / hata / yetki yok durumları, her görünümün etrafında hata yakalama                                                                         |
 
 Arayüz yalnızca İngilizcedir.
 
@@ -478,29 +478,29 @@ Tüm türler `cilium.io` API grubundadır. "Varsayılan sürüm", keşif tamamla
 varsaydığı sürümdür; gerçekte kullanılan sürüm, kümenin o kaynak için sunduğu en yüksek öncelikli
 sürümdür (`v2alpha1`'den önce `v2`).
 
-| Tür                            | Kapsam     | Varsayılan sürüm | Oluşturma / düzenleme                                                  |
-| ------------------------------ | ---------- | ---------------- | ---------------------------------------------------------------------- |
-| CiliumNetworkPolicy            | Namespaced | v2               | Sihirbaz, form, YAML                                                   |
-| CiliumClusterwideNetworkPolicy | Cluster    | v2               | Sihirbaz, form, YAML                                                   |
-| CiliumCIDRGroup                | Cluster    | v2               | Form, YAML                                                             |
-| CiliumEndpoint                 | Namespaced | v2               | Salt okunur (çalışma durumu)                                           |
-| CiliumEndpointSlice            | Cluster    | v2alpha1         | Salt okunur (çalışma durumu)                                           |
-| CiliumIdentity                 | Cluster    | v2               | Salt okunur (çalışma durumu)                                           |
-| CiliumNode                     | Cluster    | v2               | Salt okunur (çalışma durumu)                                           |
-| CiliumNodeConfig               | Namespaced | v2               | Form, YAML                                                             |
-| CiliumBGPClusterConfig         | Cluster    | v2               | Kurulum sihirbazı, form, YAML                                          |
-| CiliumBGPPeerConfig            | Cluster    | v2               | Kurulum sihirbazı, form, YAML                                          |
-| CiliumBGPAdvertisement         | Cluster    | v2               | Kurulum sihirbazı, form, YAML                                          |
-| CiliumBGPNodeConfig            | Cluster    | v2               | Salt okunur (operatör üretir)                                          |
-| CiliumBGPNodeConfigOverride    | Cluster    | v2               | Form, YAML                                                             |
+| Tür                            | Kapsam     | Varsayılan sürüm | Oluşturma / düzenleme                                                                   |
+| ------------------------------ | ---------- | ---------------- | --------------------------------------------------------------------------------------- |
+| CiliumNetworkPolicy            | Namespaced | v2               | Sihirbaz, form, YAML                                                                    |
+| CiliumClusterwideNetworkPolicy | Cluster    | v2               | Sihirbaz, form, YAML                                                                    |
+| CiliumCIDRGroup                | Cluster    | v2               | Form, YAML                                                                              |
+| CiliumEndpoint                 | Namespaced | v2               | Salt okunur (çalışma durumu)                                                            |
+| CiliumEndpointSlice            | Cluster    | v2alpha1         | Salt okunur (çalışma durumu)                                                            |
+| CiliumIdentity                 | Cluster    | v2               | Salt okunur (çalışma durumu)                                                            |
+| CiliumNode                     | Cluster    | v2               | Salt okunur (çalışma durumu)                                                            |
+| CiliumNodeConfig               | Namespaced | v2               | Form, YAML                                                                              |
+| CiliumBGPClusterConfig         | Cluster    | v2               | Kurulum sihirbazı, form, YAML                                                           |
+| CiliumBGPPeerConfig            | Cluster    | v2               | Kurulum sihirbazı, form, YAML                                                           |
+| CiliumBGPAdvertisement         | Cluster    | v2               | Kurulum sihirbazı, form, YAML                                                           |
+| CiliumBGPNodeConfig            | Cluster    | v2               | Salt okunur (operatör üretir)                                                           |
+| CiliumBGPNodeConfigOverride    | Cluster    | v2               | Form, YAML                                                                              |
 | CiliumBGPPeeringPolicy         | Cluster    | v2alpha1         | **Kullanımdan kaldırıldı (Deprecated)**: yalnızca sunuluyorsa gösterilir, yalnızca YAML |
-| CiliumLoadBalancerIPPool       | Cluster    | v2               | Kurulum sihirbazı, form, YAML                                          |
-| CiliumL2AnnouncementPolicy     | Cluster    | v2alpha1         | Kurulum sihirbazı, form, YAML                                          |
-| CiliumPodIPPool                | Cluster    | v2alpha1         | Form, YAML                                                             |
-| CiliumEgressGatewayPolicy      | Cluster    | v2               | Sihirbaz, form, YAML                                                   |
-| CiliumLocalRedirectPolicy      | Namespaced | v2               | Form, YAML                                                             |
-| CiliumEnvoyConfig              | Namespaced | v2               | Form (Envoy kaynakları gömülü YAML olarak), YAML                       |
-| CiliumClusterwideEnvoyConfig   | Cluster    | v2               | Form (Envoy kaynakları gömülü YAML olarak), YAML                       |
+| CiliumLoadBalancerIPPool       | Cluster    | v2               | Kurulum sihirbazı, form, YAML                                                           |
+| CiliumL2AnnouncementPolicy     | Cluster    | v2alpha1         | Kurulum sihirbazı, form, YAML                                                           |
+| CiliumPodIPPool                | Cluster    | v2alpha1         | Form, YAML                                                                              |
+| CiliumEgressGatewayPolicy      | Cluster    | v2               | Sihirbaz, form, YAML                                                                    |
+| CiliumLocalRedirectPolicy      | Namespaced | v2               | Form, YAML                                                                              |
+| CiliumEnvoyConfig              | Namespaced | v2               | Form (Envoy kaynakları gömülü YAML olarak), YAML                                        |
+| CiliumClusterwideEnvoyConfig   | Cluster    | v2               | Form (Envoy kaynakları gömülü YAML olarak), YAML                                        |
 
 `cilium.io` grubunda sunulan diğer türler (örneğin yeni bir Cilium sürümünün eklediği bir CRD)
 **Advanced** altında genel bir liste ve detay sayfasıyla listelenir.
@@ -719,7 +719,7 @@ npm start             # her değişiklikte derler ve sonucu yerel Headlamp'e kop
 | ----------------------------------- | ---------------------------------------------------- |
 | `npm start`                         | İzleme modu; her derleme yerel Headlamp'e kopyalanır |
 | `npm run build`                     | `dist/` altında üretim paketi                        |
-| `npm run check`                     | Tip denetimi, lint ve birim testleri                 |
+| `npm run check`                     | Biçim denetimi, tip denetimi, lint ve birim testleri |
 | `npm run tsc`                       | Tip denetimi (strict)                                |
 | `npm run lint` / `npm run lint-fix` | ESLint, sıfır uyarı                                  |
 | `npm run format`                    | Prettier                                             |

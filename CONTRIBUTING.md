@@ -33,7 +33,7 @@ You need Node.js 20.11 or newer and npm 10 or newer. In the directory of a plugi
 ```bash
 npm ci
 npm start          # rebuilds on every change and copies the result into the local Headlamp
-npm run check      # type-check, lint and unit tests
+npm run check      # formatting, type-check, lint and unit tests
 ```
 
 The README of each plugin lists all commands.
@@ -54,7 +54,7 @@ props.
 ## Pull requests
 
 - Keep a pull request focused on one change.
-- Run `npm run check` in every plugin you changed, and `npm run format` to format the code.
+- Run `npm run check` in every plugin you changed, and `npm run format` plus `npx prettier --write README.md CHANGELOG.md` to format the code and the docs.
 - Add or update unit tests for logic changes; pure logic lives in modules without Headlamp imports
   so it can be tested.
 - Include screenshots for UI changes.

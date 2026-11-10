@@ -252,7 +252,7 @@ npm start             # rebuilds on every change and copies the result into the 
 | ----------------------------------- | --------------------------------------------------------- |
 | `npm start`                         | Watch mode; every build is copied into the local Headlamp |
 | `npm run build`                     | Production bundle in `dist/`                              |
-| `npm run check`                     | Type-check, lint and unit tests                           |
+| `npm run check`                     | Formatting, type-check, lint and unit tests               |
 | `npm run tsc`                       | Type-check (strict)                                       |
 | `npm run lint` / `npm run lint-fix` | ESLint, zero warnings allowed                             |
 | `npm run format`                    | Prettier                                                  |
@@ -462,12 +462,12 @@ COPY --from=build /plugin/dist /headlamp/plugins/monitoring
 
 Genel bakış sayfası küme genelinde şunları okur:
 
-| Ne                                                      | API                                      | Neden                                                                                     |
-| ------------------------------------------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------- |
-| 10 izleme CRD'sinin tamamı                              | `monitoring.coreos.com`: `list`, `watch` | kaynak kartları, sağlık tablosu, dikkat gerektirenler listesi                             |
+| Ne                                                      | API                                      | Neden                                                                                                                |
+| ------------------------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| 10 izleme CRD'sinin tamamı                              | `monitoring.coreos.com`: `list`, `watch` | kaynak kartları, sağlık tablosu, dikkat gerektirenler listesi                                                        |
 | Namespace'ler                                           | core: `list`, `watch`                    | etiket tabanlı namespace seçicilerinin değerlendirilmesi (isteğe bağlı; yetki yoksa "bilinmiyor" olarak işaretlenir) |
-| Prometheus/Alertmanager namespace'lerindeki Service'ler | core: `list`                             | her örneğin önündeki Service'in bulunması                                                 |
-| Prometheus/Alertmanager HTTP API'leri                   | core `services/proxy`: `get`             | canlı durum: alarmlar, hedefler, silence'lar, yapılandırma yeniden yükleme                |
+| Prometheus/Alertmanager namespace'lerindeki Service'ler | core: `list`                             | her örneğin önündeki Service'in bulunması                                                                            |
+| Prometheus/Alertmanager HTTP API'leri                   | core `services/proxy`: `get`             | canlı durum: alarmlar, hedefler, silence'lar, yapılandırma yeniden yükleme                                           |
 
 API keşfi (`/apis/monitoring.coreos.com`) varsayılan `system:discovery` rolüyle kimliği doğrulanmış
 her kullanıcıya açıktır. Yerleşik `view` rolü ne izleme CRD'lerini ne de `services/proxy`'yi kapsar,
@@ -544,7 +544,7 @@ npm start             # her değişiklikte derler ve sonucu yerel Headlamp'e kop
 | ----------------------------------- | ---------------------------------------------------- |
 | `npm start`                         | İzleme modu; her derleme yerel Headlamp'e kopyalanır |
 | `npm run build`                     | `dist/` altında üretim paketi                        |
-| `npm run check`                     | Tip denetimi, lint ve birim testleri                 |
+| `npm run check`                     | Biçim denetimi, tip denetimi, lint ve birim testleri |
 | `npm run tsc`                       | Tip denetimi (strict)                                |
 | `npm run lint` / `npm run lint-fix` | ESLint, sıfır uyarı                                  |
 | `npm run format`                    | Prettier                                             |

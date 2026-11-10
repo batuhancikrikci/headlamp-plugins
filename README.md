@@ -98,7 +98,7 @@ pluginsManager:
 cd cilium            # or any other plugin
 npm ci
 npm start            # rebuilds on every change and copies the result into the local Headlamp
-npm run check        # type-check, lint, unit tests
+npm run check        # formatting, type-check, lint, unit tests
 npm run deploy       # checks + build + install into the local Headlamp desktop app
 ```
 
@@ -220,7 +220,7 @@ pluginsManager:
 cd cilium            # veya başka bir eklenti
 npm ci
 npm start            # her değişiklikte derler ve yerel Headlamp'e kopyalar
-npm run check        # tip denetimi, lint, birim testleri
+npm run check        # biçim, tip denetimi, lint, birim testleri
 npm run deploy       # denetim + derleme + yerel Headlamp masaüstüne kurulum
 ```
 

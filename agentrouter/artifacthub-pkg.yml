@@ -4,7 +4,7 @@ version: 0.2.0
 name: agentrouter
 displayName: Agent Router
 createdAt: "2026-10-20T13:26:50Z"
-digest: "399d56a7ebc2a02a4b3965a2b0d24cdb748d6d8daf9c91ea2c963abbcf9bb23e"
+digest: "2d5f8acb6c0fa4a3bed1697eb6465cb2a5c4875b274a55640907a94bc0e6dea4"
 description: 'Headlamp plugin for Envoy AI Gateway (Agent Router) — manage AIGatewayRoute, AIServiceBackend, BackendSecurityPolicy, MCPRoute, QuotaPolicy, and GatewayConfig CRDs'
 logoPath: docs/logo.png
 license: Apache-2.0

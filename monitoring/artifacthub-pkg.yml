@@ -4,7 +4,7 @@ version: 0.3.0
 name: monitoring
 displayName: Monitoring
 createdAt: "2026-10-20T13:28:08Z"
-digest: "2715226f06ad0639e5ca245247cdd50f755dfa0fae45e9e32f1e89793b58ca41"
+digest: "9c806e8ceea8f21c272c39564a1b8c98045bc738c56a94c496f0980ada404af3"
 description: 'Headlamp plugin for managing kube-prometheus-stack (Prometheus Operator) resources'
 logoPath: docs/logo.png
 license: Apache-2.0

@@ -4,7 +4,7 @@ version: 0.1.1
 name: envoy-gateway
 displayName: Envoy Gateway
 createdAt: "2026-11-02T22:15:17Z"
-digest: "816681548f30dc78ae4a68ee22096d42655d4fcfc9e7373cb639e7cc6cba6841"
+digest: "33b1eeb2009c6b9f77477e204eee9980b7f1e7980a1ec74f0388a43e8f7eae27"
 description: 'Headlamp plugin for managing Envoy Gateway (gateway.envoyproxy.io) resources: overview, relationships, guided forms and wizards'
 logoPath: docs/logo.png
 license: Apache-2.0

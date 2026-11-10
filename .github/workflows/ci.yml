@@ -54,6 +54,6 @@ jobs:
         run: |
           npm run icons
           git diff --exit-code -- src/icons/bundle.json
-      - run: npx prettier --check src scripts
+      # format:check, tsc, lint and tests: the same command developers run.
       - run: npm run check
       - run: npm run package
