@@ -28,23 +28,19 @@ export function rangeWindow(range: TrendRange, nowMs = Date.now()) {
   return { start: end - span, end, step };
 }
 
-const clean = (value: string) => value.replace(/["\\]/g, '');
-
-function selector(namespace?: string, node?: string): string {
+function selector(namespace?: string): string {
   const parts = ['container!=""', 'container!="POD"'];
-  if (namespace) parts.push(`namespace="${clean(namespace)}"`);
-  // The "node" label is set on the kubelet's targets by the Prometheus operator.
-  if (node) parts.push(`node="${clean(node)}"`);
+  if (namespace) parts.push(`namespace="${namespace.replace(/["\\]/g, '')}"`);
   return `{${parts.join(',')}}`;
 }
 
-/** PromQL of the CPU (cores) and memory (bytes) used, for the cluster, a namespace or a node. */
-export function trendQueries(namespace?: string, step = 60, node?: string) {
+/** PromQL of the CPU (cores) and memory (bytes) used, for the cluster or one namespace. */
+export function trendQueries(namespace?: string, step = 60) {
   // The rate window covers several scrapes even for short steps.
   const window = `${Math.max(5 * 60, step * 2)}s`;
   return {
-    cpu: `sum(rate(container_cpu_usage_seconds_total${selector(namespace, node)}[${window}]))`,
-    memory: `sum(container_memory_working_set_bytes${selector(namespace, node)})`,
+    cpu: `sum(rate(container_cpu_usage_seconds_total${selector(namespace)}[${window}]))`,
+    memory: `sum(container_memory_working_set_bytes${selector(namespace)})`,
   };
 }
 

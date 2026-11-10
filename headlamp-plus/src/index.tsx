@@ -5,18 +5,9 @@ import {
   registerAppTheme,
   registerDetailsViewSectionsProcessor,
   registerRoute,
-  registerSidebarEntry,
 } from '@kinvolk/headlamp-plugin/lib';
 import { ErrorBoundary, withBoundary } from './common/ErrorBoundary';
 import { PLUGIN_NAME } from './config';
-import { EfficiencyDashboard } from './dashboards/EfficiencyDashboard';
-import { JobsDashboard } from './dashboards/JobsDashboard';
-import { NetworkDashboard } from './dashboards/NetworkDashboard';
-import { NodeDetailJson } from './dashboards/node';
-import { NodeOverview } from './dashboards/NodeOverview';
-import { SecurityDashboard } from './dashboards/SecurityDashboard';
-import { StorageDashboard } from './dashboards/StorageDashboard';
-import { UpgradeDashboard } from './dashboards/UpgradeDashboard';
 import { enforceLanguage } from './language';
 import { completeOidcReturn, installOidcRedirect } from './oidcRedirect';
 import { ClusterOverview } from './overview/ClusterOverview';
@@ -46,63 +37,23 @@ registerRoute({
   component: withBoundary(WorkloadsOverview),
 });
 
-// Further dashboards in a sidebar group of their own.
-const DASHBOARDS: Array<{ path: string; label: string; component: React.ComponentType }> = [
-  { path: 'storage', label: 'Storage', component: StorageDashboard },
-  { path: 'security', label: 'Security', component: SecurityDashboard },
-  { path: 'network', label: 'Network', component: NetworkDashboard },
-  { path: 'jobs', label: 'Jobs', component: JobsDashboard },
-  { path: 'upgrade', label: 'Upgrade readiness', component: UpgradeDashboard },
-  { path: 'efficiency', label: 'Resource efficiency', component: EfficiencyDashboard },
-];
-const DASHBOARDS_ROOT = 'headlamp-plus-dashboards';
-registerSidebarEntry({
-  parent: null,
-  name: DASHBOARDS_ROOT,
-  label: 'Dashboards',
-  url: `/dashboards/${DASHBOARDS[0].path}`,
-  icon: 'mdi:view-dashboard-outline',
-});
-for (const dashboard of DASHBOARDS) {
-  const name = `${DASHBOARDS_ROOT}-${dashboard.path}`;
-  registerSidebarEntry({
-    parent: DASHBOARDS_ROOT,
-    name,
-    label: dashboard.label,
-    url: `/dashboards/${dashboard.path}`,
-  });
-  registerRoute({
-    path: `/dashboards/${dashboard.path}`,
-    exact: true,
-    name,
-    sidebar: name,
-    component: withBoundary(dashboard.component),
-  });
-}
-
-// The namespace and node dashboards go right below the object's own details (name, labels,
-// status), above Headlamp's other sections.
+// The namespace dashboard goes right below the namespace's own details (name, labels, status),
+// above Headlamp's sections for quotas, limit ranges, pods and events.
 const NAMESPACE_SECTION_ID = 'headlamp-plus.namespace-overview';
-const NODE_SECTION_ID = 'headlamp-plus.node-overview';
 /** Id of a details view section; sections can also be plain React nodes. */
 function sectionId(section: unknown): string | undefined {
   return (section as { id?: string } | null)?.id;
 }
 
-registerDetailsViewSectionsProcessor(function addOverviewSections(resource, sections) {
-  const kind = resource?.kind;
-  const id =
-    kind === 'Namespace' ? NAMESPACE_SECTION_ID : kind === 'Node' ? NODE_SECTION_ID : undefined;
-  if (!resource || !id || sections.some(s => sectionId(s) === id)) return sections;
+registerDetailsViewSectionsProcessor(function addNamespaceOverview(resource, sections) {
+  if (resource?.kind !== 'Namespace' || sections.some(s => sectionId(s) === NAMESPACE_SECTION_ID)) {
+    return sections;
+  }
   const section = {
-    id,
+    id: NAMESPACE_SECTION_ID,
     section: (
       <ErrorBoundary>
-        {kind === 'Namespace' ? (
-          <NamespaceOverview namespace={resource.metadata.name} />
-        ) : (
-          <NodeOverview node={resource.jsonData as NodeDetailJson} />
-        )}
+        <NamespaceOverview namespace={resource.metadata.name} />
       </ErrorBoundary>
     ),
   };

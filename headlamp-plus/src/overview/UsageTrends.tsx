@@ -5,7 +5,15 @@
  */
 import { Icon } from '@iconify/react';
 import { K8s } from '@kinvolk/headlamp-plugin/lib';
-import { Box, CircularProgress, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  CircularProgress,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+} from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import React from 'react';
 import {
@@ -20,7 +28,13 @@ import {
 } from 'recharts';
 import { cardGrid, Panel } from './blocks';
 import { formatCores, formatGiB } from './clusterHealth';
-import { PrometheusEndpoint, promRange } from './prometheus';
+import {
+  discoverPrometheus,
+  endpointOf,
+  parseService,
+  PrometheusEndpoint,
+  promRange,
+} from './prometheus';
 import {
   RANGES,
   rangeWindow,
@@ -31,10 +45,44 @@ import {
   trendQueries,
   TrendRange,
 } from './trends';
-import { ServicePicker, usePrometheus } from './usePrometheus';
 
 /** Categorical slot 1 of the reference palette, stepped per mode. */
 const SERIES_COLOR = { light: '#2a78d6', dark: '#3987e5' };
+
+/** Services entered by hand, per cluster, for the session. */
+const manual = new Map<string, PrometheusEndpoint>();
+
+type PromState =
+  | { status: 'loading' }
+  | { status: 'ready'; endpoint: PrometheusEndpoint }
+  | { status: 'missing' };
+
+function usePrometheus(cluster: string): [PromState, (endpoint: PrometheusEndpoint) => void] {
+  const [state, setState] = React.useState<PromState>({ status: 'loading' });
+  const [attempt, setAttempt] = React.useState(0);
+  React.useEffect(() => {
+    let cancelled = false;
+    const chosen = manual.get(cluster);
+    if (chosen) {
+      setState({ status: 'ready', endpoint: chosen });
+      return;
+    }
+    setState({ status: 'loading' });
+    discoverPrometheus(cluster)
+      .then(endpoint => {
+        if (!cancelled) setState(endpoint ? { status: 'ready', endpoint } : { status: 'missing' });
+      })
+      .catch(() => !cancelled && setState({ status: 'missing' }));
+    return () => {
+      cancelled = true;
+    };
+  }, [cluster, attempt]);
+  const choose = (endpoint: PrometheusEndpoint) => {
+    manual.set(cluster, endpoint);
+    setAttempt(a => a + 1);
+  };
+  return [state, choose];
+}
 
 interface Trends {
   cpu: TrendPoint[];
@@ -45,8 +93,7 @@ function useTrends(
   endpoint: PrometheusEndpoint | undefined,
   cluster: string,
   range: TrendRange,
-  namespace?: string,
-  node?: string
+  namespace?: string
 ): { data?: Trends; error?: string; loading: boolean } {
   const [state, setState] = React.useState<{ data?: Trends; error?: string; loading: boolean }>({
     loading: true,
@@ -60,7 +107,7 @@ function useTrends(
     if (!endpoint) return;
     let cancelled = false;
     const { start, end, step } = rangeWindow(range);
-    const queries = trendQueries(namespace, step, node);
+    const queries = trendQueries(namespace, step);
     setState(s => ({ ...s, loading: true }));
     Promise.all([
       promRange(endpoint, queries.cpu, start, end, step, cluster),
@@ -75,7 +122,7 @@ function useTrends(
     return () => {
       cancelled = true;
     };
-  }, [endpoint?.base, cluster, range, namespace, node, tick]);
+  }, [endpoint?.base, cluster, range, namespace, tick]);
   return state;
 }
 
@@ -190,19 +237,48 @@ function TrendChart({
   );
 }
 
+function ServicePicker({ onChoose }: { onChoose: (endpoint: PrometheusEndpoint) => void }) {
+  const [text, setText] = React.useState('');
+  const service = parseService(text);
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+      <Typography variant="body2" color="text.secondary">
+        No Prometheus compatible service was found. The trend needs Prometheus (or Thanos, Mimir,
+        VictoriaMetrics) with the kubelet's cAdvisor metrics; enter its service to use it.
+      </Typography>
+      <Box sx={{ display: 'flex', gap: 1 }}>
+        <TextField
+          size="small"
+          label="Prometheus service"
+          placeholder="monitoring/prometheus-operated:9090"
+          value={text}
+          onChange={e => setText(e.target.value)}
+          error={!!text && !service}
+          sx={{ flexGrow: 1 }}
+        />
+        <Button
+          variant="outlined"
+          disabled={!service}
+          onClick={() => service && onChoose(endpointOf(service))}
+        >
+          Use
+        </Button>
+      </Box>
+    </Box>
+  );
+}
+
 /**
  * CPU and memory used over time by the whole cluster or by one namespace, with the allocatable
  * capacity or the quota as a dashed line.
  */
 export function UsageTrends({
   namespace,
-  node,
   cpuCapacity,
   memoryCapacity,
   capacityLabel,
 }: {
   namespace?: string;
-  node?: string;
   /** Cores. */
   cpuCapacity?: number;
   /** Bytes. */
@@ -217,8 +293,7 @@ export function UsageTrends({
     prom.status === 'ready' ? prom.endpoint : undefined,
     cluster,
     range,
-    namespace,
-    node
+    namespace
   );
 
   return (
@@ -246,7 +321,7 @@ export function UsageTrends({
       {prom.status === 'loading' ? (
         <CircularProgress size={20} />
       ) : prom.status === 'missing' ? (
-        <ServicePicker onChoose={choose} needs="the kubelet's cAdvisor metrics" />
+        <ServicePicker onChoose={choose} />
       ) : trends.error ? (
         <Typography variant="body2" color="error">
           <Icon icon="mdi:alert-circle" width={16} style={{ verticalAlign: 'middle' }} />{' '}

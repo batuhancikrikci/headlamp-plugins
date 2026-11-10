@@ -13,13 +13,6 @@ export interface Issue {
   uid?: string;
   title: string;
   detail?: string;
-  /** Headlamp route of the object, for dashboards that work on plain JSON. */
-  link?: RouteRef;
-}
-
-export interface RouteRef {
-  route: string;
-  params?: Record<string, string>;
 }
 
 interface Condition {

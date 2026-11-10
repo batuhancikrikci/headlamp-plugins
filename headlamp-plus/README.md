@@ -23,13 +23,6 @@ Target: **Headlamp 0.45.0**, `@kinvolk/headlamp-plugin` **0.14.x**.
 | Workloads overview                    | The same dashboard layout for the Workloads page; Headlamp's workloads table is kept and the dashboard follows its namespace filter                                                                                                                                     |
 | Namespace overview                    | A dashboard at the top of each namespace page: pods, workloads, jobs and volume claims, what needs attention (also unbound claims and quotas at 90 %), quota use or requests against usage, the busiest pods and the usage trend. Headlamp's own sections stay below it |
 | Usage trend                           | CPU and memory used over the last hour, 6 hours, day or week, for the cluster (against the allocatable capacity) and for a namespace (against its quota), from Prometheus. The service is found automatically or entered by hand                                        |
-| Node overview                         | A dashboard at the top of each node page: CPU, memory and pod slots requested against allocatable, usage, limits over allocatable, conditions and failing pods on the node, taints, the heaviest pods and the node's usage trend (`src/dashboards/`)                    |
-| Storage dashboard                     | Dashboards → Storage: claims and volumes, released or failed volumes, the default storage class, claims and capacity per class and, with Prometheus, the fullest volumes (warning at 80 %, error at 90 %)                                                               |
-| Security dashboard                    | Dashboards → Security: pods that are privileged, use the host's network/PID/IPC or host paths, add powerful capabilities, run as UID 0 or have no memory limit; Pod Security levels of the namespaces; subjects bound to cluster-admin. Secrets are not read            |
-| Network dashboard                     | Dashboards → Network: services by type, load balancers without an address, services without ready endpoints, ingresses without an address or with a missing backend service, and namespaces with running pods but no NetworkPolicy                                      |
-| Jobs dashboard                        | Dashboards → Jobs: cron jobs with their last runs, missed runs, runs failing in a row and runs still going when the next one is due; failed and running jobs                                                                                                            |
-| Upgrade readiness                     | Dashboards → Upgrade readiness: kubelet versions against the API server (supported skew of 3 minor versions), PodDisruptionBudgets that block drains and, with Prometheus, deprecated APIs still requested                                                              |
-| Resource efficiency                   | Dashboards → Resource efficiency: requested against used CPU and memory per workload, now (metrics API) or over the last 24 hours (Prometheus: CPU average, memory peak), and workloads without requests. No costs                                                      |
 | Same-tab OIDC sign-in (web only)      | "Sign In" goes to the identity provider in the same tab instead of a popup and returns to the page the user wanted (`src/oidcRedirect.ts`)                                                                                                                              |
 | Style refinements                     | Neutral scrollbars, selection colour and keyboard focus ring from the active theme, native controls following light/dark, "Custom Resources" kept last in the sidebar (`src/styles.ts`)                                                                                 |
 
@@ -156,22 +149,7 @@ API versions are discovered at runtime; the table lists the versions used during
   `/auth?cluster=…`; test it in-cluster after upgrading Headlamp.
 - **Dashboards:** registered on Headlamp's `/` and `/workloads` routes so they replace the stock
   pages (plugin routes match first). Charts added with `registerOverviewChartsProcessor` are not shown.
-  The namespace and node dashboards are added to Headlamp's namespace and node pages as details
-  sections. The other dashboards are in a "Dashboards" sidebar group (`/dashboards/...`).
-- **Reads of the dashboards:** they list the objects they show across all namespaces (pods,
-  services, endpoint slices, ingresses, network policies, claims, volumes, storage classes, jobs,
-  cron jobs, disruption budgets, namespaces, nodes, cluster role bindings); what the user may not
-  list is reported on the page and left out. Usage comes from the metrics API.
-- **Prometheus metrics of the dashboards:** volume fill from `kubelet_volume_stats_used_bytes` /
-  `kubelet_volume_stats_capacity_bytes`; deprecated APIs from `apiserver_requested_deprecated_apis`
-  (reset when an API server restarts); the 24 hour efficiency view from the cAdvisor metrics.
-  The node's usage trend filters on the `node` label, which the Prometheus operator sets on the
-  kubelet targets.
-- **Missed cron job runs:** schedules are evaluated in UTC (the time zone of
-  kube-controller-manager on most clusters); cron jobs with another `timeZone` are not checked.
-- **Security dashboard:** "runs as root" is reported only when the spec sets UID 0; an image that
-  runs as root without saying so in the spec is not detected. CNI specific policies (for example
-  Cilium's or Calico's own kinds) are not counted in the network policy coverage.
+  The namespace dashboard is added to Headlamp's namespace page as a details section.
 - **Usage trend:** container usage from cAdvisor (`container_cpu_usage_seconds_total`,
   `container_memory_working_set_bytes`). The allocatable capacity line uses today's nodes, so it
   does not show past changes of the node pool.
@@ -220,8 +198,7 @@ src/
   language.ts               English-only language lock
   styles.ts                 Global CSS refinements and hiding rules
   oidcRedirect.ts           Web: OIDC sign-in in the same tab
-  overview/                 Cluster, Workloads and namespace dashboards, usage trend
-  dashboards/               Node, storage, security, network, jobs, upgrade and efficiency dashboards
+  overview/                 Cluster and Workloads dashboards
 scripts/
   build-icons.mjs           Offline icon bundle (src/icons/bundle.json)
   deploy.mjs                Build and install into the local Headlamp desktop app
@@ -258,13 +235,6 @@ Hedef: **Headlamp 0.45.0**, `@kinvolk/headlamp-plugin` **0.14.x**.
 | İş yükleri genel bakışı                 | Workloads sayfası için aynı pano düzeni; Headlamp'in iş yükü tablosu korunur ve pano onun namespace filtresini izler                                                                                                                                                                                              |
 | Namespace genel bakışı                  | Her namespace sayfasının üstünde bir pano: pod'lar, iş yükleri, job'lar ve volume claim'ler, dikkat gerektirenler (bağlanmamış claim'ler ve %90'a ulaşan kotalar dahil), kota kullanımı ya da istekler ile kullanım, en çok kaynak kullanan pod'lar ve kullanım trendi. Headlamp'in kendi bölümleri altında kalır |
 | Kullanım trendi                         | Son 1 saat, 6 saat, gün ya da haftada kullanılan CPU ve bellek; küme için ayrılabilir kapasiteye, namespace için kotasına karşı, Prometheus'tan. Servis otomatik bulunur ya da elle girilir                                                                                                                       |
-| Node genel bakışı                       | Her node sayfasının üstünde bir pano: ayrılabilir kapasiteye karşı istenen CPU, bellek ve pod yuvaları, kullanım, ayrılabilir kapasiteyi aşan limitler, node'un durumları ve üzerinde hata veren pod'lar, taint'ler, en yoğun pod'lar ve node'un kullanım trendi (`src/dashboards/`)                              |
-| Depolama panosu                         | Dashboards → Storage: claim'ler ve volume'lar, serbest kalmış ya da hata vermiş volume'lar, varsayılan storage class, sınıf başına claim ve kapasite; Prometheus varsa en dolu volume'lar (%80'de uyarı, %90'da hata)                                                                                             |
-| Güvenlik panosu                         | Dashboards → Security: privileged, host'un ağını/PID/IPC'sini ya da host path kullanan, güçlü capability ekleyen, UID 0 ile çalışan ya da bellek limiti olmayan pod'lar; namespace'lerin Pod Security seviyeleri; cluster-admin'e bağlı özneler. Secret okunmaz                                                   |
-| Ağ panosu                               | Dashboards → Network: türüne göre servisler, adresi olmayan LoadBalancer'lar, hazır endpoint'i olmayan servisler, adresi olmayan ya da backend servisi eksik ingress'ler ve pod çalıştırıp NetworkPolicy'si olmayan namespace'ler                                                                                 |
-| Job panosu                              | Dashboards → Jobs: son çalışmalarıyla cron job'lar, kaçırılan çalışmalar, art arda başarısız olanlar ve bir sonraki çalışma zamanı geldiğinde hâlâ süren çalışmalar; başarısız ve çalışan job'lar                                                                                                                 |
-| Yükseltme hazırlığı                     | Dashboards → Upgrade readiness: API sunucusuna karşı kubelet sürümleri (desteklenen fark 3 minor sürüm), drain'i engelleyen PodDisruptionBudget'lar; Prometheus varsa hâlâ istenen kullanımdan kalkmış API'ler                                                                                                    |
-| Kaynak verimliliği                      | Dashboards → Resource efficiency: iş yükü başına istenen ve kullanılan CPU ve bellek, şu an (metrics API) ya da son 24 saat (Prometheus: CPU ortalaması, bellek tepe değeri), isteği olmayan iş yükleri. Maliyet hesabı yok                                                                                       |
 | Aynı sekmede OIDC girişi (yalnızca web) | Giriş ("Sign In") işlemi kullanıcıyı açılır pencere yerine doğrudan aynı sekmede kimlik sağlayıcıya yönlendirir ve doğrulama tamamlandığında istenen sayfaya geri aktarır (`src/oidcRedirect.ts`)                                                                                                                 |
 | Stil iyileştirmeleri                    | Aktif temadan nötr kaydırma çubukları, seçim rengi ve klavye odak halkası; açık/koyu temayı izleyen yerel kontroller; kenar çubuğunda en sonda tutulan "Custom Resources" (`src/styles.ts`)                                                                                                                       |
 
@@ -390,22 +360,7 @@ API sürümleri çalışma zamanında keşfedilir; tabloda geliştirme ve test s
   `/auth?cluster=…` adresine dönmesi varsayımına dayanır; Headlamp sürümü yükseltildiğinde küme içinde test edilmelidir.
 - **Panolar:** stok sayfaların yerine geçmeleri için Headlamp'in `/` ve `/workloads` rotalarına
   kaydedilir (eklenti rotaları önce eşleşir). `registerOverviewChartsProcessor` ile eklenen grafikler
-  gösterilmez. Namespace ve node panoları Headlamp'in namespace ve node sayfalarına birer detay
-  bölümü olarak eklenir. Diğer panolar kenar çubuğundaki "Dashboards" grubundadır (`/dashboards/...`).
-- **Panoların okudukları:** gösterdikleri nesneleri tüm namespace'lerde listelerler (pod, servis,
-  endpoint slice, ingress, network policy, claim, volume, storage class, job, cron job, disruption
-  budget, namespace, node, cluster role binding); kullanıcının listeleyemedikleri sayfada belirtilir
-  ve dışarıda kalır. Kullanım metrics API'den gelir.
-- **Panoların Prometheus metrikleri:** volume doluluğu `kubelet_volume_stats_used_bytes` /
-  `kubelet_volume_stats_capacity_bytes`; kullanımdan kalkmış API'ler
-  `apiserver_requested_deprecated_apis` (API sunucusu yeniden başlayınca sıfırlanır); 24 saatlik
-  verimlilik görünümü cAdvisor metrikleri. Node'un kullanım trendi, Prometheus operator'ün kubelet
-  hedeflerine koyduğu `node` etiketiyle süzülür.
-- **Kaçırılan cron job çalışmaları:** zamanlamalar UTC'ye göre değerlendirilir (çoğu kümede
-  kube-controller-manager'ın saat dilimi); başka bir `timeZone` kullanan cron job'lar denetlenmez.
-- **Güvenlik panosu:** "root olarak çalışır" yalnızca spec UID 0 belirttiğinde bildirilir; spec'te
-  belirtmeden root çalışan imajlar algılanmaz. CNI'ye özgü politikalar (ör. Cilium'un ya da
-  Calico'nun kendi türleri) network policy kapsamında sayılmaz.
+  gösterilmez. Namespace panosu Headlamp'in namespace sayfasına bir detay bölümü olarak eklenir.
 - **Kullanım trendi:** cAdvisor'dan gelen container kullanımı (`container_cpu_usage_seconds_total`,
   `container_memory_working_set_bytes`). Ayrılabilir kapasite çizgisi bugünkü node'ları kullanır;
   node havuzunun geçmişteki değişimlerini göstermez.
@@ -454,8 +409,7 @@ src/
   language.ts               Yalnızca İngilizce dil kilidi
   styles.ts                 Genel CSS iyileştirmeleri ve gizleme kuralları
   oidcRedirect.ts           Web: aynı sekmede OIDC girişi
-  overview/                 Küme, iş yükü ve namespace panoları, kullanım trendi
-  dashboards/               Node, depolama, güvenlik, ağ, job, yükseltme ve verimlilik panoları
+  overview/                 Küme ve iş yükü panoları
 scripts/
   build-icons.mjs           Çevrimdışı ikon paketi (src/icons/bundle.json)
   deploy.mjs                Derler ve yerel Headlamp masaüstüne kurar
