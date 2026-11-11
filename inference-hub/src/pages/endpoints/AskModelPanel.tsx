@@ -5,7 +5,6 @@ import {
   Button,
   CircularProgress,
   FormControlLabel,
-  MenuItem,
   Paper,
   Switch,
   TextField,
@@ -16,6 +15,7 @@ import React from 'react';
 import { chatCompletion, isContextLengthError, resolveTarget } from '../../api/openai';
 import { t } from '../../common/i18n';
 import { Markdown } from '../../components/common/Markdown';
+import { EndpointPicker } from '../../components/playground/EndpointPicker';
 import { GatewayAccess } from '../../components/playground/GatewayAccess';
 import { Diagnosis, LogSample } from '../../diagnostics/diagnose';
 import {
@@ -213,21 +213,13 @@ export function AskModelPanel({
       ) : (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-            <TextField
-              select
-              size="small"
+            <EndpointPicker
+              targets={started ? [conversation.target] : candidates}
               label={t('Model')}
-              value={(started ? conversation.target.id : target?.id) || ''}
-              onChange={e => setTargetId(e.target.value)}
-              sx={{ minWidth: 280 }}
+              value={(started ? conversation.target.id : target?.id) || null}
+              onChange={setTargetId}
               disabled={busy || loading || started}
-            >
-              {(started ? [conversation.target] : candidates).map(c => (
-                <MenuItem key={c.id} value={c.id}>
-                  {c.namespace}/{c.label} · {c.defaultModel}
-                </MenuItem>
-              ))}
-            </TextField>
+            />
             <TextField
               size="small"
               label={t('Question (optional)')}

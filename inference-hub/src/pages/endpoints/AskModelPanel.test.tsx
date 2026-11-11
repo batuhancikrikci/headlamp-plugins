@@ -55,6 +55,7 @@ vi.mock('../../hooks/usePlaygroundTargets', () => ({
         label: 'helper',
         defaultModel: 'helper-model',
         status: { health: 'ready' },
+        model: {},
       },
     ],
   }),

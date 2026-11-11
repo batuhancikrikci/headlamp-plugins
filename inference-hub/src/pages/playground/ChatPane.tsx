@@ -1,7 +1,6 @@
 import { Icon } from '@iconify/react';
 import {
   Alert,
-  Autocomplete,
   Box,
   Button,
   Chip,
@@ -30,8 +29,7 @@ import {
 } from '../../api/openai';
 import { t } from '../../common/i18n';
 import { Markdown } from '../../components/common/Markdown';
-import { ModelAvatar } from '../../components/common/ModelAvatar';
-import { StatusBadge } from '../../components/common/StatusBadge';
+import { EndpointPicker } from '../../components/playground/EndpointPicker';
 import { GatewayAccess } from '../../components/playground/GatewayAccess';
 import { useCan } from '../../hooks/useCan';
 import { useCurrentCluster } from '../../hooks/useCluster';
@@ -369,7 +367,12 @@ export const ChatPane = React.forwardRef<ChatPaneHandle, ChatPaneProps>(function
   ref
 ) {
   const cluster = useCurrentCluster();
-  const target = targets.find(x => x.id === targetId);
+  // A refresh can drop the chosen target from the list for a moment: keep it until the list
+  // has it again or another one is chosen, so the conversation and the model stay.
+  const lastTarget = React.useRef<PlaygroundTarget | undefined>(undefined);
+  const found = targets.find(x => x.id === targetId);
+  const target = found ?? (lastTarget.current?.id === targetId ? lastTarget.current : undefined);
+  lastTarget.current = target;
   const [resolveState, setResolveState] = React.useState<ResolveState>({ status: 'idle' });
   const [attempt, setAttempt] = React.useState(0);
   const [model, setModel] = React.useState('');
@@ -523,45 +526,16 @@ export const ChatPane = React.forwardRef<ChatPaneHandle, ChatPaneProps>(function
           alignItems: 'center',
         }}
       >
-        <Autocomplete
-          size="small"
-          sx={{ minWidth: 240, flex: 1 }}
-          options={targets}
-          value={target || null}
-          onChange={(_, v) => {
+        <EndpointPicker
+          targets={targets}
+          value={target?.id ?? null}
+          onChange={id => {
+            if (id === target?.id) return;
             abortRef.current?.abort();
             setMessages([]);
-            onTargetChange(v?.id || null);
+            onTargetChange(id);
           }}
-          getOptionLabel={o => `${o.namespace}/${o.label}`}
-          isOptionEqualToValue={(a, b) => a.id === b.id}
-          groupBy={o =>
-            o.kind === 'Engine'
-              ? t('vLLM engine pods')
-              : o.kind === 'Gateway'
-              ? t('Through a gateway')
-              : t('Model endpoints')
-          }
-          renderOption={(props, o) => (
-            <Box
-              component="li"
-              {...props}
-              key={o.id}
-              sx={{ display: 'flex', gap: 1, alignItems: 'center' }}
-            >
-              <ModelAvatar model={o.model} size={22} />
-              <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                <Typography variant="body2" noWrap>
-                  {o.label}
-                </Typography>
-                <Typography variant="caption" color="text.secondary" noWrap component="div">
-                  {o.namespace} · {o.defaultModel}
-                </Typography>
-              </Box>
-              <StatusBadge summary={o.status} />
-            </Box>
-          )}
-          renderInput={p => <TextField {...p} label={t('Endpoint')} />}
+          minWidth={240}
         />
         <TextField
           select

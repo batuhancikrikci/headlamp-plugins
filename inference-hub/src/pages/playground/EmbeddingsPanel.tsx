@@ -32,6 +32,7 @@ import {
   resolveTarget,
 } from '../../api/openai';
 import { t } from '../../common/i18n';
+import { EndpointPicker } from '../../components/playground/EndpointPicker';
 import { GatewayAccess } from '../../components/playground/GatewayAccess';
 import { useCurrentCluster } from '../../hooks/useCluster';
 import { PlaygroundTarget } from '../../hooks/usePlaygroundTargets';
@@ -312,20 +313,14 @@ export function EmbeddingsPanel({
     <Grid container spacing={2}>
       <Grid item xs={12} md={5}>
         <Paper variant="outlined" sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField
-            select
-            size="small"
-            label={t('Endpoint')}
-            value={targetId}
-            disabled={running}
-            onChange={e => setTargetId(e.target.value)}
-          >
-            {ready.map(x => (
-              <MenuItem key={x.id} value={x.id}>
-                {x.namespace}/{x.label} · {x.defaultModel}
-              </MenuItem>
-            ))}
-          </TextField>
+          <Box sx={{ display: 'flex' }}>
+            <EndpointPicker
+              targets={ready}
+              value={targetId}
+              disabled={running}
+              onChange={setTargetId}
+            />
+          </Box>
           <GatewayAccess target={target} disabled={running} />
           {resolveError ? (
             <Alert severity="error">{resolveError}</Alert>

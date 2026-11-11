@@ -7,6 +7,7 @@ import { GatewayPath, gatewayPathsOf } from '../resources/gatewayTargets';
 import { KubeJson } from '../resources/types';
 import { HealthSummary } from '../utils/health';
 import { ModelInfo, parseModelUri } from '../utils/modelInfo';
+import { reuseUnchanged } from '../utils/stableList';
 import { useEndpoints } from './useEndpoints';
 import { useResourceList } from './useLive';
 import { useVllmEngines } from './useVllmEngines';
@@ -75,7 +76,8 @@ export function usePlaygroundTargets() {
   const httpRoutes = useResourceList<KubeJson>('httproutes', {}, 60000);
   const aiRoutes = useResourceList<KubeJson>('aigatewayroutes', {}, 60000);
   const aiBackends = useResourceList<KubeJson>('aiservicebackends', {}, 60000);
-  const targets = React.useMemo(() => {
+  const previous = React.useRef<PlaygroundTarget[]>([]);
+  const built = React.useMemo(() => {
     const viaGateways = endpoints.flatMap(ep =>
       gatewayPathsOf(
         ep,
@@ -91,6 +93,10 @@ export function usePlaygroundTargets() {
     const rank = (t: PlaygroundTarget) => (t.status.health === 'ready' ? 0 : 1);
     return list.sort((a, b) => rank(a) - rank(b) || a.id.localeCompare(b.id));
   }, [endpoints, engines, httpRoutes.items, aiRoutes.items, aiBackends.items]);
+  // The lists refresh in the background: keep the objects that did not change, so an open picker
+  // keeps what the user typed and selected.
+  const targets = React.useMemo(() => reuseUnchanged(previous.current, built), [built]);
+  previous.current = targets;
   return { targets, loading: loading || enginesLoading };
 }
 

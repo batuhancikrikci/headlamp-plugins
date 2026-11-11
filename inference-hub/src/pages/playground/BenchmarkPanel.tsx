@@ -17,6 +17,7 @@ import React from 'react';
 import { chatCompletion, resolveTarget } from '../../api/openai';
 import { promQuery } from '../../api/prometheus';
 import { t } from '../../common/i18n';
+import { EndpointPicker } from '../../components/playground/EndpointPicker';
 import { GatewayAccess } from '../../components/playground/GatewayAccess';
 import { useCurrentCluster } from '../../hooks/useCluster';
 import { endpointIdOf, PlaygroundTarget } from '../../hooks/usePlaygroundTargets';
@@ -348,23 +349,15 @@ export function BenchmarkPanel({
         <Grid container spacing={2}>
           {[0, ...(compare ? [1] : [])].map(i => (
             <Grid item xs={12} md={compare ? 6 : 12} key={i}>
-              <TextField
-                select
-                fullWidth
-                size="small"
-                label={compare ? t('Endpoint {{n}}', { n: i + 1 }) : t('Endpoint')}
-                value={targetIds[i] || ''}
-                disabled={running}
-                onChange={e =>
-                  setTargetIds(ids => Object.assign([...ids], { [i]: e.target.value }))
-                }
-              >
-                {ready.map(target => (
-                  <MenuItem key={target.id} value={target.id}>
-                    {target.namespace}/{target.label} · {target.defaultModel}
-                  </MenuItem>
-                ))}
-              </TextField>
+              <Box sx={{ display: 'flex' }}>
+                <EndpointPicker
+                  targets={ready}
+                  label={compare ? t('Endpoint {{n}}', { n: i + 1 }) : t('Endpoint')}
+                  value={targetIds[i]}
+                  disabled={running}
+                  onChange={id => setTargetIds(ids => Object.assign([...ids], { [i]: id }))}
+                />
+              </Box>
               <Box sx={{ mt: 1 }}>
                 <GatewayAccess
                   target={ready.find(target => target.id === targetIds[i])}

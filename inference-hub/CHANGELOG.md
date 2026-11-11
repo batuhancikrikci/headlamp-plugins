@@ -4,6 +4,22 @@ All notable changes to the Inference Hub plugin are documented here. The format 
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the plugin uses
 [semantic versioning](https://semver.org/).
 
+## [0.6.0] — unreleased
+
+### Changed
+
+- New model server picker in the Playground (chat, benchmark, embed & rerank) and in "Ask a
+  model": the field shows the chosen server with its model and health, and opens a panel with a
+  namespace filter (remembered for the session), a search over names and models, a filter for
+  endpoints, gateway routes and vLLM pods, and "ready only".
+
+### Fixed
+
+- Choosing a model in the Playground could be undone by the background refresh: the rebuilt list
+  reset the picker's search and highlight, and a server that dropped out of the list for a
+  moment cleared the chosen one. Unchanged entries now keep their objects, and the chosen server
+  stays until another one is picked.
+
 ## [0.5.0] — 2026-11-10
 
 ### Added

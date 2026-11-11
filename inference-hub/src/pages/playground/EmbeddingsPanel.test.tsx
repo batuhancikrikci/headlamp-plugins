@@ -46,6 +46,7 @@ const targets = [
     label: 'embed',
     defaultModel: 'bge-m3',
     status: { health: 'ready' },
+    model: {},
   },
 ] as unknown as PlaygroundTarget[];
 
