@@ -4,7 +4,7 @@ All notable changes to the Multicluster Hub plugin are documented here. The form
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the plugin uses
 [semantic versioning](https://semver.org/).
 
-## [0.2.1] — unreleased
+## [0.2.1] — 2026-11-11
 
 ### Fixed
 

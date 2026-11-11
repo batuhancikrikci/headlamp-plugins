@@ -1,10 +1,10 @@
 # Artifact Hub metadata of the Multicluster Hub plugin. The release workflow updates version, createdAt,
 # archive-url and archive-checksum when a tag named multi-cluster-v<version> is pushed.
-version: 0.2.0
+version: 0.2.1
 name: multi-cluster
 displayName: Multicluster Hub
-createdAt: "2026-11-10T16:45:20Z"
-digest: "9945aff46524a59a546510a50bd1d3013829b735bc3e4897743bd4f852776df4"
+createdAt: "2026-11-11T11:01:58Z"
+digest: "dc200117d01c88192adb19173204133d4119fb13723d5d9778fd3fb6bc563297"
 description: 'Multicluster Hub: Headlamp plugin for managing Open Cluster Management (OCM) hubs — clusters, cluster sets, placements, ManifestWorks, add-ons, application subscriptions and GitOps, with guided forms and wizards'
 logoPath: docs/logo.png
 license: Apache-2.0
@@ -34,7 +34,7 @@ install: |
   ## Headlamp desktop
 
   Open the plugin catalog in Headlamp, search for "Multicluster Hub" and install it. Alternatively,
-  download `multi-cluster-0.2.0.tar.gz` from the GitHub release and extract it into the Headlamp plugins
+  download `multi-cluster-0.2.1.tar.gz` from the GitHub release and extract it into the Headlamp plugins
   directory (for example `~/.config/Headlamp/plugins/` on Linux), then reload Headlamp.
 
   ## Headlamp in-cluster
@@ -48,13 +48,13 @@ install: |
       plugins:
         - name: multi-cluster
           source: https://artifacthub.io/packages/headlamp/batuhancikrikci-headlamp-plugins/multi-cluster
-          version: 0.2.0
+          version: 0.2.1
   ```
 changes:
-  - kind: added
-    description: "Compliance matrix on the Policies tab: every root policy against every cluster it is placed on, with the compliance of each cell, links to the policy and the cluster, and a filter that keeps only non-compliant and pending policies and clusters."
+  - kind: fixed
+    description: "Opening an object from a reference link could crash its details page (for example \"Cannot read properties of undefined\"). The link handed Headlamp a name-only object, which the details page rendered instead of loading the real one; it now only navigates."
 annotations:
-  headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/multi-cluster-v0.2.0/multi-cluster-0.2.0.tar.gz
-  headlamp/plugin/archive-checksum: sha256:094c2f6975c8d1f495470135aac2de39dd6ae7b8edd146489612d54a1ebb2acc
+  headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/multi-cluster-v0.2.1/multi-cluster-0.2.1.tar.gz
+  headlamp/plugin/archive-checksum: sha256:c446c67ea564022653aa2f21b5febb4f6e1c43023418754d30320beb6837cc4f
   headlamp/plugin/version-compat: '>=0.45.0'
   headlamp/plugin/distro-compat: in-cluster,web,desktop
