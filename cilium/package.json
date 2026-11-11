@@ -1,6 +1,6 @@
 {
   "name": "cilium",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Headlamp plugin for operating Cilium: network policies, endpoints and identities, BGP, LB IPAM, egress gateway and Envoy configuration with guided forms and wizards",
   "keywords": [
     "headlamp",

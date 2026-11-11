@@ -1,8 +1,8 @@
 import { K8s } from '@kinvolk/headlamp-plugin/lib';
-import { Link } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
 import type { KubeObjectClass } from '@kinvolk/headlamp-plugin/lib/K8s/cluster';
-import { Box, Chip, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, Link as MuiLink, Tooltip, Typography } from '@mui/material';
 import React from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import { crdByKind } from '../../resources/registry';
 import { API_GROUP } from '../../resources/types';
 
@@ -56,6 +56,9 @@ export interface ResourceRefLinkProps {
 /**
  * Renders a reference to another Kubernetes object. When Headlamp knows the resource kind the
  * name is a link to its details page; otherwise it is rendered as plain text.
+ *
+ * The link only navigates. Headlamp's Link would also put this name-only object into its cache,
+ * and the details page would then render it (without a spec) instead of loading the real one.
  */
 export function ResourceRefLink({
   kind,
@@ -83,7 +86,9 @@ export function ResourceRefLink({
       <Tooltip title={tooltip}>
         <span>
           {obj ? (
-            <Link kubeObject={obj}>{text}</Link>
+            <MuiLink component={RouterLink} to={obj.getDetailsLink()}>
+              {text}
+            </MuiLink>
           ) : (
             <Typography component="span" variant="body2">
               {text}

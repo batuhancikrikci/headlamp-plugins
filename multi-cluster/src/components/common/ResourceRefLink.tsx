@@ -1,8 +1,8 @@
 import { K8s } from '@kinvolk/headlamp-plugin/lib';
-import { Link } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
 import type { KubeObjectClass } from '@kinvolk/headlamp-plugin/lib/K8s/cluster';
-import { Box, Chip, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, Link as MuiLink, Tooltip, Typography } from '@mui/material';
 import React from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import { crdByKind } from '../../resources/registry';
 
 const CORE_KINDS = ['Namespace', 'Secret', 'ConfigMap', 'ServiceAccount', 'Pod', 'Service'];
@@ -41,6 +41,9 @@ export interface ResourceRefLinkProps {
 /**
  * A reference to another object: a link to its detail page when the plugin or Headlamp knows
  * the kind, plain text otherwise.
+ *
+ * The link only navigates. Headlamp's Link would also put this name-only object into its cache,
+ * and the details page would then render it (without a spec) instead of loading the real one.
  */
 export function ResourceRefLink({
   kind,
@@ -65,7 +68,9 @@ export function ResourceRefLink({
       <Tooltip title={[kind, namespace, name].filter(Boolean).join(' / ')}>
         <span>
           {obj ? (
-            <Link kubeObject={obj}>{text}</Link>
+            <MuiLink component={RouterLink} to={obj.getDetailsLink()}>
+              {text}
+            </MuiLink>
           ) : (
             <Typography component="span" variant="body2">
               {text}

@@ -4,6 +4,15 @@ All notable changes to the Envoy Gateway plugin are documented here. The format 
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the plugin uses
 [semantic versioning](https://semver.org/).
 
+## [0.1.2] — unreleased
+
+### Fixed
+
+- Opening an object from a reference link (for example the target HTTPRoute in a policy list)
+  crashed its details page with "Cannot read properties of undefined (reading 'rules')". The link
+  handed Headlamp a name-only object, which the details page rendered instead of loading the real
+  one; it now only navigates.
+
 ## [0.1.1] — 2026-11-02
 
 ### Fixed

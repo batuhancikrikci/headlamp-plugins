@@ -4,6 +4,14 @@ All notable changes to the Multicluster Hub plugin are documented here. The form
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the plugin uses
 [semantic versioning](https://semver.org/).
 
+## [0.2.1] — unreleased
+
+### Fixed
+
+- Opening an object from a reference link could crash its details page (for example "Cannot
+  read properties of undefined"). The link handed Headlamp a name-only object, which the details
+  page rendered instead of loading the real one; it now only navigates.
+
 ## [0.2.0] — 2026-11-10
 
 ### Added
