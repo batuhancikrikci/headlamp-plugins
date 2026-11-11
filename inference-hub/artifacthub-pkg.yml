@@ -1,10 +1,10 @@
 # Artifact Hub metadata of the Inference Hub plugin. The release workflow updates version, createdAt,
 # archive-url and archive-checksum when a tag named inference-hub-v<version> is pushed.
-version: 0.6.0
+version: 0.6.1
 name: inference-hub
 displayName: Inference Hub
-createdAt: "2026-11-11T11:03:27Z"
-digest: "3565c7c796c8ae52799cbdcaf730ac4f68878720cd5645cfe944d5411cc572fb"
+createdAt: "2026-11-11T12:10:12Z"
+digest: "6644833366f47579d4001eeedf18b02545f779c3e5eb1eaa7dc75c7ac4e00ebb"
 description: 'Inference Hub: an AI/LLM platform experience for Headlamp covering KServe, llm-d, the Gateway API Inference Extension, vLLM and the NVIDIA GPU Operator'
 logoPath: docs/logo.png
 license: Apache-2.0
@@ -39,7 +39,7 @@ install: |
   ## Headlamp desktop
 
   Open the plugin catalog in Headlamp, search for "Inference Hub" and install it. Alternatively,
-  download `inference-hub-0.6.0.tar.gz` from the GitHub release and extract it into the Headlamp plugins
+  download `inference-hub-0.6.1.tar.gz` from the GitHub release and extract it into the Headlamp plugins
   directory (for example `~/.config/Headlamp/plugins/` on Linux), then reload Headlamp.
 
   ## Headlamp in-cluster
@@ -53,15 +53,17 @@ install: |
       plugins:
         - name: inference-hub
           source: https://artifacthub.io/packages/headlamp/batuhancikrikci-headlamp-plugins/inference-hub
-          version: 0.6.0
+          version: 0.6.1
   ```
 changes:
-  - kind: changed
-    description: "New model server picker in the Playground (chat, benchmark, embed & rerank) and in \"Ask a model\": the field shows the chosen server with its model and health, and opens a panel with a namespace filter (remembered for the session), a search over names and models, a filter for endpoints, gateway routes and vLLM pods, and \"ready only\"."
   - kind: fixed
-    description: "Choosing a model in the Playground could be undone by the background refresh: the rebuilt list reset the picker's search and highlight, and a server that dropped out of the list for a moment cleared the chosen one. Unchanged entries now keep their objects, and the chosen server stays until another one is picked."
+    description: "The namespace filter and the search field of the model server picker sit on the same line."
+  - kind: fixed
+    description: "The Playground warned \"You are not allowed to use the services proxy\" for every target reached through a gateway, even for cluster administrators. The permission is not checked for those targets, and the skipped check was taken as a denial; the warning now only follows a check the API server denied."
+  - kind: changed
+    description: "A target reached through a gateway shows the implementation that runs the gateway, from its GatewayClass (Envoy Gateway, Istio, kgateway, Cilium, NGINX Gateway Fabric, Traefik, GKE, or the controller name). Envoy Gateway `SecurityPolicy` hints are named as such and only shown when Envoy Gateway runs the gateway (or its class cannot be read); with another implementation a note says its policies are not read and that request headers can still be added."
 annotations:
-  headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/inference-hub-v0.6.0/inference-hub-0.6.0.tar.gz
-  headlamp/plugin/archive-checksum: sha256:04a1821cd00b716aa20381ab883028d2a3b94412823f1ec31807869bac7b46b9
+  headlamp/plugin/archive-url: https://github.com/batuhancikrikci/headlamp-plugins/releases/download/inference-hub-v0.6.1/inference-hub-0.6.1.tar.gz
+  headlamp/plugin/archive-checksum: sha256:631a455d8d62570d7d48fd887645cb7999b2fa6bf415f487242cd374cd2d4392
   headlamp/plugin/version-compat: '>=0.45.0'
   headlamp/plugin/distro-compat: in-cluster,web,desktop
