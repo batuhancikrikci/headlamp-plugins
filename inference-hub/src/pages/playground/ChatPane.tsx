@@ -350,6 +350,22 @@ function MessageBubble({
   );
 }
 
+/**
+ * Why the Playground cannot reach the model, or null. Only a check that was made counts: gateway
+ * targets are not checked here (their Service is found later), and useCan reports a skipped
+ * check as not allowed.
+ */
+export function proxyDenial(
+  target: PlaygroundTarget | undefined,
+  allowed: boolean | undefined
+): string | null {
+  if (!proxyCheck(target) || allowed !== false) return null;
+  return t(
+    'You are not allowed to use the {{r}} proxy in namespace {{ns}}, which the Playground needs to reach the model.',
+    { r: target?.kind === 'Engine' ? 'pods' : 'services', ns: target?.namespace }
+  );
+}
+
 function proxyCheck(target: PlaygroundTarget | undefined) {
   // A gateway target goes through the gateway's Service, whose namespace is found later.
   if (!target || target.kind === 'Gateway') return null;
@@ -381,6 +397,7 @@ export const ChatPane = React.forwardRef<ChatPaneHandle, ChatPaneProps>(function
   const abortRef = React.useRef<AbortController | null>(null);
   const listRef = React.useRef<HTMLDivElement>(null);
   const can = useCan(proxyCheck(target));
+  const denial = proxyDenial(target, can.allowed);
   const busy = messages.some(m => m.pending);
 
   React.useEffect(() => onBusyChange(busy), [busy, onBusyChange]);
@@ -588,15 +605,9 @@ export const ChatPane = React.forwardRef<ChatPaneHandle, ChatPaneProps>(function
             <GatewayAccess target={target} disabled={busy} />
           </Box>
         )}
-        {can.allowed === false && (
+        {denial && (
           <Alert severity="error" sx={{ mb: 1 }}>
-            {t(
-              'You are not allowed to use the {{r}} proxy in namespace {{ns}}, which the Playground needs to reach the model.',
-              {
-                r: target?.kind === 'Engine' ? 'pods' : 'services',
-                ns: target?.namespace,
-              }
-            )}
+            {denial}
           </Alert>
         )}
         {resolveState.status === 'resolving' && (

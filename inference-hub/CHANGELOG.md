@@ -9,6 +9,10 @@ All notable changes to the Inference Hub plugin are documented here. The format 
 ### Fixed
 
 - The namespace filter and the search field of the model server picker sit on the same line.
+- The Playground warned "You are not allowed to use the services proxy" for every target reached
+  through a gateway, even for cluster administrators. The permission is not checked for those
+  targets, and the skipped check was taken as a denial; the warning now only follows a check the
+  API server denied.
 
 ## [0.6.0] — 2026-11-11
 

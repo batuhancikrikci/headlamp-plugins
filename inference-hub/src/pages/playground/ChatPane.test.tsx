@@ -1,4 +1,5 @@
-import { paneHistory, PaneMessage, reasoningCutoffNotice } from './ChatPane';
+import type { PlaygroundTarget } from '../../hooks/usePlaygroundTargets';
+import { paneHistory, PaneMessage, proxyDenial, reasoningCutoffNotice } from './ChatPane';
 
 function reply(patch: Partial<PaneMessage> = {}): PaneMessage {
   return {
@@ -83,5 +84,25 @@ describe('paneHistory', () => {
       { role: 'tool', tool_call_id: 'c1', content: '{"temperature": 21}' },
       { role: 'assistant', content: 'It is 21 °C.' },
     ]);
+  });
+});
+
+describe('proxyDenial', () => {
+  const target = (kind: string) =>
+    ({ id: 'x', kind, namespace: 'llm', name: 'm' } as unknown as PlaygroundTarget);
+
+  it('reports a denied proxy check of a model endpoint or vLLM pod', () => {
+    expect(proxyDenial(target('LLMInferenceService'), false)).toMatch(
+      /services proxy in namespace llm/
+    );
+    expect(proxyDenial(target('Engine'), false)).toMatch(/pods proxy in namespace llm/);
+  });
+
+  it('says nothing for a gateway target, whose check is skipped, or while checking', () => {
+    // useCan reports the skipped check of a gateway target as not allowed.
+    expect(proxyDenial(target('Gateway'), false)).toBeNull();
+    expect(proxyDenial(undefined, false)).toBeNull();
+    expect(proxyDenial(target('LLMInferenceService'), undefined)).toBeNull();
+    expect(proxyDenial(target('LLMInferenceService'), true)).toBeNull();
   });
 });
