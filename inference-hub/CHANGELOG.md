@@ -4,6 +4,12 @@ All notable changes to the Inference Hub plugin are documented here. The format 
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the plugin uses
 [semantic versioning](https://semver.org/).
 
+## [0.6.1] — unreleased
+
+### Fixed
+
+- The namespace filter and the search field of the model server picker sit on the same line.
+
 ## [0.6.0] — 2026-11-11
 
 ### Changed

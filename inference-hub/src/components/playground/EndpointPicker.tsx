@@ -196,7 +196,7 @@ export function EndpointPicker({
         }}
       >
         <Box sx={{ p: 1.5, display: 'flex', flexDirection: 'column', gap: 1.25 }}>
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
             <TextField
               select
               size="small"
@@ -221,7 +221,9 @@ export function EndpointPicker({
               size="small"
               inputRef={search}
               fullWidth
-              placeholder={t('Search name or model')}
+              // Labelled like the namespace field, so both sit on the same line.
+              label={t('Search')}
+              placeholder={t('Name or model')}
               value={filter.search}
               onChange={e => set({ search: e.target.value })}
               onKeyDown={e => {
