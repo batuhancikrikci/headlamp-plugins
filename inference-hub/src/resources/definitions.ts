@@ -29,6 +29,7 @@ export type ResourceId =
   | 'inferenceobjectives'
   | 'inferencemodelrewrites'
   | 'gateways'
+  | 'gatewayclasses'
   | 'httproutes'
   | 'referencegrants'
   | 'aigatewayroutes'
@@ -143,6 +144,14 @@ export const RESOURCES: Record<ResourceId, ResourceDefinition> = {
     plural: 'gateways',
     groups: ['gateway.networking.k8s.io'],
     namespaced: true,
+    stack: 'gatewayApi',
+  },
+  gatewayclasses: {
+    id: 'gatewayclasses',
+    kind: 'GatewayClass',
+    plural: 'gatewayclasses',
+    groups: ['gateway.networking.k8s.io'],
+    namespaced: false,
     stack: 'gatewayApi',
   },
   httproutes: {

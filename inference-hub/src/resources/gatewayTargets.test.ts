@@ -2,10 +2,14 @@ import { RouteUse } from './agentRouter';
 import { fromLLMInferenceService } from './endpoint';
 import {
   authHints,
+  ENVOY_GATEWAY_CONTROLLER,
+  gatewayController,
   gatewayPathsOf,
   GatewayVia,
   headerProblem,
+  implementationName,
   pickGatewayPort,
+  readsEnvoyPolicies,
 } from './gatewayTargets';
 import { KubeJson } from './types';
 
@@ -148,6 +152,7 @@ describe('authHints', () => {
     );
     expect(hints).toEqual([
       {
+        source: 'Envoy Gateway SecurityPolicy',
         policy: 'gw/keys',
         text: 'API key in header x-api-key',
         headers: ['x-api-key'],
@@ -182,5 +187,31 @@ describe('headerProblem', () => {
     expect(headerProblem('Host')).toMatch(/browser or the proxy/);
     expect(headerProblem('bad header')).toMatch(/only contain/);
     expect(headerProblem(' ')).toBe('Enter a header name.');
+  });
+});
+
+describe('gateway implementation', () => {
+  const gateway = (className: string) =>
+    ({ metadata: { name: 'gw' }, spec: { gatewayClassName: className } } as unknown as KubeJson);
+  const classes = [
+    { metadata: { name: 'envoy' }, spec: { controllerName: ENVOY_GATEWAY_CONTROLLER } },
+    { metadata: { name: 'istio' }, spec: { controllerName: 'istio.io/gateway-controller' } },
+    { metadata: { name: 'own' }, spec: { controllerName: 'example.com/gateway' } },
+  ] as unknown as KubeJson[];
+
+  it('names the implementation from the GatewayClass controller', () => {
+    expect(implementationName(gatewayController(gateway('envoy'), classes))).toBe('Envoy Gateway');
+    expect(implementationName(gatewayController(gateway('istio'), classes))).toBe('Istio');
+    expect(implementationName(gatewayController(gateway('own'), classes))).toBe(
+      'example.com/gateway'
+    );
+    expect(gatewayController(gateway('missing'), classes)).toBeUndefined();
+    expect(gatewayController(undefined, classes)).toBeUndefined();
+  });
+
+  it('reads Envoy Gateway policies only for Envoy Gateway, and leaves an unknown one open', () => {
+    expect(readsEnvoyPolicies(ENVOY_GATEWAY_CONTROLLER)).toBe(true);
+    expect(readsEnvoyPolicies('istio.io/gateway-controller')).toBe(false);
+    expect(readsEnvoyPolicies(undefined)).toBeUndefined();
   });
 });

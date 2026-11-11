@@ -14,6 +14,14 @@ All notable changes to the Inference Hub plugin are documented here. The format 
   targets, and the skipped check was taken as a denial; the warning now only follows a check the
   API server denied.
 
+### Changed
+
+- A target reached through a gateway shows the implementation that runs the gateway, from its
+  GatewayClass (Envoy Gateway, Istio, kgateway, Cilium, NGINX Gateway Fabric, Traefik, GKE, or the
+  controller name). Envoy Gateway `SecurityPolicy` hints are named as such and only shown when
+  Envoy Gateway runs the gateway (or its class cannot be read); with another implementation a
+  note says its policies are not read and that request headers can still be added.
+
 ## [0.6.0] — 2026-11-11
 
 ### Changed

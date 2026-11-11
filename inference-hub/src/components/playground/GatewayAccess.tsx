@@ -5,7 +5,13 @@ import { ChatTarget } from '../../api/openai';
 import { HeaderRow, useHeaderRows } from '../../api/requestHeaders';
 import { t } from '../../common/i18n';
 import { useResourceList } from '../../hooks/useLive';
-import { authHints, headerProblem } from '../../resources/gatewayTargets';
+import {
+  authHints,
+  gatewayController,
+  headerProblem,
+  implementationName,
+  readsEnvoyPolicies,
+} from '../../resources/gatewayTargets';
 import { KubeJson } from '../../resources/types';
 
 function HeaderRowField({
@@ -66,16 +72,36 @@ function HeaderRowField({
 }
 
 /**
- * For a target reached through a gateway: which gateway and route, what the gateway's security
- * policies expect, and the request headers to send (e.g. an API key). Headers are kept for the
+ * For a target reached through a gateway: which gateway and route, which implementation runs the
+ * gateway, what its authentication policies expect when they can be read (Envoy Gateway
+ * SecurityPolicies), and the request headers to send (e.g. an API key). Headers are kept for the
  * session only.
  */
 export function GatewayAccess({ target, disabled }: { target?: ChatTarget; disabled?: boolean }) {
   const via = target?.gateway;
-  const policies = useResourceList<KubeJson>('securitypolicies', via ? {} : null, 60000);
+  const gateways = useResourceList<KubeJson>(
+    'gateways',
+    via ? { namespace: via.namespace } : null,
+    60000
+  );
+  const classes = useResourceList<KubeJson>('gatewayclasses', via ? {} : null, 60000);
+  const controller = via
+    ? gatewayController(
+        gateways.items.find(g => g.metadata.name === via.name),
+        classes.items
+      )
+    : undefined;
+  const envoy = readsEnvoyPolicies(controller);
+  // Envoy Gateway's SecurityPolicies are read unless another implementation runs the gateway.
+  const policies = useResourceList<KubeJson>(
+    'securitypolicies',
+    via && envoy !== false ? {} : null,
+    60000
+  );
   const [rows, setRows] = useHeaderRows(target?.id || '');
   if (!target || !via) return null;
-  const hints = authHints(policies.items, via);
+  const hints = envoy === false ? [] : authHints(policies.items, via);
+  const implementation = implementationName(controller);
   const add = (name = '') => setRows([...rows, { name, value: '' }]);
   const missing = Array.from(new Set(hints.flatMap(h => h.headers))).filter(
     name => !rows.some(r => r.name.trim().toLowerCase() === name.toLowerCase())
@@ -83,6 +109,11 @@ export function GatewayAccess({ target, disabled }: { target?: ChatTarget; disab
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+      {implementation && (
+        <Typography variant="caption" color="text.secondary">
+          {t('Gateway implementation: {{name}}', { name: implementation })}
+        </Typography>
+      )}
       <Typography variant="body2" color="text.secondary">
         {via.source === 'agentRouter'
           ? t(
@@ -121,12 +152,24 @@ export function GatewayAccess({ target, disabled }: { target?: ChatTarget; disab
         >
           {hints.map(h => (
             <Typography variant="body2" key={`${h.policy}/${h.text}`}>
-              {t('SecurityPolicy {{policy}}: {{text}}.', { policy: h.policy, text: t(h.text) })}{' '}
+              {t('{{source}} {{policy}}: {{text}}.', {
+                source: h.source,
+                policy: h.policy,
+                text: t(h.text),
+              })}{' '}
               {h.unusable &&
                 t('This cannot be sent through the Kubernetes API proxy; use the direct path.')}
             </Typography>
           ))}
         </Alert>
+      )}
+      {envoy === false && (
+        <Typography variant="body2" color="text.secondary">
+          {t(
+            'The authentication policies of {{name}} are not read here. If the gateway asks for credentials (for example an API key), add the request headers it expects below.',
+            { name: implementation }
+          )}
+        </Typography>
       )}
       {rows.map((row, index) => (
         <HeaderRowField

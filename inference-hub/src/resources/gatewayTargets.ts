@@ -158,7 +158,51 @@ export function gatewayServiceSelectors(via: Pick<GatewayVia, 'name' | 'namespac
   ];
 }
 
+/** Controller of Envoy Gateway; SecurityPolicy is its own kind (gateway.envoyproxy.io). */
+export const ENVOY_GATEWAY_CONTROLLER = 'gateway.envoyproxy.io/gatewayclass-controller';
+
+/** Names of the Gateway API implementations by their GatewayClass controller. */
+const IMPLEMENTATIONS: Record<string, string> = {
+  [ENVOY_GATEWAY_CONTROLLER]: 'Envoy Gateway',
+  'istio.io/gateway-controller': 'Istio',
+  'kgateway.dev/kgateway': 'kgateway',
+  'io.cilium/gateway-controller': 'Cilium',
+  'gateway.nginx.org/nginx-gateway-controller': 'NGINX Gateway Fabric',
+  'traefik.io/gateway-controller': 'Traefik',
+  'networking.gke.io/gateway': 'GKE Gateway',
+};
+
+/**
+ * The controller that runs a Gateway, from its GatewayClass; undefined when the Gateway or its
+ * class could not be read.
+ */
+export function gatewayController(
+  gateway: KubeJson | undefined,
+  classes: KubeJson[]
+): string | undefined {
+  const className = (gateway?.spec as Json | undefined)?.gatewayClassName;
+  const cls = classes.find(c => c.metadata.name === className);
+  return (cls?.spec as Json | undefined)?.controllerName;
+}
+
+/** Readable name of a Gateway API implementation, or its controller name. */
+export function implementationName(controller?: string): string | undefined {
+  if (!controller) return undefined;
+  return IMPLEMENTATIONS[controller] || controller;
+}
+
+/**
+ * Whether the Envoy Gateway SecurityPolicies apply: yes for Envoy Gateway, no for another
+ * implementation, and when the controller is unknown, only if a policy targets the path.
+ */
+export function readsEnvoyPolicies(controller?: string): boolean | undefined {
+  if (!controller) return undefined;
+  return controller === ENVOY_GATEWAY_CONTROLLER;
+}
+
 export interface AuthHint {
+  /** Kind of the policy, e.g. "Envoy Gateway SecurityPolicy". */
+  source: string;
   policy: string;
   /** What the policy asks of a client, in words. */
   text: string;
@@ -178,6 +222,8 @@ function targets(policy: Json): Json[] {
  * Gateway or one of the HTTPRoutes), and what each asks of a client. Policies that select their
  * targets by label are not found.
  */
+const ENVOY_POLICY = 'Envoy Gateway SecurityPolicy';
+
 export function authHints(policies: KubeJson[], via: GatewayVia): AuthHint[] {
   const applies = (policy: KubeJson) =>
     targets(policy as Json).some(ref => {
@@ -198,6 +244,7 @@ export function authHints(policies: KubeJson[], via: GatewayVia): AuthHint[] {
         e => (e.headers || []) as string[]
       );
       hints.push({
+        source: ENVOY_POLICY,
         policy: name,
         text: headers.length
           ? `API key in header ${headers.join(' or ')}`
@@ -212,6 +259,7 @@ export function authHints(policies: KubeJson[], via: GatewayVia): AuthHint[] {
       );
       const custom = headers.filter(h => h.toLowerCase() !== 'authorization');
       hints.push({
+        source: ENVOY_POLICY,
         policy: name,
         text: custom.length
           ? `JWT in header ${custom.join(' or ')}`
@@ -221,16 +269,29 @@ export function authHints(policies: KubeJson[], via: GatewayVia): AuthHint[] {
       });
     }
     if (spec.basicAuth) {
-      hints.push({ policy: name, text: 'Basic authentication', headers: [], unusable: true });
+      hints.push({
+        source: ENVOY_POLICY,
+        policy: name,
+        text: 'Basic authentication',
+        headers: [],
+        unusable: true,
+      });
     }
     if (spec.oidc) {
-      hints.push({ policy: name, text: 'OIDC login', headers: [], unusable: true });
+      hints.push({
+        source: ENVOY_POLICY,
+        policy: name,
+        text: 'OIDC login',
+        headers: [],
+        unusable: true,
+      });
     }
     if (spec.extAuth) {
       const headers = ((spec.extAuth.headersToExtAuth || []) as string[]).filter(
         h => h.toLowerCase() !== 'authorization'
       );
       hints.push({
+        source: ENVOY_POLICY,
         policy: name,
         text: headers.length
           ? `External authorization, which reads ${headers.join(', ')}`
